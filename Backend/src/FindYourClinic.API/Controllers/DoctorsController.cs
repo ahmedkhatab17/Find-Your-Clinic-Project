@@ -1,6 +1,7 @@
 using FindYourClinic.API.Common;
 using FindYourClinic.API.Features.Doctors.GetDoctorAvailability;
 using FindYourClinic.API.Features.Doctors.GetDoctorById;
+using FindYourClinic.API.Features.Doctors.GetDoctorDashboard;
 using FindYourClinic.API.Features.Doctors.GetMyStatus;
 using FindYourClinic.API.Features.Doctors.GetTopRatedDoctors;
 using FindYourClinic.API.Features.Doctors.SearchDoctors;
@@ -21,6 +22,15 @@ public class DoctorsController : ControllerBase
     public DoctorsController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    [HttpGet("dashboard")]
+    [Authorize]
+    public async Task<IActionResult> GetDashboard(CancellationToken cancellationToken)
+    {
+        var userId = UserContext.GetRequiredUserId(User);
+        var result = await _mediator.Send(new GetDoctorDashboardQuery { UserId = userId }, cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet]
@@ -78,3 +88,4 @@ public class DoctorsController : ControllerBase
         return Ok(result);
     }
 }
+

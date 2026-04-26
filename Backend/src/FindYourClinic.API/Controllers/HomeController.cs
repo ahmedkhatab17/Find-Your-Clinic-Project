@@ -57,24 +57,37 @@ public class HomeController : ControllerBase
         var latestHeartRate = records.FirstOrDefault(x => x.Type == HealthRecordType.HeartRate);
         var latestBloodPressure = records.FirstOrDefault(x => x.Type == HealthRecordType.BloodPressure);
 
-        var topDoctors = await _dbContext.DoctorProfiles
+        var topDoctorsData = await _dbContext.DoctorProfiles
             .AsNoTracking()
-            .Include(x => x.User)
-            .Include(x => x.Specialty)
             .Where(x => x.Status == DoctorStatus.Approved && x.User.IsActive)
-            .Select(x => new TopDoctorDto(
+            .Select(x => new
+            {
                 x.UserId,
-                $"{x.User.FirstName} {x.User.LastName}".Trim(),
-                x.Specialty.Name,
-                Math.Round(_dbContext.DoctorReviews.Where(r => r.DoctorProfileId == x.Id).Select(r => (double?)r.Rating).Average() ?? 0, 2),
-                _dbContext.DoctorReviews.Count(r => r.DoctorProfileId == x.Id),
+                x.User.FirstName,
+                x.User.LastName,
+                SpecialtyName = x.Specialty.Name,
+                RawRating = _dbContext.DoctorReviews.Where(r => r.DoctorProfileId == x.Id).Average(r => (double?)r.Rating) ?? 0,
+                ReviewsCount = _dbContext.DoctorReviews.Count(r => r.DoctorProfileId == x.Id),
                 x.ConsultationFee,
                 x.Latitude,
-                x.Longitude))
-            .OrderByDescending(x => x.Rating)
+                x.Longitude
+            })
+            .OrderByDescending(x => x.RawRating)
             .ThenBy(x => x.ConsultationFee)
             .Take(5)
             .ToListAsync(cancellationToken);
+
+        var topDoctors = topDoctorsData
+            .Select(x => new TopDoctorDto(
+                x.UserId,
+                $"{x.FirstName} {x.LastName}".Trim(),
+                x.SpecialtyName,
+                Math.Round(x.RawRating, 2),
+                x.ReviewsCount,
+                x.ConsultationFee,
+                x.Latitude,
+                x.Longitude))
+            .ToList();
 
         var specialties = await _dbContext.Specialties
             .AsNoTracking()

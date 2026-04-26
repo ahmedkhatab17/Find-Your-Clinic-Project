@@ -18,8 +18,8 @@ public class EmailService : IEmailService
 
     public Task SendPasswordResetEmailAsync(string toEmail, string resetLink)
     {
-        var body = $"Reset your password using this link: {resetLink}";
-        return SendEmailAsync(toEmail, "Reset Your Password", body);
+        var body = $"<p>Reset your password using this link:</p><p><a href=\"{resetLink}\">{resetLink}</a></p>";
+        return SendEmailAsync(toEmail, "Reset Your Password", body, true);
     }
 
     public Task SendDoctorApprovedEmailAsync(string toEmail, string doctorName)
@@ -34,13 +34,13 @@ public class EmailService : IEmailService
         return SendEmailAsync(toEmail, "Doctor Account Rejected", body);
     }
 
-    private async Task SendEmailAsync(string toEmail, string subject, string body)
+    private async Task SendEmailAsync(string toEmail, string subject, string body, bool isHtml = false)
     {
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(_settings.FromName, _settings.Username));
         message.To.Add(MailboxAddress.Parse(toEmail));
         message.Subject = subject;
-        message.Body = new TextPart("plain") { Text = body };
+        message.Body = new TextPart(isHtml ? "html" : "plain") { Text = body };
 
         using var client = new SmtpClient();
         client.ServerCertificateValidationCallback = (s, c, h, e) => true;

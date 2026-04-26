@@ -69,6 +69,7 @@ class ApiEndpoints {
 
   // ─── Home ───
   static const homeSummary = '/api/home/summary';
+  static const doctorDashboard = '/api/doctors/dashboard';
 
   // ─── Specialties ───
   static const specialties = '/api/specialties';

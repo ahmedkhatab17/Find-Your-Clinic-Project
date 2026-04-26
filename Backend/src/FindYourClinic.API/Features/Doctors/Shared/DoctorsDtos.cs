@@ -50,3 +50,37 @@ public sealed record TopRatedDoctorDto(
     double? Longitude);
 
 public sealed record CursorPaginatedResponse<T>(List<T> Items, string? NextCursor, bool HasNextPage);
+
+public sealed record DoctorDashboardDto(
+    DoctorQuickStatsDto QuickStats,
+    DoctorNextAppointmentDto? NextAppointment,
+    DoctorPerformanceDto Performance,
+    List<DoctorScheduleItemDto> TodaySchedule);
+
+public sealed record DoctorQuickStatsDto(
+    int TotalToday,
+    int Completed,
+    int Pending,
+    int Cancelled);
+
+public sealed record DoctorNextAppointmentDto(
+    Guid AppointmentId,
+    DateTime ScheduledAt,
+    string Status,
+    string? LocationName,
+    Guid PatientId,
+    string PatientName,
+    string? PatientImageUrl);
+
+public sealed record DoctorPerformanceDto(
+    int PatientsThisMonth,
+    double AverageRating,
+    int TotalReviews);
+
+public sealed record DoctorScheduleItemDto(
+    Guid AppointmentId,
+    DateTime ScheduledAt,
+    string Status,
+    Guid PatientId,
+    string PatientName,
+    string? PatientImageUrl);

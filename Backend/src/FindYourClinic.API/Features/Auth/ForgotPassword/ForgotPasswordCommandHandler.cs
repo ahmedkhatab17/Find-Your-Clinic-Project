@@ -46,8 +46,17 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            var baseUrl = _appSettings.FrontendBaseUrl.TrimEnd('/');
-            var resetLink = $"{baseUrl}/reset-password?token={Uri.EscapeDataString(token)}";
+            var baseUrl = _appSettings.FrontendBaseUrl;
+            var deepLink = baseUrl.EndsWith("://")
+                ? $"{baseUrl}reset-password?token={Uri.EscapeDataString(token)}"
+                : $"{baseUrl.TrimEnd('/')}/reset-password?token={Uri.EscapeDataString(token)}";
+
+            var resetLink = deepLink;
+            if (!string.IsNullOrWhiteSpace(_appSettings.ApiBaseUrl))
+            {
+                resetLink = $"{_appSettings.ApiBaseUrl.TrimEnd('/')}/api/auth/deep-link?url={Uri.EscapeDataString(deepLink)}";
+            }
+
             await _emailService.SendPasswordResetEmailAsync(user.Email ?? request.Email, resetLink);
         }
         Console.WriteLine("Email sent successfully");

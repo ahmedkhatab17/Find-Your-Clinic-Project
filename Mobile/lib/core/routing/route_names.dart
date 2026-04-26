@@ -31,4 +31,11 @@ class RouteNames {
   static const doctorChat = 'doctorChat';
   static const doctorInsights = 'doctorInsights';
   static const doctorProfile = 'doctorProfile';
+
+  // Discovery & Detail
+  static const search = 'search';
+  static const doctorDetails = 'doctorDetails';
+  static const nearbyClinics = 'nearbyClinics';
+  static const notifications = 'notifications';
 }
+

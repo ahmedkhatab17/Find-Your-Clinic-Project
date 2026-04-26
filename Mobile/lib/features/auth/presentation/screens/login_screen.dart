@@ -37,12 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocListener<AuthCubit, AuthState>(
         listener: _handleAuthState,
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildForm(),
-            ],
-          ),
+          child: Column(children: [_buildHeader(), _buildForm()]),
         ),
       ),
     );
@@ -86,9 +81,12 @@ class _LoginScreenState extends State<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-            Text('Login to Your Account',
-                style: AppTextStyles.heading3
-                    .copyWith(color: AppColors.textPrimary)),
+            Text(
+              'Login to Your Account',
+              style: AppTextStyles.heading3.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
             const SizedBox(height: 24),
 
             // Email
@@ -125,7 +123,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Password is required';
-                if (v.length < 8) return 'Password must be at least 8 characters';
+                if (v.length < 8)
+                  return 'Password must be at least 8 characters';
                 return null;
               },
             ),
@@ -144,7 +143,9 @@ class _LoginScreenState extends State<LoginScreen> {
             // Login Button
             BlocBuilder<AuthCubit, AuthState>(
               buildWhen: (prev, curr) =>
-                  curr is AuthLoading || curr is AuthError || curr is AuthSuccess,
+                  curr is AuthLoading ||
+                  curr is AuthError ||
+                  curr is AuthSuccess,
               builder: (context, state) {
                 return AppButton(
                   text: 'Login',
@@ -163,8 +164,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
                     'Or continue with',
-                    style: AppTextStyles.bodySm
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodySm.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
                 const Expanded(child: Divider()),
@@ -198,15 +200,17 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Text(
                   "Don't have an account? ",
-                  style: AppTextStyles.bodyMd
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 GestureDetector(
                   onTap: () => context.pushNamed(RouteNames.signUp),
                   child: Text(
                     'Sign Up',
-                    style: AppTextStyles.label
-                        .copyWith(color: AppColors.secondary),
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.secondary,
+                    ),
                   ),
                 ),
               ],
@@ -220,9 +224,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void _onLogin() {
     if (_formKey.currentState?.validate() ?? false) {
       context.read<AuthCubit>().login(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
     }
   }
 
@@ -262,7 +266,9 @@ class _LoginScreenState extends State<LoginScreen> {
               content: Text(message),
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           );
       default:

@@ -17,6 +17,20 @@ import '../../features/doctor_onboarding/presentation/cubits/onboarding_cubit.da
 import '../../features/doctor_onboarding/presentation/screens/doctor_document_upload_screen.dart';
 import '../../features/doctor_onboarding/presentation/screens/doctor_pending_screen.dart';
 
+// Phase 4 imports
+import '../../features/patient_home/presentation/cubits/patient_home_cubit.dart';
+import '../../features/patient_home/presentation/screens/patient_home_screen.dart';
+import '../../features/doctor_home/presentation/cubits/doctor_home_cubit.dart';
+import '../../features/doctor_home/presentation/screens/doctor_home_screen.dart';
+import '../../features/search/presentation/cubits/search_cubit.dart';
+import '../../features/search/presentation/screens/search_screen.dart';
+import '../../features/doctor_profile/presentation/cubits/doctor_profile_cubit.dart';
+import '../../features/doctor_profile/presentation/screens/doctor_profile_screen.dart';
+import '../../features/nearby_clinics/presentation/cubits/nearby_clinics_cubit.dart';
+import '../../features/nearby_clinics/presentation/screens/nearby_clinics_screen.dart';
+import '../../features/notifications/presentation/cubits/notifications_cubit.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
+
 part 'route_names.dart';
 
 /// Main app router with auth redirect and role-based shell navigation.
@@ -117,6 +131,46 @@ class AppRouter {
         ),
       ),
 
+      // ─── Discovery Routes (outside shells) ───
+      GoRoute(
+        path: '/search',
+        name: RouteNames.search,
+        builder: (context, state) {
+          final specialtyId = state.uri.queryParameters['specialtyId'];
+          return BlocProvider(
+            create: (_) => sl<SearchCubit>(),
+            child: SearchScreen(initialSpecialtyId: specialtyId),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/doctor-details/:id',
+        name: RouteNames.doctorDetails,
+        builder: (context, state) {
+          final doctorId = state.pathParameters['id']!;
+          return BlocProvider(
+            create: (_) => sl<DoctorProfileCubit>(),
+            child: DoctorProfileScreen(doctorId: doctorId),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/nearby-clinics',
+        name: RouteNames.nearbyClinics,
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<NearbyClinicsCubit>(),
+          child: const NearbyClinicsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: RouteNames.notifications,
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<NotificationsCubit>(),
+          child: const NotificationsScreen(),
+        ),
+      ),
+
       // ─── Patient Shell ───
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => _PatientShell(
@@ -127,8 +181,10 @@ class AppRouter {
             GoRoute(
               path: '/patient/home',
               name: RouteNames.patientHome,
-              builder: (context, state) =>
-                  const _PlaceholderScreen(title: 'Patient Home'),
+              builder: (context, state) => BlocProvider(
+                create: (_) => sl<PatientHomeCubit>(),
+                child: const PatientHomeScreen(),
+              ),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -176,8 +232,10 @@ class AppRouter {
             GoRoute(
               path: '/doctor/home',
               name: RouteNames.doctorHome,
-              builder: (context, state) =>
-                  const _PlaceholderScreen(title: 'Doctor Home'),
+              builder: (context, state) => BlocProvider(
+                create: (_) => sl<DoctorHomeCubit>(),
+                child: const DoctorHomeScreen(),
+              ),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -330,7 +388,7 @@ class _PlaceholderScreen extends StatelessWidget {
             Text(title, style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
-              'Signed in successfully!',
+              'Coming soon!',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Colors.grey[600],
                   ),

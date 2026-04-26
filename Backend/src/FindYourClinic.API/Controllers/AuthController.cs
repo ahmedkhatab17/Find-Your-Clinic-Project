@@ -91,4 +91,42 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
         return result.Success ? Ok(result) : Unauthorized(result);
     }
+
+    [HttpGet("deep-link")]
+    [AllowAnonymous]
+    public IActionResult DeepLinkRedirect([FromQuery] string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return BadRequest("URL is required.");
+        }
+
+        var html = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset=""utf-8"">
+                <title>Redirecting...</title>
+                <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
+                <style>
+                    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f8f9fa; color: #333; }}
+                    .container {{ text-align: center; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
+                    h1 {{ margin-top: 0; color: #0d6efd; }}
+                    p {{ margin-bottom: 1.5rem; }}
+                    .btn {{ display: inline-block; padding: 10px 20px; background-color: #0d6efd; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }}
+                </style>
+            </head>
+            <body>
+                <div class=""container"">
+                    <h1>Opening App...</h1>
+                    <p>If you are not automatically redirected, please click the button below.</p>
+                    <a href=""{url}"" class=""btn"">Open App</a>
+                </div>
+                <script>
+                    window.location.href = '{url}';
+                </script>
+            </body>
+            </html>";
+        return Content(html, "text/html");
+    }
 }
