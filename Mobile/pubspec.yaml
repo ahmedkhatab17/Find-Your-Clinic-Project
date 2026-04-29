@@ -71,3 +71,16 @@ flutter:
     - family: Inter
       fonts:
         - asset: assets/fonts/Inter-Variable.ttf
+
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  color_dark: "#000000"
+  image: "assets/icons/Icon-App.png"
+  image_dark: "assets/icons/Icon-App.png"
+  
+  android_12:
+    image: "assets/icons/Icon-App.png"
+    image_dark: "assets/icons/Icon-App.png"
+    color: "#FFFFFF"
+    color_dark: "#000000"

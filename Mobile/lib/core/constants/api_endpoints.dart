@@ -25,6 +25,7 @@ class ApiEndpoints {
   static const topRatedDoctors = '/api/doctors/top-rated';
   static String doctorDetails(String id) => '/api/doctors/$id';
   static String doctorAvailability(String id) => '/api/doctors/$id/availability';
+  static String doctorWeeklySchedule(String id) => '/api/doctors/$id/weekly-schedule';
   static const updateDoctorProfile = '/api/doctors/profile';
   static const doctorMyStatus = '/api/doctors/me/status';
 
@@ -43,6 +44,7 @@ class ApiEndpoints {
   static const appointments = '/api/appointments';
   static const myAppointments = '/api/appointments/my';
   static const doctorAppointments = '/api/appointments/doctor/my';
+  static String appointmentById(String id) => '/api/appointments/$id';
   static String cancelAppointment(String id) => '/api/appointments/$id/cancel';
   static String confirmAppointment(String id) => '/api/appointments/$id/confirm';
   static String completeAppointment(String id) => '/api/appointments/$id/complete';

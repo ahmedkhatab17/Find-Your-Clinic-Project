@@ -17,6 +17,8 @@ class ApiClient {
   final Dio dio;
   final TokenStorage _tokenStorage;
 
+  String get baseUrl => _baseUrl;
+
   ApiClient({required TokenStorage tokenStorage})
       : _tokenStorage = tokenStorage,
         dio = Dio(

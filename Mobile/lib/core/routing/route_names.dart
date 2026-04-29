@@ -27,6 +27,7 @@ class RouteNames {
 
   // Doctor Shell
   static const doctorHome = 'doctorHome';
+  static const manageAvailability = 'manageAvailability';
   static const doctorAppointments = 'doctorAppointments';
   static const doctorChat = 'doctorChat';
   static const doctorInsights = 'doctorInsights';
@@ -37,5 +38,22 @@ class RouteNames {
   static const doctorDetails = 'doctorDetails';
   static const nearbyClinics = 'nearbyClinics';
   static const notifications = 'notifications';
+
+  // Chat
+  static const chatDetail = 'chatDetail';
+
+  // Appointments
+  static const bookAppointment = 'bookAppointment';
+  static const appointmentDetail = 'appointmentDetail';
+
+  // Health Records
+  static const healthRecordDetail = 'healthRecordDetail';
+  static const addHealthRecord = 'addHealthRecord';
+
+  // Patient Profile
+  static const patientProfileEdit = 'patientProfileEdit';
+
+  // Settings
+  static const settings = 'settings';
 }
 

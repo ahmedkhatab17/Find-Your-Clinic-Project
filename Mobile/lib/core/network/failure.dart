@@ -13,17 +13,21 @@ class ServerFailure extends Failure {
 
 /// No internet connection or request timed out.
 class NetworkFailure extends Failure {
-  const NetworkFailure([super.message = 'No internet connection. Please check your network.']);
+  const NetworkFailure([
+    super.message = 'No internet connection. Please check your network.',
+  ]);
 }
 
 /// Token expired or invalid — user needs to re-authenticate.
 class AuthFailure extends Failure {
-  const AuthFailure([super.message = 'Session expired. Please login again.']);
+  const AuthFailure([super.message = 'Invalid email or password.']);
 }
 
 /// Resource not found (404).
 class NotFoundFailure extends Failure {
-  const NotFoundFailure([super.message = 'The requested resource was not found.']);
+  const NotFoundFailure([
+    super.message = 'The requested resource was not found.',
+  ]);
 }
 
 /// Validation errors from the server or client.
@@ -34,5 +38,7 @@ class ValidationFailure extends Failure {
 
 /// Unknown or unexpected error.
 class UnknownFailure extends Failure {
-  const UnknownFailure([super.message = 'Something went wrong. Please try again.']);
+  const UnknownFailure([
+    super.message = 'Something went wrong. Please try again.',
+  ]);
 }

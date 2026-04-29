@@ -26,6 +26,7 @@ import '../../features/doctor_home/data/repos/doctor_dashboard_repository_impl.d
 import '../../features/doctor_home/domain/repos/doctor_dashboard_repository.dart';
 import '../../features/doctor_home/domain/usecases/get_doctor_dashboard_usecase.dart';
 import '../../features/doctor_home/presentation/cubits/doctor_home_cubit.dart';
+import '../../features/doctor_home/presentation/cubits/insights_cubit.dart';
 
 // Search
 import '../../features/search/data/repos/doctor_search_repository_impl.dart';
@@ -38,6 +39,8 @@ import '../../features/doctor_profile/data/repos/doctor_profile_repository_impl.
 import '../../features/doctor_profile/domain/repos/doctor_profile_repository.dart';
 import '../../features/doctor_profile/domain/usecases/doctor_profile_usecases.dart';
 import '../../features/doctor_profile/presentation/cubits/doctor_profile_cubit.dart';
+import '../../features/doctor_profile/presentation/cubits/doctor_shell_profile_cubit.dart';
+import '../../features/doctor_profile/presentation/cubits/edit_doctor_profile_cubit.dart';
 
 // Nearby Clinics
 import '../../features/nearby_clinics/presentation/cubits/nearby_clinics_cubit.dart';
@@ -46,7 +49,46 @@ import '../../features/nearby_clinics/presentation/cubits/nearby_clinics_cubit.d
 import '../../features/notifications/data/repos/notification_repository_impl.dart';
 import '../../features/notifications/domain/repos/notification_repository.dart';
 import '../../features/notifications/domain/usecases/notification_usecases.dart';
+import '../../features/notifications/presentation/cubits/notification_badge_cubit.dart';
 import '../../features/notifications/presentation/cubits/notifications_cubit.dart';
+
+// Appointments
+import '../../features/appointments/data/repos/appointment_repository_impl.dart';
+import '../../features/appointments/domain/repos/appointment_repository.dart';
+import '../../features/appointments/domain/usecases/appointment_usecases.dart';
+import '../../features/appointments/presentation/cubits/appointment_cubit.dart';
+import '../../features/appointments/presentation/cubits/booking_cubit.dart';
+
+// Chat
+import '../../features/chat/data/datasources/chat_remote_datasource.dart';
+import '../../features/chat/data/datasources/chat_signalr_datasource.dart';
+import '../../features/chat/data/repositories/chat_repository_impl.dart';
+import '../../features/chat/domain/repositories/i_chat_repository.dart';
+import '../../features/chat/domain/usecases/get_conversations_usecase.dart';
+import '../../features/chat/domain/usecases/get_messages_usecase.dart';
+import '../../features/chat/domain/usecases/mark_conversation_as_read_usecase.dart';
+import '../../features/chat/domain/usecases/send_message_usecase.dart';
+import '../../features/chat/domain/usecases/start_conversation_usecase.dart';
+import '../../features/chat/presentation/cubit/chat_cubit.dart';
+import '../../features/chat/presentation/cubit/conversations_cubit.dart';
+
+import '../../features/doctor_availability/data/datasources/doctor_availability_remote_datasource.dart';
+import '../../features/doctor_availability/data/repos/doctor_availability_repository_impl.dart';
+import '../../features/doctor_availability/domain/repos/doctor_availability_repository.dart';
+import '../../features/doctor_availability/domain/usecases/manage_availability_usecases.dart';
+import '../../features/doctor_availability/presentation/cubits/manage_availability_cubit.dart';
+
+// Patient Profile
+import '../../features/patient_profile/data/repos/patient_profile_repository_impl.dart';
+import '../../features/patient_profile/domain/repos/patient_profile_repository.dart';
+import '../../features/patient_profile/domain/usecases/patient_profile_usecases.dart';
+import '../../features/patient_profile/presentation/cubits/patient_profile_cubit.dart';
+
+// Health Records
+import '../../features/health_records/data/repos/health_record_repository_impl.dart';
+import '../../features/health_records/domain/repos/health_record_repository.dart';
+import '../../features/health_records/domain/usecases/health_record_usecases.dart';
+import '../../features/health_records/presentation/cubits/health_record_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -79,11 +121,26 @@ Future<void> initServiceLocator() async {
   // ─── Doctor Profile Feature ───
   _initDoctorProfile();
 
+  // ─── Doctor Availability Feature ───
+  _initDoctorAvailability();
+
   // ─── Nearby Clinics Feature ───
   _initNearbyClinics();
 
   // ─── Notifications Feature ───
   _initNotifications();
+
+  // ─── Appointments Feature ───
+  _initAppointments();
+
+  // ─── Chat Feature ───
+  _initChat();
+
+  // ─── Patient Profile Feature ───
+  _initPatientProfile();
+
+  // ─── Health Records Feature ───
+  _initHealthRecords();
 }
 
 void _initAuth() {
@@ -151,19 +208,19 @@ void _initDoctorHome() {
     () => DoctorDashboardRepositoryImpl(apiClient: sl<ApiClient>()),
   );
   sl.registerFactory(
-      () => GetDoctorDashboardUseCase(sl<DoctorDashboardRepository>()));
-  sl.registerFactory(
-    () => DoctorHomeCubit(
-        getDashboardUseCase: sl<GetDoctorDashboardUseCase>()),
+    () => GetDoctorDashboardUseCase(sl<DoctorDashboardRepository>()),
   );
+  sl.registerFactory(
+    () => DoctorHomeCubit(getDashboardUseCase: sl<GetDoctorDashboardUseCase>()),
+  );
+  sl.registerFactory(() => InsightsCubit(sl<GetDoctorDashboardUseCase>()));
 }
 
 void _initSearch() {
   sl.registerLazySingleton<DoctorSearchRepository>(
     () => DoctorSearchRepositoryImpl(apiClient: sl<ApiClient>()),
   );
-  sl.registerFactory(
-      () => SearchDoctorsUseCase(sl<DoctorSearchRepository>()));
+  sl.registerFactory(() => SearchDoctorsUseCase(sl<DoctorSearchRepository>()));
   sl.registerFactory(
     () => SearchCubit(searchDoctorsUseCase: sl<SearchDoctorsUseCase>()),
   );
@@ -174,16 +231,38 @@ void _initDoctorProfile() {
     () => DoctorProfileRepositoryImpl(apiClient: sl<ApiClient>()),
   );
   sl.registerFactory(
-      () => GetDoctorDetailsUseCase(sl<DoctorProfileRepository>()));
+    () => GetDoctorDetailsUseCase(sl<DoctorProfileRepository>()),
+  );
   sl.registerFactory(
-      () => GetDoctorReviewsUseCase(sl<DoctorProfileRepository>()));
+    () => GetDoctorReviewsUseCase(sl<DoctorProfileRepository>()),
+  );
   sl.registerFactory(
-      () => GetDoctorAvailabilityUseCase(sl<DoctorProfileRepository>()));
+    () => GetDoctorAvailabilityUseCase(sl<DoctorProfileRepository>()),
+  );
+  sl.registerFactory(
+    () => AddReviewUseCase(sl<DoctorProfileRepository>()),
+  );
+  sl.registerFactory(
+    () => UpdateDoctorProfileUseCase(sl<DoctorProfileRepository>()),
+  );
+  sl.registerFactory(
+    () => EditDoctorProfileCubit(
+      getDetails: sl<GetDoctorDetailsUseCase>(),
+      updateProfile: sl<UpdateDoctorProfileUseCase>(),
+    ),
+  );
   sl.registerFactory(
     () => DoctorProfileCubit(
       getDetailsUseCase: sl<GetDoctorDetailsUseCase>(),
       getReviewsUseCase: sl<GetDoctorReviewsUseCase>(),
       getAvailabilityUseCase: sl<GetDoctorAvailabilityUseCase>(),
+      addReviewUseCase: sl<AddReviewUseCase>(),
+    ),
+  );
+  sl.registerFactory(
+    () => DoctorShellProfileCubit(
+      getProfile: sl<GetPatientProfileUseCase>(),
+      getDashboard: sl<GetDoctorDashboardUseCase>(),
     ),
   );
 }
@@ -191,8 +270,7 @@ void _initDoctorProfile() {
 void _initNearbyClinics() {
   // Reuses SearchDoctorsUseCase from _initSearch
   sl.registerFactory(
-    () => NearbyClinicsCubit(
-        searchDoctorsUseCase: sl<SearchDoctorsUseCase>()),
+    () => NearbyClinicsCubit(searchDoctorsUseCase: sl<SearchDoctorsUseCase>()),
   );
 }
 
@@ -201,13 +279,180 @@ void _initNotifications() {
     () => NotificationRepositoryImpl(apiClient: sl<ApiClient>()),
   );
   sl.registerFactory(
-      () => GetNotificationsUseCase(sl<NotificationRepository>()));
+    () => GetNotificationsUseCase(sl<NotificationRepository>()),
+  );
   sl.registerFactory(
-      () => MarkNotificationReadUseCase(sl<NotificationRepository>()));
+    () => GetUnreadNotificationCountUseCase(sl<NotificationRepository>()),
+  );
+  sl.registerFactory(
+    () => MarkNotificationReadUseCase(sl<NotificationRepository>()),
+  );
+  sl.registerFactory(
+    () => RegisterDeviceTokenUseCase(sl<NotificationRepository>()),
+  );
   sl.registerFactory(
     () => NotificationsCubit(
       getNotificationsUseCase: sl<GetNotificationsUseCase>(),
       markReadUseCase: sl<MarkNotificationReadUseCase>(),
+    ),
+  );
+  sl.registerLazySingleton<NotificationBadgeCubit>(
+    () => NotificationBadgeCubit(
+      getUnreadCountUseCase: sl<GetUnreadNotificationCountUseCase>(),
+    ),
+  );
+}
+
+void _initAppointments() {
+  // Repository
+  sl.registerLazySingleton<AppointmentRepository>(
+    () => AppointmentRepositoryImpl(apiClient: sl<ApiClient>()),
+  );
+
+  // Use Cases
+  sl.registerFactory(() => BookAppointmentUseCase(sl<AppointmentRepository>()));
+  sl.registerFactory(
+    () => GetPatientAppointmentsUseCase(sl<AppointmentRepository>()),
+  );
+  sl.registerFactory(
+    () => GetDoctorAppointmentsUseCase(sl<AppointmentRepository>()),
+  );
+  sl.registerFactory(
+    () => GetAppointmentByIdUseCase(sl<AppointmentRepository>()),
+  );
+  sl.registerFactory(
+    () => GetAvailableSlotsUseCase(sl<AppointmentRepository>()),
+  );
+  sl.registerFactory(
+    () => CancelAppointmentUseCase(sl<AppointmentRepository>()),
+  );
+  sl.registerFactory(
+    () => ConfirmAppointmentUseCase(sl<AppointmentRepository>()),
+  );
+  sl.registerFactory(
+    () => CompleteAppointmentUseCase(sl<AppointmentRepository>()),
+  );
+
+  // Cubits
+  sl.registerFactory(
+    () => AppointmentCubit(
+      getPatientAppointmentsUseCase: sl<GetPatientAppointmentsUseCase>(),
+      getDoctorAppointmentsUseCase: sl<GetDoctorAppointmentsUseCase>(),
+      getAppointmentByIdUseCase: sl<GetAppointmentByIdUseCase>(),
+      cancelAppointmentUseCase: sl<CancelAppointmentUseCase>(),
+      confirmAppointmentUseCase: sl<ConfirmAppointmentUseCase>(),
+      completeAppointmentUseCase: sl<CompleteAppointmentUseCase>(),
+    ),
+  );
+  sl.registerFactory(
+    () => BookingCubit(
+      getAvailableSlotsUseCase: sl<GetAvailableSlotsUseCase>(),
+      bookAppointmentUseCase: sl<BookAppointmentUseCase>(),
+    ),
+  );
+}
+
+void _initChat() {
+  // Data Sources
+  sl.registerLazySingleton<ChatRemoteDataSource>(
+    () => ChatRemoteDataSourceImpl(sl<ApiClient>()),
+  );
+  sl.registerLazySingleton<ChatSignalRDataSource>(
+    () => ChatSignalRDataSourceImpl(sl<TokenStorage>(), sl<ApiClient>().baseUrl),
+  );
+
+  // Repository
+  sl.registerLazySingleton<IChatRepository>(
+    () => ChatRepositoryImpl(
+      sl<ChatRemoteDataSource>(),
+      sl<ChatSignalRDataSource>(),
+    ),
+  );
+
+  // Use Cases
+  sl.registerFactory(() => GetConversationsUseCase(sl<IChatRepository>()));
+  sl.registerFactory(() => GetMessagesUseCase(sl<IChatRepository>()));
+  sl.registerFactory(() => StartConversationUseCase(sl<IChatRepository>()));
+  sl.registerFactory(() => SendMessageUseCase(sl<IChatRepository>()));
+  sl.registerFactory(
+    () => MarkConversationAsReadUseCase(sl<IChatRepository>()),
+  );
+
+  // Cubits
+  sl.registerFactory(
+    () => ConversationsCubit(
+      sl<GetConversationsUseCase>(),
+      sl<IChatRepository>(),
+    ),
+  );
+
+  sl.registerFactoryParam<ChatCubit, String, dynamic>(
+    (conversationId, _) => ChatCubit(
+      conversationId: conversationId,
+      getMessagesUseCase: sl<GetMessagesUseCase>(),
+      sendMessageUseCase: sl<SendMessageUseCase>(),
+      markConversationAsReadUseCase: sl<MarkConversationAsReadUseCase>(),
+      chatRepository: sl<IChatRepository>(),
+    ),
+  );
+}
+
+void _initDoctorAvailability() {
+  sl.registerLazySingleton<DoctorAvailabilityRemoteDataSource>(
+    () => DoctorAvailabilityRemoteDataSourceImpl(apiClient: sl()),
+  );
+  sl.registerLazySingleton<DoctorAvailabilityRepository>(
+    () => DoctorAvailabilityRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton<GetMyAvailabilityUseCase>(
+      () => GetMyAvailabilityUseCase(sl<DoctorAvailabilityRepository>()));
+  sl.registerLazySingleton<AddAvailabilityUseCase>(
+      () => AddAvailabilityUseCase(sl<DoctorAvailabilityRepository>()));
+  sl.registerLazySingleton<RemoveAvailabilityUseCase>(
+      () => RemoveAvailabilityUseCase(sl<DoctorAvailabilityRepository>()));
+  sl.registerFactory<ManageAvailabilityCubit>(
+    () => ManageAvailabilityCubit(
+      getMyAvailabilityUseCase: sl<GetMyAvailabilityUseCase>(),
+      addAvailabilityUseCase: sl<AddAvailabilityUseCase>(),
+      removeAvailabilityUseCase: sl<RemoveAvailabilityUseCase>(),
+    ),
+  );
+}
+
+void _initPatientProfile() {
+  sl.registerLazySingleton<PatientProfileRepository>(
+    () => PatientProfileRepositoryImpl(apiClient: sl<ApiClient>()),
+  );
+  sl.registerFactory(() => GetPatientProfileUseCase(sl<PatientProfileRepository>()));
+  sl.registerFactory(
+    () => UpdatePatientProfileUseCase(sl<PatientProfileRepository>()),
+  );
+  sl.registerFactory(
+    () => PatientProfileCubit(
+      getProfile: sl<GetPatientProfileUseCase>(),
+      updateProfile: sl<UpdatePatientProfileUseCase>(),
+    ),
+  );
+}
+
+void _initHealthRecords() {
+  sl.registerLazySingleton<HealthRecordRepository>(
+    () => HealthRecordRepositoryImpl(apiClient: sl<ApiClient>()),
+  );
+  sl.registerFactory(() => GetHealthRecordsUseCase(sl<HealthRecordRepository>()));
+  sl.registerFactory(() => GetHealthRecordByIdUseCase(sl<HealthRecordRepository>()));
+  sl.registerFactory(() => GetHealthSummaryUseCase(sl<HealthRecordRepository>()));
+  sl.registerFactory(() => CreateHealthRecordUseCase(sl<HealthRecordRepository>()));
+  sl.registerFactory(() => UpdateHealthRecordUseCase(sl<HealthRecordRepository>()));
+  sl.registerFactory(() => DeleteHealthRecordUseCase(sl<HealthRecordRepository>()));
+  sl.registerFactory(
+    () => HealthRecordCubit(
+      getRecordsUseCase: sl<GetHealthRecordsUseCase>(),
+      getByIdUseCase: sl<GetHealthRecordByIdUseCase>(),
+      getSummaryUseCase: sl<GetHealthSummaryUseCase>(),
+      createUseCase: sl<CreateHealthRecordUseCase>(),
+      updateUseCase: sl<UpdateHealthRecordUseCase>(),
+      deleteUseCase: sl<DeleteHealthRecordUseCase>(),
     ),
   );
 }

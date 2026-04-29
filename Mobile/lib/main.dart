@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app.dart';
 import 'core/di/service_locator.dart';
+import 'core/notifications/push_notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -9,8 +10,8 @@ void main() async {
   // Initialize dependency injection.
   await initServiceLocator();
 
-  // Firebase will be initialized in Phase 9.
-  // await Firebase.initializeApp();
+  // Initialize Push Notifications (Firebase)
+  await PushNotificationService.init();
 
   runApp(const FindYourClinicApp());
 }
