@@ -121,85 +121,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Specialty Dropdown (Doctor only)
-            if (_selectedRole == 'Doctor') ...[
-              Text('Specialty', style: AppTextStyles.label),
-              const SizedBox(height: 8),
-              BlocBuilder<SpecialtyCubit, SpecialtyState>(
-                builder: (context, specialtyState) {
-                  final isLoading = specialtyState is SpecialtyLoading;
-                  final items = specialtyState is SpecialtyLoaded
-                      ? specialtyState.specialties
-                      : <dynamic>[];
-
-                  return DropdownButtonFormField<String>(
-                    value: _selectedSpecialtyId,
-                    decoration: InputDecoration(
-                      hintText: isLoading ? 'Loading...' : 'Select Specialty',
-                      prefixIcon: const Icon(
-                          Icons.local_hospital_outlined,
-                          size: 20),
-                      filled: true,
-                      fillColor: AppColors.surface,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.divider),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.divider),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: AppColors.primary, width: 2),
-                      ),
-                    ),
-                    items: items
-                        .map((s) => DropdownMenuItem<String>(
-                              value: s.id,
-                              child: Text(s.name),
-                            ))
-                        .toList(),
-                    onChanged: isLoading
-                        ? null
-                        : (value) =>
-                            setState(() => _selectedSpecialtyId = value),
-                    validator: (v) => v == null ? 'Required' : null,
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-
-              // Doctor info banner
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  border: Border.all(color: Colors.orange.shade200),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.info_outline,
-                        color: Colors.orange.shade700, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Next step: Upload your medical license and certificates for verification (24–48 hours).',
-                        style: AppTextStyles.bodyMd.copyWith(
-                          color: Colors.orange.shade800,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-
+            
             // Name fields
             Row(
               children: [
@@ -296,6 +218,91 @@ class _SignUpScreenState extends State<SignUpScreen> {
               },
             ),
             const SizedBox(height: 20),
+            // Specialty Dropdown (Doctor only)
+            if (_selectedRole == 'Doctor') ...[
+              Text('Specialty', style: AppTextStyles.label),
+              const SizedBox(height: 8),
+              BlocBuilder<SpecialtyCubit, SpecialtyState>(
+                builder: (context, specialtyState) {
+                  final isLoading = specialtyState is SpecialtyLoading;
+                  final items = specialtyState is SpecialtyLoaded
+                      ? specialtyState.specialties
+                      : <dynamic>[];
+
+                  final dropdownColor = Theme.of(context).inputDecorationTheme.fillColor;
+
+                  return FormField<String>(
+                    initialValue: _selectedSpecialtyId,
+                    validator: (v) => v == null ? 'Required' : null,
+                    builder: (FormFieldState<String> state) {
+                      return InputDecorator(
+                        decoration: InputDecoration(
+                          hintText: isLoading ? 'Loading...' : 'Select Specialty',
+                          prefixIcon: const Icon(Icons.local_hospital_outlined, size: 20),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                          errorText: state.errorText,
+                        ),
+                        isEmpty: _selectedSpecialtyId == null,
+                        child: DropdownButtonHideUnderline(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: DropdownButton<String>(
+                              value: _selectedSpecialtyId,
+                              dropdownColor: dropdownColor,
+                              borderRadius: BorderRadius.circular(12),
+                              isExpanded: true,
+                              icon: const Icon(Icons.arrow_drop_down, size: 24),
+                              items: items
+                                  .map((s) => DropdownMenuItem<String>(
+                                        value: s.id,
+                                        child: Text(s.name),
+                                      ))
+                                  .toList(),
+                              onChanged: isLoading
+                                  ? null
+                                  : (value) {
+                                      setState(() => _selectedSpecialtyId = value);
+                                      state.didChange(value);
+                                    },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+
+              // Doctor info banner
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  border: Border.all(color: Colors.orange.shade200),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline,
+                        color: Colors.orange.shade700, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Next step: Upload your medical license and certificates for verification (24–48 hours).',
+                        style: AppTextStyles.bodyMd.copyWith(
+                          color: Colors.orange.shade800,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
 
             // Terms & Conditions checkbox
             Row(

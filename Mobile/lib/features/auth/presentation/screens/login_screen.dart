@@ -123,8 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Password is required';
-                if (v.length < 8)
+                if (v.length < 8) {
                   return 'Password must be at least 8 characters';
+                }
                 return null;
               },
             ),
@@ -237,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final auth = await googleUser.authentication;
       final idToken = auth.idToken;
       if (idToken == null) return;
-      if (!mounted) return;
+      if (!mounted) { return; }
       context.read<AuthCubit>().googleLogin(idToken: idToken);
     } catch (_) {
       // Google sign-in cancelled or failed.
@@ -247,16 +248,29 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleAuthState(BuildContext context, AuthState state) {
     switch (state) {
       case AuthSuccess(:final result):
-        final route = result.user.isDoctor
-            ? RouteNames.doctorHome
-            : RouteNames.patientHome;
-        context.goNamed(route);
+        if (result.user.isDoctor) {
+          context.read<AuthCubit>().getDoctorStatus();
+        } else {
+          context.goNamed(RouteNames.patientHome);
+        }
+      case AuthDoctorStatusLoaded(:final result):
+        if (result.isApproved) {
+          context.goNamed(RouteNames.doctorHome);
+        } else if (result.isRejected) {
+          context.goNamed(
+            RouteNames.doctorRejected,
+            extra: result.rejectionReason,
+          );
+        } else {
+          context.goNamed(RouteNames.doctorPending);
+        }
       case AuthGoogleResult(:final result):
         if (result.authResult != null) {
-          final route = result.authResult!.user.isDoctor
-              ? RouteNames.doctorHome
-              : RouteNames.patientHome;
-          context.goNamed(route);
+          if (result.authResult!.user.isDoctor) {
+            context.read<AuthCubit>().getDoctorStatus();
+          } else {
+            context.goNamed(RouteNames.patientHome);
+          }
         }
       case AuthError(:final message):
         ScaffoldMessenger.of(context)
