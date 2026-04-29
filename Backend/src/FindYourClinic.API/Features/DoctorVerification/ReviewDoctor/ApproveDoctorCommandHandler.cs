@@ -7,6 +7,7 @@ using FindYourClinic.Domain.Services;
 using FindYourClinic.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FindYourClinic.API.Features.DoctorVerification.ReviewDoctor;
 
@@ -15,15 +16,18 @@ public class ApproveDoctorCommandHandler : IRequestHandler<ApproveDoctorCommand,
     private readonly ApplicationDbContext _dbContext;
     private readonly IEmailService _emailService;
     private readonly INotificationService _notificationService;
+    private readonly ILogger<ApproveDoctorCommandHandler> _logger;
 
     public ApproveDoctorCommandHandler(
         ApplicationDbContext dbContext,
         IEmailService emailService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ILogger<ApproveDoctorCommandHandler> logger)
     {
         _dbContext = dbContext;
         _emailService = emailService;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<object>> Handle(ApproveDoctorCommand request, CancellationToken cancellationToken)
@@ -46,20 +50,34 @@ public class ApproveDoctorCommandHandler : IRequestHandler<ApproveDoctorCommand,
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        await _emailService.SendDoctorApprovedEmailAsync(
-            doctorProfile.User.Email ?? string.Empty,
-            $"{doctorProfile.User.FirstName} {doctorProfile.User.LastName}".Trim());
+        try
+        {
+            await _emailService.SendDoctorApprovedEmailAsync(
+                doctorProfile.User.Email ?? string.Empty,
+                $"{doctorProfile.User.FirstName} {doctorProfile.User.LastName}".Trim());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send approval email to {UserId}", doctorProfile.UserId);
+        }
 
-        await _notificationService.SendToUserAsync(
-            doctorProfile.UserId,
-            "Account approved",
-            "Your doctor profile has been approved. You can now receive appointments.",
-            new Dictionary<string, string>
-            {
-                ["type"] = NotificationTypes.DoctorApproved,
-                ["referenceId"] = doctorProfile.Id.ToString()
-            },
-            cancellationToken);
+        try
+        {
+            await _notificationService.SendToUserAsync(
+                doctorProfile.UserId,
+                "Account approved",
+                "Your doctor profile has been approved. You can now receive appointments.",
+                new Dictionary<string, string>
+                {
+                    ["type"] = NotificationTypes.DoctorApproved,
+                    ["referenceId"] = doctorProfile.Id.ToString()
+                },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send approval notification to {UserId}", doctorProfile.UserId);
+        }
 
         return ApiResponse<object>.Ok(null, "Doctor approved successfully.");
     }

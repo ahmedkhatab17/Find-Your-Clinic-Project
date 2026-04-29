@@ -65,6 +65,7 @@ public class HomeController : ControllerBase
                 x.UserId,
                 x.User.FirstName,
                 x.User.LastName,
+                x.User.ProfileImageUrl,
                 SpecialtyName = x.Specialty.Name,
                 RawRating = _dbContext.DoctorReviews.Where(r => r.DoctorProfileId == x.Id).Average(r => (double?)r.Rating) ?? 0,
                 ReviewsCount = _dbContext.DoctorReviews.Count(r => r.DoctorProfileId == x.Id),
@@ -86,7 +87,8 @@ public class HomeController : ControllerBase
                 x.ReviewsCount,
                 x.ConsultationFee,
                 x.Latitude,
-                x.Longitude))
+                x.Longitude,
+                x.ProfileImageUrl))
             .ToList();
 
         var specialties = await _dbContext.Specialties
@@ -133,7 +135,8 @@ public class HomeController : ControllerBase
         int ReviewsCount,
         decimal ConsultationFee,
         double? Latitude,
-        double? Longitude);
+        double? Longitude,
+        string? ProfileImageUrl);
 
     public sealed record SpecialtySummaryDto(Guid Id, string Name, string? IconUrl);
 }

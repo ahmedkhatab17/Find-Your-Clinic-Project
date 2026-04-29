@@ -33,6 +33,18 @@ public class DoctorAvailabilityController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetMyAvailability(CancellationToken cancellationToken)
+    {
+        var userId = UserContext.GetRequiredUserId(User);
+        var result = await _mediator.Send(new FindYourClinic.API.Features.DoctorAvailability.GetMyAvailability.GetMyAvailabilityQuery
+        {
+            UserId = userId
+        }, cancellationToken);
+        return Ok(result);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Create([FromBody] UpsertAvailabilityRequest request, CancellationToken cancellationToken)

@@ -177,6 +177,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
                 .HasForeignKey(x => x.PatientId)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => new { x.DoctorProfileId, x.CreatedAt });
+            entity.HasIndex(x => new { x.PatientId, x.DoctorProfileId }).IsUnique();
         });
 
         builder.Entity<Notification>(entity =>

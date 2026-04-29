@@ -7,6 +7,7 @@ using FindYourClinic.Domain.Services;
 using FindYourClinic.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FindYourClinic.API.Features.DoctorVerification.ReviewDoctor;
 
@@ -15,15 +16,18 @@ public class RejectDoctorCommandHandler : IRequestHandler<RejectDoctorCommand, A
     private readonly ApplicationDbContext _dbContext;
     private readonly IEmailService _emailService;
     private readonly INotificationService _notificationService;
+    private readonly ILogger<RejectDoctorCommandHandler> _logger;
 
     public RejectDoctorCommandHandler(
         ApplicationDbContext dbContext,
         IEmailService emailService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ILogger<RejectDoctorCommandHandler> logger)
     {
         _dbContext = dbContext;
         _emailService = emailService;
         _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<object>> Handle(RejectDoctorCommand request, CancellationToken cancellationToken)
@@ -46,21 +50,35 @@ public class RejectDoctorCommandHandler : IRequestHandler<RejectDoctorCommand, A
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        await _emailService.SendDoctorRejectedEmailAsync(
-            doctorProfile.User.Email ?? string.Empty,
-            $"{doctorProfile.User.FirstName} {doctorProfile.User.LastName}".Trim(),
-            request.Reason);
+        try
+        {
+            await _emailService.SendDoctorRejectedEmailAsync(
+                doctorProfile.User.Email ?? string.Empty,
+                $"{doctorProfile.User.FirstName} {doctorProfile.User.LastName}".Trim(),
+                request.Reason);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send rejection email to {UserId}", doctorProfile.UserId);
+        }
 
-        await _notificationService.SendToUserAsync(
-            doctorProfile.UserId,
-            "Account review result",
-            "Your doctor profile was rejected. Please check the rejection reason and resubmit.",
-            new Dictionary<string, string>
-            {
-                ["type"] = NotificationTypes.DoctorRejected,
-                ["referenceId"] = doctorProfile.Id.ToString()
-            },
-            cancellationToken);
+        try
+        {
+            await _notificationService.SendToUserAsync(
+                doctorProfile.UserId,
+                "Account review result",
+                "Your doctor profile was rejected. Please check the rejection reason and resubmit.",
+                new Dictionary<string, string>
+                {
+                    ["type"] = NotificationTypes.DoctorRejected,
+                    ["referenceId"] = doctorProfile.Id.ToString()
+                },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send rejection notification to {UserId}", doctorProfile.UserId);
+        }
 
         return ApiResponse<object>.Ok(null, "Doctor rejected successfully.");
     }

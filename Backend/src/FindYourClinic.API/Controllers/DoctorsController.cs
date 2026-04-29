@@ -2,6 +2,7 @@ using FindYourClinic.API.Common;
 using FindYourClinic.API.Features.Doctors.GetDoctorAvailability;
 using FindYourClinic.API.Features.Doctors.GetDoctorById;
 using FindYourClinic.API.Features.Doctors.GetDoctorDashboard;
+using FindYourClinic.API.Features.Doctors.GetDoctorWeeklySchedule;
 using FindYourClinic.API.Features.Doctors.GetMyStatus;
 using FindYourClinic.API.Features.Doctors.GetTopRatedDoctors;
 using FindYourClinic.API.Features.Doctors.SearchDoctors;
@@ -66,6 +67,15 @@ public class DoctorsController : ControllerBase
             DoctorId = id,
             Date = date
         }, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/weekly-schedule")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetWeeklySchedule(
+        [FromRoute] Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetDoctorWeeklyScheduleQuery(id), cancellationToken);
         return Ok(result);
     }
 
