@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FindYourClinic.API.Features.Admin.GetUsers;
 
-public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, ApiResponse<List<UserDto>>>
+public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, ApiResponse<PagedUsersDto>>
 {
     private readonly ApplicationDbContext _dbContext;
 
@@ -14,11 +14,18 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, ApiResponse<L
         _dbContext = dbContext;
     }
 
-    public async Task<ApiResponse<List<UserDto>>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
+    public async Task<ApiResponse<PagedUsersDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
-        var users = await _dbContext.Users
-            .AsNoTracking()
-            .OrderByDescending(u => u.CreatedAt)
+        var page = Math.Max(1, request.Page);
+        var pageSize = Math.Clamp(request.PageSize, 1, 100);
+
+        var query = _dbContext.Users.AsNoTracking().OrderByDescending(u => u.CreatedAt);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var users = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(u => new UserDto
             {
                 Id = u.Id,
@@ -30,6 +37,6 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, ApiResponse<L
             })
             .ToListAsync(cancellationToken);
 
-        return ApiResponse<List<UserDto>>.Ok(users);
+        return ApiResponse<PagedUsersDto>.Ok(new PagedUsersDto(users, page, pageSize, totalCount));
     }
 }

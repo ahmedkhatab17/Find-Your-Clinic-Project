@@ -3,8 +3,10 @@ using MediatR;
 
 namespace FindYourClinic.API.Features.Admin.GetUsers;
 
-public class GetUsersQuery : IRequest<ApiResponse<List<UserDto>>>
+public class GetUsersQuery : IRequest<ApiResponse<PagedUsersDto>>
 {
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 20;
 }
 
 public class UserDto
@@ -16,3 +18,9 @@ public class UserDto
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+
+public sealed record PagedUsersDto(
+    List<UserDto> Items,
+    int Page,
+    int PageSize,
+    int TotalCount);

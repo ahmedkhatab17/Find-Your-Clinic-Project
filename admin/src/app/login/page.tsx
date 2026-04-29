@@ -26,7 +26,7 @@ export default function LoginPage() {
         localStorage.setItem('token', response.data.data.accessToken);
         router.push('/');
       } else {
-        setError('Login failed. Please check your credentials.');
+        setError('Invalid email or password');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'An error occurred during login.');

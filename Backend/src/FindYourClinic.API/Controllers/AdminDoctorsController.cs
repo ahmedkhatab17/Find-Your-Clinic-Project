@@ -1,5 +1,6 @@
 using FindYourClinic.API.Features.DoctorVerification.GetPendingDoctors;
 using FindYourClinic.API.Features.DoctorVerification.ReviewDoctor;
+using FindYourClinic.Domain.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -63,6 +64,42 @@ public class AdminDoctorsController : ControllerBase
 
         var result = await _mediator.Send(command);
         return Ok(result);
+    }
+
+    [HttpPost("{doctorId:guid}/request-availability")]
+    public async Task<IActionResult> RequestDoctorAvailability(
+        [FromRoute] Guid doctorId,
+        [FromServices] FindYourClinic.Infrastructure.Persistence.ApplicationDbContext dbContext,
+        [FromServices] INotificationService notificationService,
+        CancellationToken cancellationToken)
+    {
+        var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(adminId) || !Guid.TryParse(adminId, out _))
+        {
+            return Unauthorized();
+        }
+
+        var doctor = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(
+            dbContext.Users,
+            x => x.Id == doctorId && x.Role == FindYourClinic.Domain.Enums.UserRole.Doctor,
+            cancellationToken);
+
+        if (doctor == null)
+        {
+            return NotFound(FindYourClinic.Domain.Common.ApiResponse<object>.Fail("Doctor not found."));
+        }
+
+        await notificationService.SendToUserAsync(
+            doctorId,
+            "Availability Update Needed",
+            "Please update your schedule and add availability slots so patients can book appointments with you.",
+            new Dictionary<string, string>
+            {
+                ["type"] = "AvailabilityRequest"
+            },
+            cancellationToken);
+
+        return Ok(FindYourClinic.Domain.Common.ApiResponse<object>.Ok(null, "Availability request sent to doctor."));
     }
 }
 

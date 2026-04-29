@@ -18,9 +18,9 @@ public class AdminUsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUsers(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
     {
-        var result = await _mediator.Send(new GetUsersQuery(), cancellationToken);
+        var result = await _mediator.Send(new GetUsersQuery { Page = page, PageSize = pageSize }, cancellationToken);
         return Ok(result);
     }
 }

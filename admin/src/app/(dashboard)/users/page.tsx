@@ -25,6 +25,16 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
+  const requestAvailability = async (doctorId: string) => {
+    try {
+      await api.post(`/admin/doctors/${doctorId}/request-availability`);
+      alert('Availability request sent successfully.');
+    } catch (error) {
+      console.error('Error requesting availability:', error);
+      alert('Failed to send availability request.');
+    }
+  };
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch = 
       user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -80,16 +90,17 @@ export default function UsersPage() {
                 <th className="px-6 py-4">Role</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Joined Date</th>
+                <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400">Loading users...</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">Loading users...</td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400">No users found matching your search.</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400">No users found matching your search.</td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
@@ -117,6 +128,16 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {user.role === 'Doctor' && (
+                        <button
+                          onClick={() => requestAvailability(user.id)}
+                          className="px-3 py-1.5 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 rounded-lg text-xs font-medium transition-colors"
+                        >
+                          Request Availability
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
