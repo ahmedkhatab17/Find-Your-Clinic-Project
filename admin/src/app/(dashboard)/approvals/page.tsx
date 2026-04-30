@@ -1,36 +1,70 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { CheckCircle, XCircle, Power, FileText } from 'lucide-react';
 import api from '@/lib/api';
-import { CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import DocumentsDrawer from '@/components/DocumentsDrawer';
+
+type DoctorStatusFilter = 'All' | 'Pending' | 'Approved' | 'Rejected';
+
+interface Doctor {
+  doctorId: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  specialty: string;
+  status: string;
+  isActive: boolean;
+  reviewedAt: string | null;
+  rejectionReason: string | null;
+  documentUrls: string[];
+}
+
+const TABS: DoctorStatusFilter[] = ['All', 'Pending', 'Approved', 'Rejected'];
+
+const statusBadgeClass: Record<string, string> = {
+  PendingReview: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+  Approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  Rejected: 'bg-red-500/10 text-red-400 border-red-500/20',
+};
+
+const statusLabel: Record<string, string> = {
+  PendingReview: 'Pending Review',
+  Approved: 'Approved',
+  Rejected: 'Rejected',
+};
 
 export default function ApprovalsPage() {
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<DoctorStatusFilter>('Pending');
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [rejectionReason, setRejectionReason] = useState('');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
+  const [drawerUserId, setDrawerUserId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const fetchPendingDoctors = async () => {
+  const fetchDoctors = async (tab: DoctorStatusFilter) => {
+    setIsLoading(true);
     try {
-      const response = await api.get('/admin/doctors/pending');
-      setDoctors(response.data.data || []);
+      const params = tab !== 'All' ? `?status=${tab}` : '';
+      const response = await api.get(`/admin/doctors${params}`);
+      setDoctors(response.data.data ?? []);
     } catch (error) {
-      console.error('Error fetching pending doctors:', error);
+      console.error('Error fetching doctors:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPendingDoctors();
-  }, []);
+    fetchDoctors(activeTab);
+  }, [activeTab]);
 
   const handleApprove = async (id: string) => {
     try {
       await api.post(`/admin/doctors/${id}/approve`);
-      fetchPendingDoctors();
-    } catch (error) {
-      console.error('Error approving doctor:', error);
+      fetchDoctors(activeTab);
+    } catch {
       alert('Failed to approve doctor.');
     }
   };
@@ -44,97 +78,158 @@ export default function ApprovalsPage() {
       await api.post(`/admin/doctors/${id}/reject`, { reason: rejectionReason });
       setRejectionReason('');
       setSelectedDoctorId(null);
-      fetchPendingDoctors();
-    } catch (error) {
-      console.error('Error rejecting doctor:', error);
+      fetchDoctors(activeTab);
+    } catch {
       alert('Failed to reject doctor.');
     }
   };
 
-  if (isLoading) {
-    return <div className="p-8 text-white">Loading approvals...</div>;
-  }
+  const handleToggleActive = async (doctor: Doctor) => {
+    setTogglingId(doctor.doctorId);
+    try {
+      const response = await api.post(`/admin/doctors/${doctor.doctorId}/toggle-active`);
+      const newIsActive: boolean = response.data.data?.isActive ?? !doctor.isActive;
+      setDoctors((prev) =>
+        prev.map((d) => d.doctorId === doctor.doctorId ? { ...d, isActive: newIsActive } : d)
+      );
+    } catch {
+      alert('Failed to update doctor status.');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  const pendingCount = doctors.filter((d) => d.status === 'PendingReview').length;
 
   return (
     <div className="p-8 text-white">
-      <h1 className="text-3xl font-bold mb-8">Pending Approvals</h1>
+      <h1 className="text-3xl font-bold mb-8">Doctors Management</h1>
 
-      {doctors.length === 0 ? (
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b border-gray-800">
+        {TABS.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-5 py-2.5 text-sm font-medium rounded-t-lg transition-colors border-b-2 -mb-px ${
+              activeTab === tab
+                ? 'border-blue-500 text-blue-400 bg-blue-500/5'
+                : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800/50'
+            }`}
+          >
+            {tab}
+            {tab === 'Pending' && pendingCount > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                {pendingCount}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {isLoading ? (
+        <div className="text-gray-400 py-12">Loading doctors...</div>
+      ) : doctors.length === 0 ? (
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-12 text-center text-gray-400">
           <CheckCircle className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-          <h2 className="text-xl font-semibold mb-2">All caught up!</h2>
-          <p>There are no doctors pending approval at this time.</p>
+          <h2 className="text-xl font-semibold mb-2">
+            {activeTab === 'Pending' ? 'All caught up!' : `No ${activeTab.toLowerCase()} doctors.`}
+          </h2>
+          <p>
+            {activeTab === 'Pending'
+              ? 'There are no doctors pending approval at this time.'
+              : `No doctors with ${activeTab.toLowerCase()} status found.`}
+          </p>
         </div>
       ) : (
         <div className="grid gap-6">
           {doctors.map((doctor) => (
             <div key={doctor.doctorId} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col md:flex-row gap-6">
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-white mb-1">{doctor.fullName}</h3>
-                <p className="text-gray-400 mb-4">{doctor.specialty} • {doctor.email}</p>
-                
-                <h4 className="text-sm font-semibold text-gray-300 mb-2 mt-4">Uploaded Documents</h4>
-                <div className="flex flex-wrap gap-2">
-                  {doctor.documentUrls?.map((url: string, index: number) => (
-                    <a
-                      key={index}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-blue-400 transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Document {index + 1}
-                    </a>
-                  ))}
-                  {(!doctor.documentUrls || doctor.documentUrls.length === 0) && (
-                    <span className="text-sm text-gray-500">No documents uploaded</span>
-                  )}
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <h3 className="text-xl font-bold text-white">{doctor.fullName}</h3>
+                  <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium border ${statusBadgeClass[doctor.status] ?? 'bg-gray-700 text-gray-400 border-gray-600'}`}>
+                    {statusLabel[doctor.status] ?? doctor.status}
+                  </span>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${doctor.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-gray-700 text-gray-400 border-gray-600'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${doctor.isActive ? 'bg-emerald-400' : 'bg-gray-500'}`} />
+                    {doctor.isActive ? 'Active' : 'Inactive'}
+                  </span>
                 </div>
+                <p className="text-gray-400 mb-2">{doctor.specialty} · {doctor.email}</p>
+                {doctor.rejectionReason && (
+                  <p className="text-red-400 text-sm mt-1">Rejection reason: {doctor.rejectionReason}</p>
+                )}
               </div>
-              
+
               <div className="flex flex-col gap-3 min-w-[200px] border-t md:border-t-0 md:border-l border-gray-800 pt-4 md:pt-0 md:pl-6">
+                {/* Documents button — always shown */}
                 <button
-                  onClick={() => handleApprove(doctor.doctorId)}
-                  className="w-full bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white border border-emerald-500/20 font-medium py-2 px-4 rounded-xl transition-all flex items-center justify-center"
+                  onClick={() => setDrawerUserId(doctor.userId)}
+                  className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 font-medium py-2 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
                 >
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  Approve
+                  <FileText className="w-4 h-4" />
+                  Documents
                 </button>
-                
-                {selectedDoctorId === doctor.doctorId ? (
-                  <div className="space-y-3">
-                    <textarea
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder="Reason for rejection..."
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-red-500 h-20 resize-none"
-                    />
-                    <div className="flex gap-2">
+
+                {/* Per-status actions */}
+                {doctor.status === 'PendingReview' && (
+                  <>
+                    <button
+                      onClick={() => handleApprove(doctor.doctorId)}
+                      className="w-full bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white border border-emerald-500/20 font-medium py-2 px-4 rounded-xl transition-all flex items-center justify-center"
+                    >
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                      Approve
+                    </button>
+
+                    {selectedDoctorId === doctor.doctorId ? (
+                      <div className="space-y-3">
+                        <textarea
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          placeholder="Reason for rejection..."
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-red-500 h-20 resize-none"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleReject(doctor.doctorId)}
+                            className="flex-1 bg-red-500 text-white font-medium py-2 rounded-lg text-sm hover:bg-red-600 transition-colors"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => { setSelectedDoctorId(null); setRejectionReason(''); }}
+                            className="flex-1 bg-gray-700 text-white font-medium py-2 rounded-lg text-sm hover:bg-gray-600 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
                       <button
-                        onClick={() => handleReject(doctor.doctorId)}
-                        className="flex-1 bg-red-500 text-white font-medium py-2 rounded-lg text-sm hover:bg-red-600 transition-colors"
+                        onClick={() => setSelectedDoctorId(doctor.doctorId)}
+                        className="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 font-medium py-2 px-4 rounded-xl transition-all flex items-center justify-center"
                       >
-                        Confirm
+                        <XCircle className="w-5 h-5 mr-2" />
+                        Reject
                       </button>
-                      <button
-                        onClick={() => {
-                          setSelectedDoctorId(null);
-                          setRejectionReason('');
-                        }}
-                        className="flex-1 bg-gray-700 text-white font-medium py-2 rounded-lg text-sm hover:bg-gray-600 transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
+                    )}
+                  </>
+                )}
+
+                {(doctor.status === 'Approved' || doctor.status === 'Rejected') && (
                   <button
-                    onClick={() => setSelectedDoctorId(doctor.doctorId)}
-                    className="w-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 font-medium py-2 px-4 rounded-xl transition-all flex items-center justify-center"
+                    onClick={() => handleToggleActive(doctor)}
+                    disabled={togglingId === doctor.doctorId}
+                    className={`w-full font-medium py-2 px-4 rounded-xl transition-all flex items-center justify-center gap-2 border disabled:opacity-50 disabled:cursor-not-allowed ${
+                      doctor.isActive
+                        ? 'bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border-red-500/20'
+                        : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-white border-emerald-500/20'
+                    }`}
                   >
-                    <XCircle className="w-5 h-5 mr-2" />
-                    Reject
+                    <Power className="w-4 h-4" />
+                    {togglingId === doctor.doctorId ? 'Updating...' : doctor.isActive ? 'Deactivate' : 'Activate'}
                   </button>
                 )}
               </div>
@@ -142,6 +237,8 @@ export default function ApprovalsPage() {
           ))}
         </div>
       )}
+
+      <DocumentsDrawer userId={drawerUserId} onClose={() => setDrawerUserId(null)} />
     </div>
   );
 }
