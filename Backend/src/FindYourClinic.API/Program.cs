@@ -2,6 +2,7 @@ using FindYourClinic.API.Behaviors;
 using FindYourClinic.API.Features.Doctors.Shared;
 using FindYourClinic.API.Hubs;
 using FindYourClinic.API.Middleware;
+using FindYourClinic.API.Services;
 using FindYourClinic.Infrastructure;
 using FluentValidation;
 using MediatR;
@@ -18,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<IGeminiService, GeminiService>();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
 
