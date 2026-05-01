@@ -71,7 +71,7 @@
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>UIStatusBarHidden</key>
-		<false/>
+		<true/>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
@@ -85,5 +85,7 @@
 				</array>
 			</dict>
 		</array>
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false/>
 	</dict>
 </plist>
