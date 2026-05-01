@@ -145,7 +145,7 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                   ),
                   SliverToBoxAdapter(
                     child: SizedBox(
-                      height: 100,
+                      height: 120,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 20),

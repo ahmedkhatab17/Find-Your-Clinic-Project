@@ -1,3 +1,4 @@
+import '../../../../core/utils/date_utils.dart';
 import '../../domain/entities/home_entities.dart';
 
 /// JSON deserialization models for the home summary API response.
@@ -60,7 +61,7 @@ class UpcomingAppointmentModel {
   factory UpcomingAppointmentModel.fromJson(Map<String, dynamic> json) {
     return UpcomingAppointmentModel(
       appointmentId: json['appointmentId'],
-      scheduledAt: DateTime.parse(json['scheduledAt']),
+      scheduledAt: parseServerDateTime(json['scheduledAt']),
       status: json['status'],
       locationName: json['locationName'],
       doctorId: json['doctorId'],

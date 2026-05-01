@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/user_avatar.dart';
 import '../../domain/entities/home_entities.dart';
 
 class TopDoctorCard extends StatelessWidget {
@@ -34,10 +35,12 @@ class TopDoctorCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Avatar
-            CircleAvatar(
+            UserAvatar(
               radius: 30,
+              imageUrl: doctor.profileImageUrl,
+              fullName: doctor.fullName,
               backgroundColor: AppColors.primary.withAlpha(20),
-              child: const Icon(Icons.person, color: AppColors.primary, size: 32),
+              textStyle: AppTextStyles.heading3.copyWith(color: AppColors.primary),
             ),
             const SizedBox(height: 10),
             // Name
