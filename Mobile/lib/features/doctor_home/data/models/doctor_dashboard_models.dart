@@ -1,3 +1,4 @@
+import '../../../../core/utils/date_utils.dart';
 import '../../domain/entities/doctor_dashboard_entities.dart';
 
 /// JSON deserialization models for the doctor dashboard API.
@@ -88,7 +89,7 @@ class NextAppointmentModel {
   factory NextAppointmentModel.fromJson(Map<String, dynamic> json) {
     return NextAppointmentModel(
       appointmentId: json['appointmentId'],
-      scheduledAt: DateTime.parse(json['scheduledAt']),
+      scheduledAt: parseServerDateTime(json['scheduledAt']),
       status: json['status'],
       locationName: json['locationName'],
       patientId: json['patientId'],
@@ -154,7 +155,7 @@ class ScheduleItemModel {
   factory ScheduleItemModel.fromJson(Map<String, dynamic> json) {
     return ScheduleItemModel(
       appointmentId: json['appointmentId'],
-      scheduledAt: DateTime.parse(json['scheduledAt']),
+      scheduledAt: parseServerDateTime(json['scheduledAt']),
       status: json['status'],
       patientId: json['patientId'],
       patientName: json['patientName'],

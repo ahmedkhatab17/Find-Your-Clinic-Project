@@ -52,7 +52,7 @@ class DoctorInsightsScreen extends StatelessWidget {
                     crossAxisCount: 4,
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
-                    childAspectRatio: 0.85,
+                    childAspectRatio: 0.72,
                     children: [
                       StatCard(
                         label: 'Total',
@@ -127,7 +127,7 @@ class DoctorInsightsScreen extends StatelessWidget {
                 if (dashboard.todaySchedule.isEmpty)
                   const SliverToBoxAdapter(
                     child: SizedBox(
-                      height: 160,
+                      height: 260,
                       child: EmptyStateView(
                         icon: Icons.event_available,
                         title: 'No Appointments Today',

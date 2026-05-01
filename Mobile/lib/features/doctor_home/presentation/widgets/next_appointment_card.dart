@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/user_avatar.dart';
 import '../../domain/entities/doctor_dashboard_entities.dart';
 
 class DoctorNextAppointmentCard extends StatelessWidget {
@@ -31,10 +32,12 @@ class DoctorNextAppointmentCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          UserAvatar(
             radius: 24,
+            imageUrl: appointment.patientImageUrl,
+            fullName: appointment.patientName,
             backgroundColor: AppColors.secondary.withAlpha(20),
-            child: const Icon(Icons.person, color: AppColors.secondary),
+            textStyle: AppTextStyles.label.copyWith(color: AppColors.secondary),
           ),
           const SizedBox(width: 14),
           Expanded(
