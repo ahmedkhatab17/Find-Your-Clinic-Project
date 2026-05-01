@@ -14,6 +14,14 @@ public class ApplicationUser : AuditableIdentityUser
     public DateTime? FcmTokenUpdatedAt { get; set; }
     public bool IsActive { get; set; } = true;
 
+    // Extended patient profile fields
+    public DateTime? DateOfBirth { get; set; }
+    public string? Gender { get; set; }
+    public string? BloodType { get; set; }
+    public string? Address { get; set; }
+    public string? EmergencyContactName { get; set; }
+    public string? EmergencyContactPhone { get; set; }
+
     public DoctorProfile? DoctorProfile { get; set; }
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<Appointment> PatientAppointments { get; set; } = new List<Appointment>();
