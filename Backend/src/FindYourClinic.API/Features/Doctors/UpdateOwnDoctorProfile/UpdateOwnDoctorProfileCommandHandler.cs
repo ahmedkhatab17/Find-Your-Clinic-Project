@@ -42,6 +42,11 @@ public class UpdateOwnDoctorProfileCommandHandler : IRequestHandler<UpdateOwnDoc
         doctorProfile.ConsultationFee = request.ConsultationFee;
         doctorProfile.ExperienceYears = request.ExperienceYears;
         doctorProfile.Bio = request.Bio?.Trim();
+        
+        // Update user properties
+        doctorProfile.User!.FirstName = request.FirstName.Trim();
+        doctorProfile.User!.LastName = request.LastName.Trim();
+        doctorProfile.User!.PhoneNumber = request.PhoneNumber?.Trim();
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return ApiResponse<object>.Ok(null, "Doctor profile updated.");

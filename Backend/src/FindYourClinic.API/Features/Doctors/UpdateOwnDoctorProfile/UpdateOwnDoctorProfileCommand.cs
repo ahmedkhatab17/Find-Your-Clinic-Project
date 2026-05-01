@@ -15,5 +15,8 @@ public class UpdateOwnDoctorProfileCommand : IRequest<ApiResponse<object>>
     public double? Longitude { get; set; }
     public decimal ConsultationFee { get; set; }
     public int ExperienceYears { get; set; }
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
     public string? Bio { get; set; }
 }

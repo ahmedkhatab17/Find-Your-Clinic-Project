@@ -3,6 +3,7 @@ using FindYourClinic.API.Features.Doctors.GetDoctorAvailability;
 using FindYourClinic.API.Features.Doctors.GetDoctorById;
 using FindYourClinic.API.Features.Doctors.GetDoctorDashboard;
 using FindYourClinic.API.Features.Doctors.GetDoctorWeeklySchedule;
+using FindYourClinic.API.Features.Doctors.GetMyDocuments;
 using FindYourClinic.API.Features.Doctors.GetMyStatus;
 using FindYourClinic.API.Features.Doctors.GetTopRatedDoctors;
 using FindYourClinic.API.Features.Doctors.SearchDoctors;
@@ -95,6 +96,15 @@ public class DoctorsController : ControllerBase
     {
         var userId = UserContext.GetRequiredUserId(User);
         var result = await _mediator.Send(new GetMyStatusQuery { UserId = userId }, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("me/documents")]
+    [Authorize]
+    public async Task<IActionResult> GetMyDocuments(CancellationToken cancellationToken)
+    {
+        var userId = UserContext.GetRequiredUserId(User);
+        var result = await _mediator.Send(new GetMyDocumentsQuery { UserId = userId }, cancellationToken);
         return Ok(result);
     }
 }

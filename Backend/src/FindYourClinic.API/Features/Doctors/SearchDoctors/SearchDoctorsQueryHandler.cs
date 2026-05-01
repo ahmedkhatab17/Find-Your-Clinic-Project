@@ -25,24 +25,19 @@ public class SearchDoctorsQueryHandler : IRequestHandler<SearchDoctorsQuery, Api
         var pageSize = Math.Clamp(query.PageSize ?? 20, 1, 100);
         var hasGeo = query.Lat.HasValue && query.Lng.HasValue;
 
+        // ── 1. DB-translatable filters ──────────────────────────────────────
         var doctorQuery = _dbContext.DoctorProfiles
             .AsNoTracking()
             .Where(x => x.Status == DoctorStatus.Approved && x.User.IsActive && x.Specialty.IsActive);
 
         if (query.SpecialtyId.HasValue)
-        {
             doctorQuery = doctorQuery.Where(x => x.SpecialtyId == query.SpecialtyId.Value);
-        }
 
         if (query.MinFee.HasValue)
-        {
             doctorQuery = doctorQuery.Where(x => x.ConsultationFee >= query.MinFee.Value);
-        }
 
         if (query.MaxFee.HasValue)
-        {
             doctorQuery = doctorQuery.Where(x => x.ConsultationFee <= query.MaxFee.Value);
-        }
 
         var projected = doctorQuery.Select(doctor => new DoctorSearchProjection
         {
@@ -63,91 +58,91 @@ public class SearchDoctorsQueryHandler : IRequestHandler<SearchDoctorsQuery, Api
             DistanceKm = null
         });
 
-        if (hasGeo)
-        {
-            var lat = query.Lat!.Value;
-            var lng = query.Lng!.Value;
-            var latRad = lat * (Math.PI / 180d);
-
-            projected = projected.Select(x => new DoctorSearchProjection
-            {
-                DoctorId = x.DoctorId,
-                DoctorProfileId = x.DoctorProfileId,
-                FullName = x.FullName,
-                Specialty = x.Specialty,
-                ProfileImageUrl = x.ProfileImageUrl,
-                ClinicName = x.ClinicName,
-                ClinicAddress = x.ClinicAddress,
-                Latitude = x.Latitude,
-                Longitude = x.Longitude,
-                ConsultationFee = x.ConsultationFee,
-                ExperienceYears = x.ExperienceYears,
-                Bio = x.Bio,
-                AvgRating = x.AvgRating,
-                ReviewsCount = x.ReviewsCount,
-                DistanceKm = x.Latitude.HasValue && x.Longitude.HasValue
-                    ? 6371d * Math.Acos(
-                        Math.Min(1d, Math.Max(-1d,
-                            Math.Cos(latRad) * Math.Cos(x.Latitude.Value * (Math.PI / 180d)) *
-                            Math.Cos((x.Longitude.Value - lng) * (Math.PI / 180d)) +
-                            Math.Sin(latRad) * Math.Sin(x.Latitude.Value * (Math.PI / 180d)))))
-                    : null
-            });
-        }
-
         if (query.MinRating.HasValue)
-        {
             projected = projected.Where(x => x.AvgRating >= query.MinRating.Value);
-        }
 
-        if (query.RadiusKm.HasValue && hasGeo)
-        {
-            projected = projected.Where(x => x.DistanceKm.HasValue && x.DistanceKm.Value <= query.RadiusKm.Value);
-        }
-
-        projected = query.SortBy?.ToLowerInvariant() switch
-        {
-            "price" => projected.OrderBy(x => x.ConsultationFee),
-            "distance" when hasGeo => projected.OrderBy(x => x.DistanceKm ?? double.MaxValue),
-            _ => projected.OrderByDescending(x => x.AvgRating).ThenBy(x => x.ConsultationFee)
-        };
-
+        // ── 2. Branch: needs client-side work (geo or availability) ─────────
         var hasAvailabilityFilter = !string.IsNullOrWhiteSpace(query.Availability) &&
                                     !query.Availability.Equals("anytime", StringComparison.OrdinalIgnoreCase);
 
         List<DoctorSearchProjection> pageItems;
         int total;
 
-        if (hasAvailabilityFilter)
+        if (hasGeo || hasAvailabilityFilter)
         {
-            var allCandidates = await projected.ToListAsync(cancellationToken);
-            var nextSlots = await _availabilitySlotsService.GetNextAvailableSlotsAsync(allCandidates.Select(x => x.DoctorProfileId), now, cancellationToken);
-            foreach (var item in allCandidates)
+            // Fetch all candidates into memory — haversine + availability can't run in SQL
+            var all = await projected.ToListAsync(cancellationToken);
+
+            // Compute haversine distances in memory
+            if (hasGeo)
             {
-                item.NextSlot = nextSlots.GetValueOrDefault(item.DoctorProfileId);
+                var lat = query.Lat!.Value;
+                var lng = query.Lng!.Value;
+                var latRad = lat * (Math.PI / 180d);
+                var cosLat = Math.Cos(latRad);
+                var sinLat = Math.Sin(latRad);
+
+                foreach (var item in all)
+                {
+                    if (item.Latitude.HasValue && item.Longitude.HasValue)
+                    {
+                        var itemLatRad = item.Latitude.Value * (Math.PI / 180d);
+                        var dLonRad = (item.Longitude.Value - lng) * (Math.PI / 180d);
+                        item.DistanceKm = 6371d * Math.Acos(
+                            Math.Min(1d, Math.Max(-1d,
+                                cosLat * Math.Cos(itemLatRad) * Math.Cos(dLonRad) +
+                                sinLat * Math.Sin(itemLatRad))));
+                    }
+                }
+
+                if (query.RadiusKm.HasValue)
+                    all = all.Where(x => x.DistanceKm.HasValue && x.DistanceKm.Value <= query.RadiusKm.Value).ToList();
             }
 
-            var window = DoctorAvailabilitySlotsService.GetAvailabilityWindow(query.Availability!, now);
-            var filtered = allCandidates
-                .Where(x => x.NextSlot.HasValue && x.NextSlot.Value >= window.From && x.NextSlot.Value <= window.To)
-                .ToList();
+            // Availability filter
+            var nextSlots = await _availabilitySlotsService.GetNextAvailableSlotsAsync(
+                all.Select(x => x.DoctorProfileId), now, cancellationToken);
+            foreach (var item in all)
+                item.NextSlot = nextSlots.GetValueOrDefault(item.DoctorProfileId);
 
-            total = filtered.Count;
-            pageItems = filtered.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            if (hasAvailabilityFilter)
+            {
+                var window = DoctorAvailabilitySlotsService.GetAvailabilityWindow(query.Availability!, now);
+                all = all
+                    .Where(x => x.NextSlot.HasValue && x.NextSlot.Value >= window.From && x.NextSlot.Value <= window.To)
+                    .ToList();
+            }
+
+            // Sort in memory
+            all = query.SortBy?.ToLowerInvariant() switch
+            {
+                "price" => all.OrderBy(x => x.ConsultationFee).ToList(),
+                "distance" when hasGeo => all.OrderBy(x => x.DistanceKm ?? double.MaxValue).ToList(),
+                _ => all.OrderByDescending(x => x.AvgRating).ThenBy(x => x.ConsultationFee).ToList()
+            };
+
+            total = all.Count;
+            pageItems = all.Skip((page - 1) * pageSize).Take(pageSize).ToList();
         }
         else
         {
+            // ── Pure SQL path (no geo, no availability filter) ───────────────
+            projected = query.SortBy?.ToLowerInvariant() switch
+            {
+                "price" => projected.OrderBy(x => x.ConsultationFee),
+                _ => projected.OrderByDescending(x => x.AvgRating).ThenBy(x => x.ConsultationFee)
+            };
+
             total = await projected.CountAsync(cancellationToken);
             pageItems = await projected
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
-            var nextSlots = await _availabilitySlotsService.GetNextAvailableSlotsAsync(pageItems.Select(x => x.DoctorProfileId), now, cancellationToken);
+            var nextSlots = await _availabilitySlotsService.GetNextAvailableSlotsAsync(
+                pageItems.Select(x => x.DoctorProfileId), now, cancellationToken);
             foreach (var item in pageItems)
-            {
                 item.NextSlot = nextSlots.GetValueOrDefault(item.DoctorProfileId);
-            }
         }
 
         var items = pageItems.Select(x => new DoctorSearchDto(
@@ -168,8 +163,8 @@ public class SearchDoctorsQueryHandler : IRequestHandler<SearchDoctorsQuery, Api
             x.DistanceKm.HasValue ? Math.Round(x.DistanceKm.Value, 2) : null,
             x.NextSlot)).ToList();
 
-        var response = new PaginatedResponse<DoctorSearchDto>(items, page, pageSize, total);
-        return ApiResponse<PaginatedResponse<DoctorSearchDto>>.Ok(response);
+        return ApiResponse<PaginatedResponse<DoctorSearchDto>>.Ok(
+            new PaginatedResponse<DoctorSearchDto>(items, page, pageSize, total));
     }
 
     private sealed class DoctorSearchProjection
