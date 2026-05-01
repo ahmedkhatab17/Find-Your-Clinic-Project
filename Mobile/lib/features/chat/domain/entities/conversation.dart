@@ -7,6 +7,7 @@ class Conversation extends Equatable {
   final DateTime lastMessageAt;
   final String? lastMessage;
   final String? counterpartyName;
+  final String? counterpartyImageUrl;
   final int unreadCount;
 
   const Conversation({
@@ -16,6 +17,7 @@ class Conversation extends Equatable {
     required this.lastMessageAt,
     this.lastMessage,
     this.counterpartyName,
+    this.counterpartyImageUrl,
     required this.unreadCount,
   });
 

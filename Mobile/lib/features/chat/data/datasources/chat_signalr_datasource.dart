@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:signalr_netcore/signalr_client.dart';
 import '../../../../core/constants/api_endpoints.dart';
+import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/token_storage.dart';
 import '../models/chat_message_model.dart';
 
@@ -19,6 +20,7 @@ class ChatSignalRDataSourceImpl implements ChatSignalRDataSource {
   final TokenStorage _tokenStorage;
   final String _baseUrl;
   HubConnection? _hubConnection;
+  String? _connectedToken;
 
   final _messageReceivedController = StreamController<ChatMessageModel>.broadcast();
   final _conversationUpdatedController = StreamController<String>.broadcast();
@@ -37,11 +39,19 @@ class ChatSignalRDataSourceImpl implements ChatSignalRDataSource {
 
   @override
   Future<void> connect() async {
-    if (_hubConnection?.state == HubConnectionState.Connected) return;
-
     final token = await _tokenStorage.getAccessToken();
     if (token == null) return;
 
+    // Reuse existing connection only if it belongs to the same user (same token).
+    // If the token changed (e.g. different user logged in), disconnect first.
+    if (_hubConnection?.state == HubConnectionState.Connected) {
+      if (_connectedToken == token) return;
+      await _hubConnection!.stop();
+      _hubConnection = null;
+      _connectedToken = null;
+    }
+
+    _connectedToken = token;
     final url = '$_baseUrl${ApiEndpoints.chatHub}?access_token=$token';
 
     _hubConnection = HubConnectionBuilder()
@@ -78,7 +88,7 @@ class ChatSignalRDataSourceImpl implements ChatSignalRDataSource {
         senderId: senderId.toString(),
         senderName: senderName.toString(),
         content: content.toString(),
-        sentAt: DateTime.parse(sentAt.toString()),
+        sentAt: parseServerDateTime(sentAt.toString()),
         isRead: isRead as bool,
       );
       _messageReceivedController.add(message);
@@ -118,5 +128,7 @@ class ChatSignalRDataSourceImpl implements ChatSignalRDataSource {
   @override
   Future<void> disconnect() async {
     await _hubConnection?.stop();
+    _hubConnection = null;
+    _connectedToken = null;
   }
 }

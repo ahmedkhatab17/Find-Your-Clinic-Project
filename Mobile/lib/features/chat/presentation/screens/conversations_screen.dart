@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/di/service_locator.dart';
 import '../cubit/conversations_cubit.dart';
 import '../cubit/conversations_state.dart';
+import '../../../../core/widgets/user_avatar.dart';
 
 class ConversationsScreen extends StatefulWidget {
   const ConversationsScreen({super.key});
@@ -69,85 +70,85 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               );
             }
             
-            return ListView.separated(
-              itemCount: conversations.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final conv = conversations[index];
-                final isUnread = conv.unreadCount > 0;
-                
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: CircleAvatar(
-                    radius: 28,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    child: Text(
-                      conv.counterpartyName?.isNotEmpty == true
-                          ? conv.counterpartyName![0].toUpperCase()
-                          : '?',
-                      style: TextStyle(
+            return RefreshIndicator(
+              onRefresh: () => _cubit.loadConversations(),
+              child: ListView.separated(
+                itemCount: conversations.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final conv = conversations[index];
+                  final isUnread = conv.unreadCount > 0;
+                  
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: UserAvatar(
+                      radius: 28,
+                      imageUrl: conv.counterpartyImageUrl,
+                      fullName: conv.counterpartyName,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      textStyle: TextStyle(
                         color: theme.colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
                     ),
-                  ),
-                  title: Text(
-                    conv.counterpartyName ?? 'Unknown',
-                    style: TextStyle(
-                      fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Text(
-                    conv.lastMessage ?? 'Started a conversation',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: isUnread 
-                          ? theme.colorScheme.onSurface 
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
-                    ),
-                  ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        _formatDate(conv.lastMessageAt),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isUnread 
-                              ? theme.colorScheme.primary 
-                              : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
-                        ),
+                    title: Text(
+                      conv.counterpartyName ?? 'Unknown',
+                      style: TextStyle(
+                        fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
                       ),
-                      const SizedBox(height: 4),
-                      if (isUnread)
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            shape: BoxShape.circle,
+                    ),
+                    subtitle: Text(
+                      conv.lastMessage ?? 'Started a conversation',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isUnread 
+                            ? theme.colorScheme.onSurface 
+                            : theme.colorScheme.onSurfaceVariant,
+                        fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          _formatDate(conv.lastMessageAt),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isUnread 
+                                ? theme.colorScheme.primary 
+                                : theme.colorScheme.onSurfaceVariant,
+                            fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
                           ),
-                          child: Text(
-                            conv.unreadCount.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                        ),
+                        const SizedBox(height: 4),
+                        if (isUnread)
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              conv.unreadCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                  onTap: () {
-                    context.push('/chat/${conv.id}').then((_) {
-                      if (mounted) _cubit.loadConversations();
-                    });
-                  },
-                );
-              },
+                      ],
+                    ),
+                    onTap: () {
+                      context.push('/chat/${conv.id}').then((_) {
+                        if (mounted) _cubit.loadConversations();
+                      });
+                    },
+                  );
+                },
+              ),
             );
           }
           

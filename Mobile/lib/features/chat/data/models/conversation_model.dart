@@ -1,3 +1,4 @@
+import '../../../../core/utils/date_utils.dart';
 import '../../domain/entities/conversation.dart';
 
 class ConversationModel extends Conversation {
@@ -8,17 +9,19 @@ class ConversationModel extends Conversation {
     required super.lastMessageAt,
     super.lastMessage,
     super.counterpartyName,
+    super.counterpartyImageUrl,
     required super.unreadCount,
   });
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     return ConversationModel(
-      id: json['conversationId'] as String,
+      id: (json['id'] ?? json['conversationId']) as String,
       patientId: json['patientId'] as String,
       doctorId: json['doctorId'] as String,
-      lastMessageAt: DateTime.parse(json['lastMessageAt'] as String),
+      lastMessageAt: parseServerDateTime(json['lastMessageAt'] as String),
       lastMessage: json['lastMessage'] as String?,
       counterpartyName: json['counterpartyName'] as String?,
+      counterpartyImageUrl: json['counterpartyImageUrl'] as String?,
       unreadCount: json['unreadCount'] as int,
     );
   }

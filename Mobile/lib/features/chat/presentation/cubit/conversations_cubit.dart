@@ -16,7 +16,7 @@ class ConversationsCubit extends Cubit<ConversationsState> {
   ConversationsCubit(this._getConversationsUseCase, this._chatRepository)
       : super(ConversationsInitial());
 
-  void loadConversations() async {
+  Future<void> loadConversations() async {
     emit(ConversationsLoading());
     final result = await _getConversationsUseCase();
     
