@@ -30,11 +30,6 @@ public class SubmitDocumentsCommandHandler : IRequestHandler<SubmitDocumentsComm
             throw new NotFoundException("Doctor profile not found.");
         }
 
-        if (doctorProfile.Status != DoctorStatus.PendingReview)
-        {
-            throw new BadRequestException("Documents can only be uploaded while pending review.");
-        }
-
         var uploaded = new List<UploadedDoctorDocumentDto>();
         for (var i = 0; i < request.Files.Count; i++)
         {
@@ -42,6 +37,14 @@ public class SubmitDocumentsCommandHandler : IRequestHandler<SubmitDocumentsComm
             var documentType = request.DocumentTypes[i];
             var folder = $"clinic/doctor-documents/{request.DoctorUserId}";
             var result = await _cloudinaryService.UploadFileAsync(file, folder);
+
+            var existingOfType = await _dbContext.DoctorDocuments
+                .Where(x => x.DoctorProfileId == doctorProfile.Id && x.DocumentType == documentType)
+                .ToListAsync(cancellationToken);
+            if (existingOfType.Count > 0)
+            {
+                _dbContext.DoctorDocuments.RemoveRange(existingOfType);
+            }
 
             _dbContext.DoctorDocuments.Add(new Domain.Entities.DoctorDocument
             {

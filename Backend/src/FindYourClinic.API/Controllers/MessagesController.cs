@@ -62,6 +62,7 @@ public class MessagesController : ControllerBase
                 x.LastMessageAt,
                 x.Messages.OrderByDescending(m => m.SentAt).Select(m => m.Content).FirstOrDefault(),
                 role == UserRole.Patient ? $"{x.Doctor.FirstName} {x.Doctor.LastName}".Trim() : $"{x.Patient.FirstName} {x.Patient.LastName}".Trim(),
+                role == UserRole.Patient ? x.Doctor.ProfileImageUrl : x.Patient.ProfileImageUrl,
                 x.Messages.Count(m => m.SenderId != userId && !m.IsRead)))
             .ToListAsync(cancellationToken);
 
@@ -147,7 +148,7 @@ public class MessagesController : ControllerBase
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        return Ok(ApiResponse<ConversationDto>.Ok(new ConversationDto(conversation.Id, conversation.PatientId, conversation.DoctorId, conversation.LastMessageAt, null, null, 0)));
+        return Ok(ApiResponse<ConversationDto>.Ok(new ConversationDto(conversation.Id, conversation.PatientId, conversation.DoctorId, conversation.LastMessageAt, null, null, null, 0)));
     }
 
     [HttpPost("conversations/{id:guid}/send")]
@@ -265,12 +266,13 @@ public class MessagesController : ControllerBase
     }
 
     public sealed record ConversationDto(
-        Guid ConversationId,
+        Guid Id,
         Guid PatientId,
         Guid DoctorId,
         DateTime LastMessageAt,
         string? LastMessage,
         string? CounterpartyName,
+        string? CounterpartyImageUrl,
         int UnreadCount);
 
     public sealed record MessageDto(
