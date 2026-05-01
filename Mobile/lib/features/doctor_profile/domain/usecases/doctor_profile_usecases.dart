@@ -41,3 +41,10 @@ class AddReviewUseCase {
   Future<ApiResult<void>> call(String doctorId, int rating, String? comment) =>
       _repository.addReview(doctorId, rating, comment);
 }
+class UpdateDoctorProfileImageUseCase {
+  final DoctorProfileRepository _repository;
+  const UpdateDoctorProfileImageUseCase(this._repository);
+
+  Future<ApiResult<String>> call(String filePath) =>
+      _repository.updateProfileImage(filePath);
+}

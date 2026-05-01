@@ -34,7 +34,8 @@ class DoctorProfileRepositoryImpl implements DoctorProfileRepository {
     try {
       final response =
           await _apiClient.dio.get(ApiEndpoints.doctorReviews(doctorId));
-      final data = response.data['data'] as List;
+      final responseData = response.data['data'] as Map<String, dynamic>;
+      final data = responseData['reviews'] as List;
       final reviews =
           data.map((e) => DoctorReviewModel.fromJson(e).toEntity()).toList();
       return Success(reviews);
@@ -68,15 +69,17 @@ class DoctorProfileRepositoryImpl implements DoctorProfileRepository {
       UpdateDoctorProfileParams params) async {
     try {
       await _apiClient.dio.put(ApiEndpoints.updateDoctorProfile, data: {
-        if (params.bio != null) 'bio': params.bio,
-        if (params.clinicName != null) 'clinicName': params.clinicName,
-        if (params.clinicAddress != null) 'clinicAddress': params.clinicAddress,
-        if (params.latitude != null) 'latitude': params.latitude,
-        if (params.longitude != null) 'longitude': params.longitude,
-        if (params.consultationFee != null)
-          'consultationFee': params.consultationFee,
-        if (params.experienceYears != null)
-          'experienceYears': params.experienceYears,
+        'firstName': params.firstName,
+        'lastName': params.lastName,
+        'phoneNumber': params.phoneNumber,
+        'specialtyId': params.specialtyId,
+        'consultationFee': params.consultationFee,
+        'experienceYears': params.experienceYears,
+        'bio': params.bio,
+        'clinicName': params.clinicName,
+        'clinicAddress': params.clinicAddress,
+        'latitude': params.latitude,
+        'longitude': params.longitude,
       });
       return const Success(null);
     } on DioException catch (e) {
@@ -98,6 +101,27 @@ class DoctorProfileRepositoryImpl implements DoctorProfileRepository {
         },
       );
       return const Success(null);
+    } on DioException catch (e) {
+      return Error(mapDioException(e));
+    } catch (e) {
+      return Error(UnknownFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<ApiResult<String>> updateProfileImage(String filePath) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(filePath),
+      });
+
+      final response = await _apiClient.dio.put(
+        ApiEndpoints.userProfileImage,
+        data: formData,
+      );
+
+      final imageUrl = response.data['data'] as String;
+      return Success(imageUrl);
     } on DioException catch (e) {
       return Error(mapDioException(e));
     } catch (e) {

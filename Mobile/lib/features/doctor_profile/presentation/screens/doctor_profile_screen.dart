@@ -9,6 +9,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/network/api_result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/user_avatar.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../chat/domain/usecases/start_conversation_usecase.dart';
 import '../../domain/entities/doctor_profile_entities.dart';
@@ -137,11 +138,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const SizedBox(height: 16),
-                          CircleAvatar(
+                          UserAvatar(
                             radius: 44,
+                            imageUrl: details.profileImageUrl,
+                            fullName: details.fullName,
                             backgroundColor: Colors.white.withAlpha(40),
-                            child: const Icon(Icons.person,
-                                color: Colors.white, size: 48),
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -230,6 +231,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen>
                     'consultationFee':
                         '\$${details.consultationFee.toStringAsFixed(0)}',
                     'clinicName': details.clinicName,
+                    'doctorImageUrl': details.profileImageUrl,
                   });
                 },
               ),
@@ -509,10 +511,11 @@ class _ReviewItem extends StatelessWidget {
       children: [
         Row(
           children: [
-            CircleAvatar(
+            UserAvatar(
               radius: 18,
+              imageUrl: review.patientImageUrl,
+              fullName: review.patientName,
               backgroundColor: AppColors.primary.withAlpha(20),
-              child: const Icon(Icons.person, size: 18, color: AppColors.primary),
             ),
             const SizedBox(width: 10),
             Expanded(

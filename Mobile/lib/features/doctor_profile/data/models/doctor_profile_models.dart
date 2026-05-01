@@ -1,9 +1,14 @@
+import '../../../../core/utils/date_utils.dart';
 import '../../domain/entities/doctor_profile_entities.dart';
 
 class DoctorDetailsModel {
   final String doctorId;
   final String doctorProfileId;
   final String fullName;
+  final String firstName;
+  final String lastName;
+  final String? phoneNumber;
+  final String specialtyId;
   final String specialty;
   final String? profileImageUrl;
   final String? clinicName;
@@ -21,6 +26,10 @@ class DoctorDetailsModel {
     required this.doctorId,
     required this.doctorProfileId,
     required this.fullName,
+    required this.firstName,
+    required this.lastName,
+    this.phoneNumber,
+    required this.specialtyId,
     required this.specialty,
     this.profileImageUrl,
     this.clinicName,
@@ -40,6 +49,10 @@ class DoctorDetailsModel {
       doctorId: json['doctorId'],
       doctorProfileId: json['doctorProfileId'],
       fullName: json['fullName'],
+      firstName: json['firstName'] ?? '',
+      lastName: json['lastName'] ?? '',
+      phoneNumber: json['phoneNumber'],
+      specialtyId: json['specialtyId'] ?? '',
       specialty: json['specialty'],
       profileImageUrl: json['profileImageUrl'],
       clinicName: json['clinicName'],
@@ -61,6 +74,10 @@ class DoctorDetailsModel {
         doctorId: doctorId,
         doctorProfileId: doctorProfileId,
         fullName: fullName,
+        firstName: firstName,
+        lastName: lastName,
+        phoneNumber: phoneNumber,
+        specialtyId: specialtyId,
         specialty: specialty,
         profileImageUrl: profileImageUrl,
         clinicName: clinicName,
@@ -100,7 +117,7 @@ class DoctorReviewModel {
       patientImageUrl: json['patientImageUrl'] ?? json['reviewerImageUrl'],
       rating: json['rating'] ?? 0,
       comment: json['comment'],
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: parseServerDateTime(json['createdAt']),
     );
   }
 

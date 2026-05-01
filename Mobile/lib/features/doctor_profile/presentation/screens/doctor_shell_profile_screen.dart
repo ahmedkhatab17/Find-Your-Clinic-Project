@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/widgets/user_avatar.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../cubits/doctor_shell_profile_cubit.dart';
@@ -16,16 +17,6 @@ class DoctorShellProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () => context.push('/settings'),
-          ),
-        ],
-      ),
       body: BlocConsumer<DoctorShellProfileCubit, DoctorShellProfileState>(
         listener: (context, state) {
           if (state is DoctorShellProfileError) {
@@ -42,7 +33,6 @@ class DoctorShellProfileScreen extends StatelessWidget {
               state is DoctorShellProfileInitial) {
             return const Center(child: CircularProgressIndicator());
           }
-
           if (state is DoctorShellProfileError) {
             return ErrorView(
               message: state.message,
@@ -50,11 +40,9 @@ class DoctorShellProfileScreen extends StatelessWidget {
                   context.read<DoctorShellProfileCubit>().loadProfile(),
             );
           }
-
           if (state is! DoctorShellProfileLoaded) {
             return const SizedBox.shrink();
           }
-
           return _ProfileBody(state: state);
         },
       ),
@@ -68,117 +56,208 @@ class _ProfileBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        // ─── Header ───
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 32),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.gradientStart, AppColors.gradientEnd],
+    final cs = Theme.of(context).colorScheme;
+
+    return RefreshIndicator(
+      onRefresh: () => context.read<DoctorShellProfileCubit>().loadProfile(),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          // ─── Header card ───
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: cs.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: cs.outline.withAlpha(40)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(12),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ),
-          child: Column(
-            children: [
-              CircleAvatar(
-                radius: 44,
-                backgroundColor: Colors.white24,
-                backgroundImage: state.profileImageUrl != null
-                    ? NetworkImage(state.profileImageUrl!)
-                    : null,
-                child: state.profileImageUrl == null
-                    ? const Icon(Icons.person, color: Colors.white, size: 48)
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                state.fullName,
-                style:
-                    AppTextStyles.heading2.copyWith(color: Colors.white),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.verified,
-                      size: 16, color: AppColors.success),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Verified Doctor',
-                    style: AppTextStyles.bodySm
-                        .copyWith(color: AppColors.success),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // ─── Stats row ───
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    _StatColumn(
-                      label: 'Rating',
-                      value: state.avgRating.toStringAsFixed(1),
-                      icon: Icons.star,
+                    UserAvatar(
+                      radius: 32,
+                      imageUrl: state.profileImageUrl,
+                      fullName: state.fullName,
+                      backgroundColor: AppColors.primary,
                     ),
-                    Container(
-                        width: 1, height: 40, color: Colors.white30),
-                    _StatColumn(
-                      label: 'Patients',
-                      value: state.totalPatients.toString(),
-                      icon: Icons.people,
-                    ),
-                    Container(
-                        width: 1, height: 40, color: Colors.white30),
-                    _StatColumn(
-                      label: 'Reviews',
-                      value: state.totalReviews.toString(),
-                      icon: Icons.reviews_outlined,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            state.fullName,
+                            style: AppTextStyles.heading3.copyWith(
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${state.specialty} Specialist',
+                            style: AppTextStyles.bodySm.copyWith(
+                              color: cs.onSurface.withAlpha(160),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.star,
+                                color: AppColors.starRating,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${state.avgRating.toStringAsFixed(1)} (${state.reviewsCount} reviews)',
+                                style: AppTextStyles.bodySm.copyWith(
+                                  color: cs.onSurface.withAlpha(160),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    _StatItem(
+                      value: state.totalPatients.toString(),
+                      label: 'Patients',
+                      color: AppColors.primary,
+                    ),
+                    _StatDivider(),
+                    _StatItem(
+                      value: '${state.experienceYears}',
+                      label: 'Years Exp.',
+                      color: AppColors.secondary,
+                    ),
+                    _StatDivider(),
+                    _StatItem(
+                      value: '${state.consultationFee.toStringAsFixed(0)} EGP',
+                      label: 'Fee',
+                      color: AppColors.success,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // ─── Profile Settings ───
+          _SectionHeader('PROFILE SETTINGS'),
+          _SettingsTile(
+            icon: Icons.person_outline,
+            iconBg: AppColors.primary.withAlpha(25),
+            iconColor: AppColors.primary,
+            title: 'Edit Profile',
+            subtitle: 'Update personal & professional info',
+            onTap: () => context.push('/doctor/profile/edit'),
+          ),
+          _SettingsTile(
+            icon: Icons.calendar_month_outlined,
+            iconBg: AppColors.secondary.withAlpha(25),
+            iconColor: AppColors.secondary,
+            title: 'Manage Schedule',
+            subtitle: 'Set availability & working hours',
+            onTap: () => context.push('/doctor/home/availability'),
+          ),
+          _SettingsTile(
+            icon: Icons.location_on_outlined,
+            iconBg: const Color(0xFFFF9800).withAlpha(25),
+            iconColor: const Color(0xFFFF9800),
+            title: 'My Clinics',
+            subtitle: 'Add or edit clinic locations',
+            onTap: () => context.push('/doctor/profile/edit'),
+          ),
+          _SettingsTile(
+            icon: Icons.description_outlined,
+            iconBg: AppColors.info.withAlpha(25),
+            iconColor: AppColors.info,
+            title: 'Documents',
+            subtitle: 'View & update certificates',
+            onTap: () => context.push('/doctor/profile/documents'),
+          ),
+
+          const SizedBox(height: 8),
+
+          // ─── Account Settings ───
+          _SectionHeader('ACCOUNT'),
+          _SettingsTile(
+            icon: Icons.notifications_outlined,
+            iconBg: AppColors.warning.withAlpha(25),
+            iconColor: AppColors.warning,
+            title: 'Notifications',
+            subtitle: 'Manage your alerts',
+            onTap: () => context.push('/notifications'),
+          ),
+          _SettingsTile(
+            icon: Icons.payment_outlined,
+            iconBg: cs.onSurface.withAlpha(20),
+            iconColor: cs.onSurface.withAlpha(180),
+            title: 'Payment Information',
+            subtitle: 'View & update payment info',
+            onTap: () {},
+          ),
+          _SettingsTile(
+            icon: Icons.receipt_long_outlined,
+            iconBg: cs.onSurface.withAlpha(20),
+            iconColor: cs.onSurface.withAlpha(180),
+            title: 'Transaction History',
+            subtitle: 'View past transactions',
+            onTap: () {},
+          ),
+          _SettingsTile(
+            icon: Icons.language_outlined,
+            iconBg: AppColors.primary.withAlpha(25),
+            iconColor: AppColors.primary,
+            title: 'App Settings',
+            subtitle: 'Theme, language & more',
+            onTap: () => context.push('/settings'),
+          ),
+          _SettingsTile(
+            icon: Icons.help_outline,
+            iconBg: cs.onSurface.withAlpha(20),
+            iconColor: cs.onSurface.withAlpha(180),
+            title: 'Help & Support',
+            subtitle: 'FAQ & contact support',
+            onTap: () {},
+          ),
+
+          const SizedBox(height: 16),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.logout, color: AppColors.error),
+              label: const Text(
+                'Sign Out',
+                style: TextStyle(color: AppColors.error),
               ),
-            ],
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.error),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () => _confirmLogout(context),
+            ),
           ),
-        ),
-
-        const SizedBox(height: 8),
-
-        // ─── Menu items ───
-        ListTile(
-          leading: const Icon(Icons.edit_outlined),
-          title: const Text('Edit Profile'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.push('/doctor/profile/edit'),
-        ),
-        const Divider(height: 1, indent: 16),
-        ListTile(
-          leading: const Icon(Icons.schedule_outlined),
-          title: const Text('Manage Availability'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.push('/doctor/home/availability'),
-        ),
-        const Divider(height: 1, indent: 16),
-        ListTile(
-          leading: const Icon(Icons.bar_chart_outlined),
-          title: const Text('Insights'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.go('/doctor/insights'),
-        ),
-        const Divider(height: 1),
-        const SizedBox(height: 8),
-        ListTile(
-          leading: const Icon(Icons.logout, color: AppColors.error),
-          title: const Text(
-            'Log Out',
-            style: TextStyle(color: AppColors.error),
-          ),
-          onTap: () => _confirmLogout(context),
-        ),
-      ],
+          const SizedBox(height: 24),
+        ],
+      ),
     );
   }
 
@@ -186,8 +265,8 @@ class _ProfileBody extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Log Out'),
-        content: const Text('Are you sure you want to log out?'),
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -200,7 +279,7 @@ class _ProfileBody extends StatelessWidget {
               if (context.mounted) context.go('/login');
             },
             child: const Text(
-              'Log Out',
+              'Sign Out',
               style: TextStyle(color: AppColors.error),
             ),
           ),
@@ -210,32 +289,118 @@ class _ProfileBody extends StatelessWidget {
   }
 }
 
-class _StatColumn extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader(this.title);
 
-  const _StatColumn({
-    required this.label,
-    required this.value,
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Text(
+        title,
+        style: AppTextStyles.labelSm.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withAlpha(140),
+          letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _SettingsTile({
     required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white70, size: 18),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: AppTextStyles.heading3.copyWith(color: Colors.white),
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outline.withAlpha(30)),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: iconBg,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: iconColor, size: 20),
         ),
-        Text(
-          label,
-          style: AppTextStyles.labelSm.copyWith(color: Colors.white70),
+        title: Text(
+          title,
+          style: AppTextStyles.bodyMd.copyWith(color: cs.onSurface),
         ),
-      ],
+        subtitle: Text(
+          subtitle,
+          style: AppTextStyles.bodySm.copyWith(
+            color: cs.onSurface.withAlpha(160),
+          ),
+        ),
+        trailing: Icon(Icons.chevron_right, color: cs.onSurface.withAlpha(120)),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final String value;
+  final String label;
+  final Color color;
+  const _StatItem({
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value, style: AppTextStyles.heading3.copyWith(color: color)),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: AppTextStyles.bodySm.copyWith(
+              color: cs.onSurface.withAlpha(160),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 32,
+      color: Theme.of(context).dividerColor,
     );
   }
 }
