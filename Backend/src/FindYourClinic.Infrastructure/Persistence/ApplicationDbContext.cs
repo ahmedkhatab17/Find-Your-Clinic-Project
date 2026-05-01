@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace FindYourClinic.Infrastructure.Persistence;
 
@@ -32,6 +33,18 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AiChatMessage> AiChatMessages => Set<AiChatMessage>();
 
+    // EF Core reads DateTime from SQL Server as DateTimeKind.Unspecified.
+    // This convention marks every DateTime property as UTC on read so that
+    // System.Text.Json serialises them with the trailing 'Z', fixing the
+    // 3-hour offset clients see when they're in a UTC+ timezone.
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTime>()
+            .HaveConversion<UtcDateTimeConverter>();
+        configurationBuilder.Properties<DateTime?>()
+            .HaveConversion<UtcNullableDateTimeConverter>();
+    }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -43,6 +56,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
             entity.Property(x => x.ProfileImageUrl).HasMaxLength(500);
             entity.Property(x => x.CloudinaryPublicId).HasMaxLength(200);
             entity.Property(x => x.FcmToken).HasMaxLength(512);
+            entity.Property(x => x.Gender).HasMaxLength(50);
+            entity.Property(x => x.BloodType).HasMaxLength(10);
+            entity.Property(x => x.Address).HasMaxLength(500);
+            entity.Property(x => x.EmergencyContactName).HasMaxLength(150);
+            entity.Property(x => x.EmergencyContactPhone).HasMaxLength(30);
             entity.HasIndex(x => x.Email).IsUnique();
         });
 
@@ -266,3 +284,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
         }
     }
 }
+
+file sealed class UtcDateTimeConverter()
+    : ValueConverter<DateTime, DateTime>(v => v, v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+file sealed class UtcNullableDateTimeConverter()
+    : ValueConverter<DateTime?, DateTime?>(v => v, v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : null);

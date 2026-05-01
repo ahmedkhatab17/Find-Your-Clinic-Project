@@ -86,6 +86,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<INotificationService, NotificationService>();
         services.AddHostedService<AppointmentReminderService>();
+        services.AddHostedService<AppointmentAutoCompleteService>();
 
         using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var logger = loggerFactory.CreateLogger("FirebaseInitializer");

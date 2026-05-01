@@ -73,6 +73,13 @@ builder.Services.AddRateLimiter(options =>
         o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
         o.QueueLimit = 0;
     });
+    options.AddFixedWindowLimiter("ai_limited", o =>
+    {
+        o.PermitLimit = 10;
+        o.Window = TimeSpan.FromMinutes(1);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 0;
+    });
 });
 
 builder.Services.AddSwaggerGen(options =>
