@@ -3,12 +3,14 @@
 
 class DoctorDashboard {
   final QuickStats quickStats;
+  final OverallStats overallStats;
   final NextAppointment? nextAppointment;
   final PerformanceSummary performance;
   final List<ScheduleItem> todaySchedule;
 
   const DoctorDashboard({
     required this.quickStats,
+    required this.overallStats,
     this.nextAppointment,
     required this.performance,
     required this.todaySchedule,
@@ -23,6 +25,20 @@ class QuickStats {
 
   const QuickStats({
     required this.totalToday,
+    required this.completed,
+    required this.pending,
+    required this.cancelled,
+  });
+}
+
+class OverallStats {
+  final int total;
+  final int completed;
+  final int pending;
+  final int cancelled;
+
+  const OverallStats({
+    required this.total,
     required this.completed,
     required this.pending,
     required this.cancelled,
@@ -50,12 +66,12 @@ class NextAppointment {
 }
 
 class PerformanceSummary {
-  final int patientsThisMonth;
+  final int totalPatients;
   final double averageRating;
   final int totalReviews;
 
   const PerformanceSummary({
-    required this.patientsThisMonth,
+    required this.totalPatients,
     required this.averageRating,
     required this.totalReviews,
   });

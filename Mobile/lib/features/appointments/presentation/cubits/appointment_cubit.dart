@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/network/api_result.dart';
+import '../../../payment/domain/usecases/payment_usecases.dart';
 import '../../domain/entities/appointment_entity.dart';
 import '../../domain/usecases/appointment_usecases.dart';
 import 'appointment_state.dart';
@@ -12,6 +13,7 @@ class AppointmentCubit extends Cubit<AppointmentState> {
   final CancelAppointmentUseCase _cancelAppointmentUseCase;
   final ConfirmAppointmentUseCase _confirmAppointmentUseCase;
   final CompleteAppointmentUseCase _completeAppointmentUseCase;
+  final MarkAsPaidUseCase _markAsPaidUseCase;
 
   /// Tracks whether we're loading patient or doctor appointments for reload.
   bool _isDoctorMode = false;
@@ -23,12 +25,14 @@ class AppointmentCubit extends Cubit<AppointmentState> {
     required CancelAppointmentUseCase cancelAppointmentUseCase,
     required ConfirmAppointmentUseCase confirmAppointmentUseCase,
     required CompleteAppointmentUseCase completeAppointmentUseCase,
+    required MarkAsPaidUseCase markAsPaidUseCase,
   })  : _getPatientAppointmentsUseCase = getPatientAppointmentsUseCase,
         _getDoctorAppointmentsUseCase = getDoctorAppointmentsUseCase,
         _getAppointmentByIdUseCase = getAppointmentByIdUseCase,
         _cancelAppointmentUseCase = cancelAppointmentUseCase,
         _confirmAppointmentUseCase = confirmAppointmentUseCase,
         _completeAppointmentUseCase = completeAppointmentUseCase,
+        _markAsPaidUseCase = markAsPaidUseCase,
         super(AppointmentInitial());
 
   Future<void> loadPatientAppointments() async {
@@ -59,7 +63,11 @@ class AppointmentCubit extends Cubit<AppointmentState> {
     }
   }
 
-  Future<void> loadAppointmentDetail(String id) async {
+  Future<void> loadAppointmentDetail(String id, {bool isDoctorView = false}) async {
+    // Track which list to reload after an action so we don't accidentally hit
+    // the wrong role's endpoint (doctor cancelling cash appointment was hitting
+    // the patient-only /appointments/my endpoint and 403'ing).
+    _isDoctorMode = isDoctorView;
     emit(AppointmentLoading());
 
     final result = await _getAppointmentByIdUseCase(id);
@@ -114,6 +122,20 @@ class AppointmentCubit extends Cubit<AppointmentState> {
     }
   }
 
+  Future<void> markCashAppointmentAsPaid(String id) async {
+    emit(AppointmentActionInProgress());
+
+    final result = await _markAsPaidUseCase(id);
+
+    switch (result) {
+      case Success():
+        emit(const AppointmentActionSuccess('Appointment marked as paid.'));
+        await _reload();
+      case Error(:final failure):
+        emit(AppointmentError(failure.message));
+    }
+  }
+
   /// Reloads the appropriate list after an action.
   Future<void> _reload() async {
     if (_isDoctorMode) {
@@ -130,8 +152,21 @@ class AppointmentCubit extends Cubit<AppointmentState> {
     final upcoming = all
         .where((a) =>
             (a.effectiveStatus == AppointmentStatus.scheduled ||
-                a.effectiveStatus == AppointmentStatus.confirmed) &&
+                a.effectiveStatus == AppointmentStatus.confirmed ||
+                a.effectiveStatus == AppointmentStatus.pendingPayment) &&
             a.scheduledAt.isAfter(now))
+        .toList()
+      ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+
+    final confirmed = all
+        .where((a) => a.effectiveStatus == AppointmentStatus.confirmed)
+        .toList()
+      ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
+
+    final pending = all
+        .where((a) =>
+            a.effectiveStatus == AppointmentStatus.scheduled ||
+            a.effectiveStatus == AppointmentStatus.pendingPayment)
         .toList()
       ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
@@ -147,6 +182,8 @@ class AppointmentCubit extends Cubit<AppointmentState> {
 
     return AppointmentListLoaded(
       upcoming: upcoming,
+      confirmed: confirmed,
+      pending: pending,
       completed: completed,
       cancelled: cancelled,
       all: all..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt)),

@@ -42,6 +42,7 @@ class DoctorSearchResult {
 class SearchFilters {
   final String? name;
   final String? specialtyId;
+  final String? specialtyName;
   final double? lat;
   final double? lng;
   final double? radiusKm;
@@ -55,6 +56,7 @@ class SearchFilters {
   const SearchFilters({
     this.name,
     this.specialtyId,
+    this.specialtyName,
     this.lat,
     this.lng,
     this.radiusKm,
@@ -69,6 +71,7 @@ class SearchFilters {
   SearchFilters copyWith({
     String? name,
     String? specialtyId,
+    String? specialtyName,
     double? lat,
     double? lng,
     double? radiusKm,
@@ -82,6 +85,7 @@ class SearchFilters {
     return SearchFilters(
       name: name ?? this.name,
       specialtyId: specialtyId ?? this.specialtyId,
+      specialtyName: specialtyName ?? this.specialtyName,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
       radiusKm: radiusKm ?? this.radiusKm,
@@ -98,6 +102,9 @@ class SearchFilters {
     final params = <String, String>{};
     if (name != null && name!.isNotEmpty) params['name'] = name!;
     if (specialtyId != null) params['specialtyId'] = specialtyId!;
+    if (specialtyName != null && specialtyName!.isNotEmpty) {
+      params['specialtyName'] = specialtyName!;
+    }
     if (lat != null) params['lat'] = lat.toString();
     if (lng != null) params['lng'] = lng.toString();
     if (radiusKm != null) params['radiusKm'] = radiusKm.toString();

@@ -54,6 +54,9 @@ dependencies:
   equatable: ^2.0.7
   shared_preferences: ^2.3.4
 
+  # WebView (Paymob iframe)
+  webview_flutter: ^4.10.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

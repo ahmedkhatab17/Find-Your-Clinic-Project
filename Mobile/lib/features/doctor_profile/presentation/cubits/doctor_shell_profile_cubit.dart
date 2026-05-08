@@ -61,7 +61,7 @@ class DoctorShellProfileCubit extends Cubit<DoctorShellProfileState> {
       profileImageUrl: details.profileImageUrl ?? profile.profileImageUrl,
       avgRating: details.avgRating,
       reviewsCount: details.reviewsCount,
-      totalPatients: dashboard.performance.patientsThisMonth,
+      totalPatients: dashboard.performance.totalPatients,
       experienceYears: details.experienceYears,
       consultationFee: details.consultationFee,
     ));

@@ -11,12 +11,16 @@ class AppointmentLoading extends AppointmentState {}
 
 class AppointmentListLoaded extends AppointmentState {
   final List<AppointmentEntity> upcoming;
+  final List<AppointmentEntity> confirmed;
+  final List<AppointmentEntity> pending;
   final List<AppointmentEntity> completed;
   final List<AppointmentEntity> cancelled;
   final List<AppointmentEntity> all;
 
   const AppointmentListLoaded({
     required this.upcoming,
+    required this.confirmed,
+    required this.pending,
     required this.completed,
     required this.cancelled,
     required this.all,

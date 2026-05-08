@@ -31,8 +31,8 @@ class PerformanceCard extends StatelessWidget {
           _PerformanceItem(
             icon: Icons.people,
             iconColor: AppColors.primary,
-            label: 'Patients/Month',
-            value: '${performance.patientsThisMonth}',
+            label: 'Patients',
+            value: '${performance.totalPatients}',
           ),
           _divider(),
           _PerformanceItem(

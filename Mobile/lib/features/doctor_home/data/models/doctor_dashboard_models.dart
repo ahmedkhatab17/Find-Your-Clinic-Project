@@ -5,12 +5,14 @@ import '../../domain/entities/doctor_dashboard_entities.dart';
 
 class DoctorDashboardModel {
   final QuickStatsModel quickStats;
+  final OverallStatsModel overallStats;
   final NextAppointmentModel? nextAppointment;
   final PerformanceModel performance;
   final List<ScheduleItemModel> todaySchedule;
 
   const DoctorDashboardModel({
     required this.quickStats,
+    required this.overallStats,
     this.nextAppointment,
     required this.performance,
     required this.todaySchedule,
@@ -19,6 +21,7 @@ class DoctorDashboardModel {
   factory DoctorDashboardModel.fromJson(Map<String, dynamic> json) {
     return DoctorDashboardModel(
       quickStats: QuickStatsModel.fromJson(json['quickStats']),
+      overallStats: OverallStatsModel.fromJson(json['overallStats'] ?? const {}),
       nextAppointment: json['nextAppointment'] != null
           ? NextAppointmentModel.fromJson(json['nextAppointment'])
           : null,
@@ -31,9 +34,40 @@ class DoctorDashboardModel {
 
   DoctorDashboard toEntity() => DoctorDashboard(
         quickStats: quickStats.toEntity(),
+        overallStats: overallStats.toEntity(),
         nextAppointment: nextAppointment?.toEntity(),
         performance: performance.toEntity(),
         todaySchedule: todaySchedule.map((e) => e.toEntity()).toList(),
+      );
+}
+
+class OverallStatsModel {
+  final int total;
+  final int completed;
+  final int pending;
+  final int cancelled;
+
+  const OverallStatsModel({
+    required this.total,
+    required this.completed,
+    required this.pending,
+    required this.cancelled,
+  });
+
+  factory OverallStatsModel.fromJson(Map<String, dynamic> json) {
+    return OverallStatsModel(
+      total: json['total'] ?? 0,
+      completed: json['completed'] ?? 0,
+      pending: json['pending'] ?? 0,
+      cancelled: json['cancelled'] ?? 0,
+    );
+  }
+
+  OverallStats toEntity() => OverallStats(
+        total: total,
+        completed: completed,
+        pending: pending,
+        cancelled: cancelled,
       );
 }
 
@@ -110,26 +144,26 @@ class NextAppointmentModel {
 }
 
 class PerformanceModel {
-  final int patientsThisMonth;
+  final int totalPatients;
   final double averageRating;
   final int totalReviews;
 
   const PerformanceModel({
-    required this.patientsThisMonth,
+    required this.totalPatients,
     required this.averageRating,
     required this.totalReviews,
   });
 
   factory PerformanceModel.fromJson(Map<String, dynamic> json) {
     return PerformanceModel(
-      patientsThisMonth: json['patientsThisMonth'] ?? 0,
+      totalPatients: json['totalPatients'] ?? 0,
       averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0,
       totalReviews: json['totalReviews'] ?? 0,
     );
   }
 
   PerformanceSummary toEntity() => PerformanceSummary(
-        patientsThisMonth: patientsThisMonth,
+        totalPatients: totalPatients,
         averageRating: averageRating,
         totalReviews: totalReviews,
       );

@@ -33,12 +33,55 @@ class DoctorInsightsScreen extends StatelessWidget {
 
           final dashboard = state.dashboard;
           final stats = dashboard.quickStats;
+          final overall = dashboard.overallStats;
           final perf = dashboard.performance;
 
           return RefreshIndicator(
             onRefresh: () => context.read<InsightsCubit>().loadInsights(),
             child: CustomScrollView(
               slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                    child: Text('Overall',
+                        style: AppTextStyles.heading3),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid.count(
+                    crossAxisCount: 4,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 0.72,
+                    children: [
+                      StatCard(
+                        label: 'Total',
+                        value: '${overall.total}',
+                        icon: Icons.assessment_outlined,
+                        color: AppColors.primary,
+                      ),
+                      StatCard(
+                        label: 'Done',
+                        value: '${overall.completed}',
+                        icon: Icons.check_circle_outline,
+                        color: AppColors.success,
+                      ),
+                      StatCard(
+                        label: 'Pending',
+                        value: '${overall.pending}',
+                        icon: Icons.schedule,
+                        color: AppColors.warning,
+                      ),
+                      StatCard(
+                        label: 'Cancelled',
+                        value: '${overall.cancelled}',
+                        icon: Icons.cancel_outlined,
+                        color: AppColors.error,
+                      ),
+                    ],
+                  ),
+                ),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
@@ -98,7 +141,7 @@ class DoctorInsightsScreen extends StatelessWidget {
                     children: [
                       StatCard(
                         label: 'Patients',
-                        value: '${perf.patientsThisMonth}',
+                        value: '${perf.totalPatients}',
                         icon: Icons.people_outline,
                         color: AppColors.primary,
                       ),

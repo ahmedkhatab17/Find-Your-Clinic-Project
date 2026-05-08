@@ -81,10 +81,14 @@ class UpcomingAppointmentCard extends StatelessWidget {
                     Icon(Icons.access_time,
                         size: 14, color: AppColors.textHint),
                     const SizedBox(width: 4),
-                    Text(
-                      '$dateStr · $timeStr',
-                      style: AppTextStyles.caption
-                          .copyWith(color: AppColors.textSecondary),
+                    Expanded(
+                      child: Text(
+                        '$dateStr · $timeStr',
+                        style: AppTextStyles.caption
+                            .copyWith(color: AppColors.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),

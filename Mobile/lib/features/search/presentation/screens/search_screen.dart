@@ -13,8 +13,13 @@ import '../widgets/filter_bottom_sheet.dart';
 
 class SearchScreen extends StatefulWidget {
   final String? initialSpecialtyId;
+  final String? initialSpecialtyName;
 
-  const SearchScreen({super.key, this.initialSpecialtyId});
+  const SearchScreen({
+    super.key,
+    this.initialSpecialtyId,
+    this.initialSpecialtyName,
+  });
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -28,8 +33,12 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    final filters = widget.initialSpecialtyId != null
-        ? SearchFilters(specialtyId: widget.initialSpecialtyId)
+    final filters = (widget.initialSpecialtyId != null ||
+            widget.initialSpecialtyName != null)
+        ? SearchFilters(
+            specialtyId: widget.initialSpecialtyId,
+            specialtyName: widget.initialSpecialtyName,
+          )
         : const SearchFilters();
     context.read<SearchCubit>().search(filters);
 

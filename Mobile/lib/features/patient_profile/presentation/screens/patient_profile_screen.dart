@@ -255,8 +255,8 @@ class _ProfileBody extends StatelessWidget {
             iconBg: AppColors.secondary.withAlpha(25),
             iconColor: AppColors.secondary,
             title: 'Payment Methods',
-            subtitle: 'Manage cards & payments',
-            onTap: () {},
+            subtitle: 'Choose your default method',
+            onTap: () => context.push('/patient/payments/methods'),
           ),
           _SettingsTile(
             icon: Icons.receipt_long_outlined,
@@ -264,7 +264,7 @@ class _ProfileBody extends StatelessWidget {
             iconColor: const Color(0xFF9C27B0),
             title: 'Transaction History',
             subtitle: 'View past payments',
-            onTap: () {},
+            onTap: () => context.push('/patient/payments/history'),
           ),
           _SettingsTile(
             icon: Icons.settings_outlined,

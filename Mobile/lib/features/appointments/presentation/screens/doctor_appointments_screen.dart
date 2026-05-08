@@ -129,14 +129,17 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
                 // ─── Pill Tab Bar ───
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    child: Row(
-                      children: ['Upcoming', 'Past', 'All']
-                          .asMap()
-                          .entries
-                          .map((e) => _pillTab(e.key, e.value, theme))
-                          .toList(),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        children: ['Confirmed', 'Completed', 'Pending', 'Cancelled', 'Total']
+                            .asMap()
+                            .entries
+                            .map((e) => _pillTab(e.key, e.value, theme))
+                            .toList(),
+                      ),
                     ),
                   ),
                 ),
@@ -212,8 +215,10 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
     ThemeData theme,
   ) {
     final list = switch (_selectedTab) {
-      0 => state.upcoming,
-      1 => [...state.completed, ...state.cancelled],
+      0 => state.confirmed,
+      1 => state.completed,
+      2 => state.pending,
+      3 => state.cancelled,
       _ => state.all,
     };
 
