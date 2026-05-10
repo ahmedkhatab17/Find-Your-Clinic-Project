@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Users, FileCheck, Stethoscope, LogOut, LayoutDashboard, ClipboardList, Star } from 'lucide-react';
+import { Users, FileCheck, Stethoscope, LogOut, LayoutDashboard, ClipboardList, Star, DollarSign } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -15,6 +15,7 @@ export default function Sidebar() {
     { name: 'Specialties', href: '/specialties', icon: Stethoscope },
     { name: 'Health Records', href: '/health-records', icon: ClipboardList },
     { name: 'Reviews', href: '/reviews', icon: Star },
+    { name: 'Financial', href: '/financial', icon: DollarSign },
   ];
 
   const handleLogout = () => {
