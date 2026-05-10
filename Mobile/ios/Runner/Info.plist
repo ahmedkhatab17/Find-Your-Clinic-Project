@@ -28,6 +28,10 @@
 		<string>This app needs access to your location to show you nearby clinics.</string>
 		<key>NSLocationAlwaysUsageDescription</key>
 		<string>This app needs access to your location to show you nearby clinics.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>This app uses speech recognition to let you talk to the AI health assistant.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>This app needs microphone access for voice input to the AI health assistant.</string>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>UIApplicationSceneManifest</key>

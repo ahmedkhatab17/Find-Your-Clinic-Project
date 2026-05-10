@@ -20,6 +20,7 @@ class ApiEndpoints {
   // ─── Notifications ───
   static const notifications = '/api/notifications';
   static const deviceToken = '/api/notifications/device-token';
+  static const markAllNotificationsRead = '/api/notifications/read-all';
   static String markNotificationRead(String id) => '/api/notifications/$id/read';
 
   // ─── Doctors ───
@@ -88,6 +89,7 @@ class ApiEndpoints {
   static const aiChat = '/api/ai/chat';
   static const aiChatHistory = '/api/ai/chat/history';
   static const aiSymptomsAnalyze = '/api/ai/symptoms/analyze';
+  static const aiVoiceCommand = '/api/ai/voice-command';
 
   // ─── Payments ───
   static const paymentInitiate = '/api/payments/initiate';

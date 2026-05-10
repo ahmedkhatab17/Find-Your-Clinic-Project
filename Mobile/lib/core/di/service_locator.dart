@@ -104,6 +104,17 @@ import '../../features/ai_health/domain/usecases/get_chat_history_usecase.dart';
 import '../../features/ai_health/domain/usecases/analyze_symptoms_usecase.dart';
 import '../../features/ai_health/presentation/cubits/ai_chat_cubit.dart';
 import '../../features/ai_health/presentation/cubits/symptom_checker_cubit.dart';
+import '../../features/ai_health/presentation/cubits/voice_input_cubit.dart';
+import '../services/tts_service.dart';
+
+// Accessibility (voice assistant for blind patients)
+import '../../features/accessibility/data/accessibility_preferences_store.dart';
+import '../../features/accessibility/data/datasources/voice_command_remote_datasource.dart';
+import '../../features/accessibility/data/repos/voice_command_repository_impl.dart';
+import '../../features/accessibility/domain/repos/voice_command_repository.dart';
+import '../../features/accessibility/domain/usecases/process_voice_command_usecase.dart';
+import '../../features/accessibility/presentation/cubits/voice_assistant_cubit.dart';
+import '../../features/accessibility/presentation/cubits/voice_assistant_visibility_cubit.dart';
 
 // Payment
 import '../../features/payment/data/preferred_payment_method_store.dart';
@@ -171,6 +182,10 @@ Future<void> initServiceLocator() async {
 
   // ─── AI Health Feature ───
   _initAiHealth();
+
+  // ─── Accessibility Feature (depends on AI Health for VoiceInputCubit/TTS
+  //     and on Appointments for GetPatientAppointmentsUseCase) ───
+  _initAccessibility();
 
   // ─── Payment Feature ───
   _initPayment();
@@ -332,17 +347,22 @@ void _initNotifications() {
     () => MarkNotificationReadUseCase(sl<NotificationRepository>()),
   );
   sl.registerFactory(
+    () => MarkAllNotificationsReadUseCase(sl<NotificationRepository>()),
+  );
+  sl.registerFactory(
     () => RegisterDeviceTokenUseCase(sl<NotificationRepository>()),
+  );
+  sl.registerLazySingleton<NotificationBadgeCubit>(
+    () => NotificationBadgeCubit(
+      getUnreadCountUseCase: sl<GetUnreadNotificationCountUseCase>(),
+    ),
   );
   sl.registerFactory(
     () => NotificationsCubit(
       getNotificationsUseCase: sl<GetNotificationsUseCase>(),
       markReadUseCase: sl<MarkNotificationReadUseCase>(),
-    ),
-  );
-  sl.registerLazySingleton<NotificationBadgeCubit>(
-    () => NotificationBadgeCubit(
-      getUnreadCountUseCase: sl<GetUnreadNotificationCountUseCase>(),
+      markAllReadUseCase: sl<MarkAllNotificationsReadUseCase>(),
+      badgeCubit: sl<NotificationBadgeCubit>(),
     ),
   );
 }
@@ -534,6 +554,45 @@ void _initAiHealth() {
     () => AiChatCubit(sl<ai_send.SendMessageUseCase>(), sl<GetChatHistoryUseCase>()),
   );
   sl.registerFactory(() => SymptomCheckerCubit(sl<AnalyzeSymptomsUseCase>()));
+
+  // Voice
+  sl.registerLazySingleton(() => TtsService());
+  sl.registerFactory(() => VoiceInputCubit());
+}
+
+void _initAccessibility() {
+  // Data
+  sl.registerLazySingleton(() => AccessibilityPreferencesStore());
+  sl.registerLazySingleton<VoiceCommandRemoteDataSource>(
+    () => VoiceCommandRemoteDataSourceImpl(sl<ApiClient>()),
+  );
+  sl.registerLazySingleton<VoiceCommandRepository>(
+    () => VoiceCommandRepositoryImpl(
+      dataSource: sl<VoiceCommandRemoteDataSource>(),
+    ),
+  );
+
+  // Domain
+  sl.registerLazySingleton(
+    () => ProcessVoiceCommandUseCase(sl<VoiceCommandRepository>()),
+  );
+
+  // Presentation cubits.
+  // Visibility is a singleton so Home and Settings stay in sync.
+  sl.registerLazySingleton(
+    () => VoiceAssistantVisibilityCubit(sl<AccessibilityPreferencesStore>()),
+  );
+  // Orchestrator is a singleton too so the patient shell, settings, and any
+  // screen all share the same instance and the same active screen-context.
+  sl.registerLazySingleton(
+    () => VoiceAssistantCubit(
+      voiceInputCubit: sl<VoiceInputCubit>(),
+      tts: sl<TtsService>(),
+      processVoiceCommand: sl<ProcessVoiceCommandUseCase>(),
+      getAppointments: sl<GetPatientAppointmentsUseCase>(),
+      bookAppointment: sl<BookAppointmentUseCase>(),
+    ),
+  );
 }
 
 void _initPayment() {
