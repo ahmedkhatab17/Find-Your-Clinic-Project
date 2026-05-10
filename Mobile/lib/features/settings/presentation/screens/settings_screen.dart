@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/theme_mode_cubit.dart';
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/utils/token_storage.dart';
+import '../../../accessibility/presentation/cubits/voice_assistant_visibility_cubit.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -32,6 +34,34 @@ class _SettingsBody extends StatelessWidget {
                       Brightness.dark);
           return ListView(
             children: [
+              // ACCESSIBILITY section is patient-only — the voice assistant is
+              // a blind-patient feature.
+              FutureBuilder<String?>(
+                future: sl<TokenStorage>().getUserRole(),
+                builder: (ctx, snap) {
+                  if (snap.data != 'Patient') return const SizedBox.shrink();
+                  return Column(
+                    children: [
+                      _SectionHeader('ACCESSIBILITY'),
+                      BlocBuilder<VoiceAssistantVisibilityCubit, bool>(
+                        bloc: sl<VoiceAssistantVisibilityCubit>(),
+                        builder: (_, enabled) => SwitchListTile(
+                          secondary:
+                              const Icon(Icons.record_voice_over_outlined),
+                          title: const Text('Voice Assistant Card'),
+                          subtitle: const Text(
+                            'Show the voice assistant card on the home screen',
+                          ),
+                          value: enabled,
+                          onChanged: (v) =>
+                              sl<VoiceAssistantVisibilityCubit>().setEnabled(v),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                    ],
+                  );
+                },
+              ),
               _SectionHeader('APPEARANCE'),
               SwitchListTile(
                 secondary: Icon(
@@ -48,6 +78,15 @@ class _SettingsBody extends StatelessWidget {
                 title: const Text('Change Password'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.pushNamed('changePassword'),
+              ),
+              const Divider(height: 1),
+              _SectionHeader('SUPPORT'),
+              ListTile(
+                leading: const Icon(Icons.help_outline),
+                title: const Text('Help & Support'),
+                subtitle: const Text('FAQs, contact us, legal'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.pushNamed('helpSupport'),
               ),
               const Divider(height: 1),
               _SectionHeader('ABOUT'),
