@@ -38,11 +38,17 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Messages'),
         centerTitle: true,
+        shape: Border(
+          bottom: BorderSide(
+            color: theme.dividerTheme.color ?? theme.dividerColor,
+            width: 1.5,
+          ),
+        ),
       ),
       body: BlocBuilder<ConversationsCubit, ConversationsState>(
         bloc: _cubit,
@@ -50,13 +56,16 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           if (state is ConversationsLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           if (state is ConversationsError) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(state.message, style: TextStyle(color: theme.colorScheme.error)),
+                  Text(
+                    state.message,
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
                   TextButton(
                     onPressed: () => _cubit.loadConversations(),
                     child: const Text('Retry'),
@@ -65,16 +74,14 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               ),
             );
           }
-          
+
           if (state is ConversationsLoaded) {
             final conversations = state.conversations;
-            
+
             if (conversations.isEmpty) {
-              return const Center(
-                child: Text('No conversations yet.'),
-              );
+              return const Center(child: Text('No conversations yet.'));
             }
-            
+
             return RefreshIndicator(
               onRefresh: () => _cubit.loadConversations(),
               child: ListView.separated(
@@ -83,9 +90,12 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 itemBuilder: (context, index) {
                   final conv = conversations[index];
                   final isUnread = conv.unreadCount > 0;
-                  
+
                   return ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     leading: UserAvatar(
                       radius: 28,
                       imageUrl: conv.counterpartyImageUrl,
@@ -100,7 +110,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                     title: Text(
                       conv.counterpartyName ?? 'Unknown',
                       style: TextStyle(
-                        fontWeight: isUnread ? FontWeight.bold : FontWeight.w600,
+                        fontWeight: isUnread
+                            ? FontWeight.bold
+                            : FontWeight.w600,
                       ),
                     ),
                     subtitle: Text(
@@ -108,10 +120,12 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: isUnread 
-                            ? theme.colorScheme.onSurface 
+                        color: isUnread
+                            ? theme.colorScheme.onSurface
                             : theme.colorScheme.onSurfaceVariant,
-                        fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isUnread
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                     trailing: Column(
@@ -121,10 +135,12 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         Text(
                           _formatDate(conv.lastMessageAt),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: isUnread 
-                                ? theme.colorScheme.primary 
+                            color: isUnread
+                                ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurfaceVariant,
-                            fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isUnread
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -150,23 +166,25 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                       final otherUserId = _currentUserId == conv.patientId
                           ? conv.doctorId
                           : conv.patientId;
-                      context.push(
-                        '/chat/${conv.id}',
-                        extra: {
-                          'otherPartyName': conv.counterpartyName,
-                          'otherPartyImageUrl': conv.counterpartyImageUrl,
-                          'otherPartyUserId': otherUserId,
-                        },
-                      ).then((_) {
-                        if (mounted) _cubit.loadConversations();
-                      });
+                      context
+                          .push(
+                            '/chat/${conv.id}',
+                            extra: {
+                              'otherPartyName': conv.counterpartyName,
+                              'otherPartyImageUrl': conv.counterpartyImageUrl,
+                              'otherPartyUserId': otherUserId,
+                            },
+                          )
+                          .then((_) {
+                            if (mounted) _cubit.loadConversations();
+                          });
                     },
                   );
                 },
               ),
             );
           }
-          
+
           return const SizedBox.shrink();
         },
       ),
