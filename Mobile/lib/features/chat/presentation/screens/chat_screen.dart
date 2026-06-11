@@ -149,10 +149,27 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: _ChatAppBar(
-        name: widget.otherPartyName ?? 'Chat',
-        imageUrl: widget.otherPartyImageUrl,
-        onTap: widget.otherPartyUserId == null ? null : _openCounterpartyInfo,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(kToolbarHeight),
+        child: BlocBuilder<ChatCubit, ChatState>(
+          bloc: _cubit,
+          buildWhen: (prev, curr) {
+            if (prev is ChatLoaded && curr is ChatLoaded) {
+              return prev.isOtherPartyTyping != curr.isOtherPartyTyping;
+            }
+            return prev.runtimeType != curr.runtimeType;
+          },
+          builder: (context, state) {
+            final isTyping = state is ChatLoaded && state.isOtherPartyTyping;
+            return _ChatAppBar(
+              name: widget.otherPartyName ?? 'Chat',
+              imageUrl: widget.otherPartyImageUrl,
+              isTyping: isTyping,
+              isOnline: false, // Changed from true to false to avoid showing offline users as online
+              onTap: widget.otherPartyUserId == null ? null : _openCounterpartyInfo,
+            );
+          },
+        ),
       ),
       body: Column(
         children: [
@@ -174,27 +191,42 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
                 if (state is ChatLoaded) {
                   final messages = state.messages.reversed.toList();
-                  return ListView.builder(
-                    controller: _scrollController,
-                    reverse: true,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final message = messages[index];
-                      final isMe = message.senderId == _currentUserId;
-                      return ChatBubble(
-                        key: ValueKey(message.id),
-                        message: message,
-                        isMe: isMe,
-                        onLongPress: message.isPending
-                            ? null
-                            : () => _showMessageActions(message),
-                        onReactTap: message.isPending
-                            ? null
-                            : () => _showMessageActions(message),
-                      );
-                    },
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0.8, 1.2),
+                        radius: 1.5,
+                        colors: [
+                          isDark
+                              ? const Color(0xFF1A4D3B).withValues(alpha: 0.4)
+                              : const Color(0xFFD8EFE5),
+                          isDark ? AppColors.darkBackground : AppColors.scaffoldLight,
+                        ],
+                      ),
+                    ),
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      reverse: true,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final message = messages[index];
+                        final isMe = message.senderId == _currentUserId;
+                        return ChatBubble(
+                          key: ValueKey(message.id),
+                          message: message,
+                          isMe: isMe,
+                          onLongPress: message.isPending
+                              ? null
+                              : () => _showMessageActions(message),
+                          onReactTap: message.isPending
+                              ? null
+                              : () => _showMessageActions(message),
+                        );
+                      },
+                    ),
                   );
                 }
                 return const SizedBox.shrink();
@@ -255,11 +287,15 @@ class _ChatScreenState extends State<ChatScreen> {
 class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String name;
   final String? imageUrl;
+  final bool isTyping;
+  final bool isOnline;
   final VoidCallback? onTap;
 
   const _ChatAppBar({
     required this.name,
     this.imageUrl,
+    this.isTyping = false,
+    this.isOnline = false,
     this.onTap,
   });
 
@@ -268,8 +304,21 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AppBar(
       titleSpacing: 0,
+      elevation: 2.0,
+      shadowColor: isDark
+          ? Colors.black.withValues(alpha: 0.4)
+          : Colors.black.withValues(alpha: 0.08),
+      shape: Border(
+        bottom: BorderSide(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.12)
+              : Colors.black.withValues(alpha: 0.12),
+          width: 1.0,
+        ),
+      ),
       flexibleSpace: const DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -290,24 +339,66 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Row(
             children: [
-              UserAvatar(
-                radius: 18,
-                imageUrl: imageUrl,
-                fullName: name,
-                backgroundColor: Colors.white24,
-                textStyle:
-                    const TextStyle(color: Colors.white, fontSize: 14),
+              Stack(
+                children: [
+                  UserAvatar(
+                    radius: 20,
+                    imageUrl: imageUrl,
+                    fullName: name,
+                    backgroundColor: Colors.white24,
+                    textStyle:
+                        const TextStyle(color: Colors.white, fontSize: 15),
+                  ),
+                  if (isOnline)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent[400],
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.primary, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (isTyping)
+                      const Text(
+                        'typing...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white70,
+                        ),
+                      )
+                    else if (isOnline)
+                      const Text(
+                        'Online',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white70,
+                        ),
+                      ),
+                  ],
                 ),
               ),
               if (onTap != null)
