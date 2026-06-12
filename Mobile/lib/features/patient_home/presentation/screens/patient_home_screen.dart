@@ -91,9 +91,9 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
       // Register screen context only — never auto-speak. The summary is read
       // out only when the user explicitly says "read this screen".
       context.read<VoiceAssistantCubit>().setScreenContext(
-            _screenContext,
-            summary: _buildScreenSummary,
-          );
+        _screenContext,
+        summary: _buildScreenSummary,
+      );
     });
   }
 
@@ -132,405 +132,429 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     return BlocProvider(
       create: (context) => sl<HomeHighlightsCubit>(),
       child: Scaffold(
-          body: Stack(
-            children: [
-              BlocBuilder<PatientHomeCubit, PatientHomeState>(
-                builder: (context, state) => switch (state) {
-                  PatientHomeInitial() || PatientHomeLoading() => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-            PatientHomeError(:final message) => ErrorView(
-              message: message,
-              onRetry: () => context.read<PatientHomeCubit>().loadDashboard(),
-            ),
-            PatientHomeLoaded(:final summary) => RefreshIndicator(
-              onRefresh: () => context.read<PatientHomeCubit>().loadDashboard(),
-              child: CustomScrollView(
-                slivers: [
-                  // ─── App Bar ───
-                  SliverAppBar(
-                    expandedHeight: 120,
-                    floating: true,
-                    pinned: true,
-                    backgroundColor: AppColors.primary,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Container(
-                        key: _headerKey,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              AppColors.gradientStart,
-                              AppColors.gradientMiddle,
-                              AppColors.gradientEnd,
-                            ],
+        body: Stack(
+          children: [
+            BlocBuilder<PatientHomeCubit, PatientHomeState>(
+              builder: (context, state) => switch (state) {
+                PatientHomeInitial() || PatientHomeLoading() => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                PatientHomeError(:final message) => ErrorView(
+                  message: message,
+                  onRetry: () =>
+                      context.read<PatientHomeCubit>().loadDashboard(),
+                ),
+                PatientHomeLoaded(:final summary) => RefreshIndicator(
+                  onRefresh: () =>
+                      context.read<PatientHomeCubit>().loadDashboard(),
+                  child: CustomScrollView(
+                    slivers: [
+                      // ─── App Bar ───
+                      SliverAppBar(
+                        expandedHeight: 120,
+                        floating: true,
+                        pinned: true,
+                        backgroundColor: AppColors.primary,
+                        flexibleSpace: FlexibleSpaceBar(
+                          background: Container(
+                            key: _headerKey,
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  AppColors.gradientStart,
+                                  AppColors.gradientMiddle,
+                                  AppColors.gradientEnd,
+                                ],
+                              ),
+                            ),
+                            child: SafeArea(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  12,
+                                  20,
+                                  0,
+                                ),
+                                child:
+                                    BlocBuilder<
+                                      NotificationBadgeCubit,
+                                      NotificationBadgeState
+                                    >(
+                                      builder: (context, badgeState) {
+                                        final count =
+                                            badgeState
+                                                is NotificationBadgeLoaded
+                                            ? badgeState.unreadCount
+                                            : 0;
+                                        return GreetingHeader(
+                                          unreadNotificationCount: count,
+                                          onNotificationTap: () => context
+                                              .pushNamed('notifications')
+                                              .then((_) {
+                                                if (context.mounted) {
+                                                  context
+                                                      .read<
+                                                        NotificationBadgeCubit
+                                                      >()
+                                                      .loadUnreadCount();
+                                                }
+                                              }),
+                                        );
+                                      },
+                                    ),
+                              ),
+                            ),
                           ),
                         ),
-                        child: SafeArea(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                            child:
-                                BlocBuilder<
-                                  NotificationBadgeCubit,
-                                  NotificationBadgeState
-                                >(
-                                  builder: (context, badgeState) {
-                                    final count =
-                                        badgeState is NotificationBadgeLoaded
-                                        ? badgeState.unreadCount
-                                        : 0;
-                                    return GreetingHeader(
-                                      unreadNotificationCount: count,
-                                      onNotificationTap: () => context
-                                          .pushNamed('notifications')
-                                          .then((_) {
-                                            if (context.mounted) {
-                                              context
-                                                  .read<
-                                                    NotificationBadgeCubit
-                                                  >()
-                                                  .loadUnreadCount();
-                                            }
-                                          }),
+                      ),
+
+                      // ─── Search Bar ───
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                          child: GestureDetector(
+                            onTap: () => context.pushNamed('search'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.darkSurface
+                                    : AppColors.surface,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.divider),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.shadow,
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.search,
+                                    color: AppColors.textHint,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Search doctors, specialties...',
+                                    style: AppTextStyles.bodyMd.copyWith(
+                                      color: AppColors.textHint,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // ─── Specialties ───
+                      SliverToBoxAdapter(
+                        child: Container(
+                          key: _specialtiesKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  20,
+                                  20,
+                                  8,
+                                ),
+                                child: Text(
+                                  'Specialties',
+                                  style: AppTextStyles.heading3,
+                                ),
+                              ),
+                              SizedBox(
+                                height: 120,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  itemCount: summary.specialties.length,
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(width: 12),
+                                  itemBuilder: (context, index) {
+                                    final s = summary.specialties[index];
+                                    return SpecialtyChip(
+                                      name: s.name,
+                                      iconUrl: s.iconUrl,
+                                      onTap: () => context.pushNamed(
+                                        'search',
+                                        queryParameters: {'specialtyId': s.id},
+                                      ),
                                     );
                                   },
                                 ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // ─── Search Bar ───
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                      child: GestureDetector(
-                        onTap: () => context.pushNamed('search'),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? AppColors.darkSurface
-                                : AppColors.surface,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: AppColors.divider),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.shadow,
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.search,
-                                color: AppColors.textHint,
-                                size: 22,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Search doctors, specialties...',
-                                style: AppTextStyles.bodyMd.copyWith(
-                                  color: AppColors.textHint,
-                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
-                  ),
 
-                  // ─── Specialties ───
-                  SliverToBoxAdapter(
-                    child: Container(
-                      key: _specialtiesKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                            child: Text(
-                              'Specialties',
-                              style: AppTextStyles.heading3,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 120,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              itemCount: summary.specialties.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(width: 12),
-                              itemBuilder: (context, index) {
-                                final s = summary.specialties[index];
-                                return SpecialtyChip(
-                                  name: s.name,
-                                  iconUrl: s.iconUrl,
-                                  onTap: () => context.pushNamed(
-                                    'search',
-                                    queryParameters: {'specialtyId': s.id},
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // ─── Voice Assistant (Accessibility) ───
-                  SliverToBoxAdapter(
-                    child: BlocBuilder<VoiceAssistantVisibilityCubit, bool>(
-                      builder: (_, visible) => visible
-                          ? const Padding(
-                              padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
-                              child: VoiceAssistantCard(),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ),
-
-                  // ─── Upcoming Appointment ───
-                  if (summary.upcomingAppointment != null)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        key: _upcomingKey,
-                        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Upcoming Appointment',
-                              style: AppTextStyles.heading3,
-                            ),
-                            const SizedBox(height: 12),
-                            UpcomingAppointmentCard(
-                              appointment: summary.upcomingAppointment!,
-                            ),
-                          ],
+                      // ─── Voice Assistant (Accessibility) ───
+                      SliverToBoxAdapter(
+                        child: BlocBuilder<VoiceAssistantVisibilityCubit, bool>(
+                          builder: (_, visible) => visible
+                              ? const Padding(
+                                  padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+                                  child: VoiceAssistantCard(),
+                                )
+                              : const SizedBox.shrink(),
                         ),
                       ),
-                    ),
 
-                  // ─── Health Stats ───
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      key: _healthKey,
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Health Overview',
-                            style: AppTextStyles.heading3,
-                          ),
-                          const SizedBox(height: 12),
-                          HealthStatsCard(healthSummary: summary.healthSummary),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // ─── AI Health Tools ───
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      key: _aiToolsKey,
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'AI Health Tools',
-                            style: AppTextStyles.heading3,
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _AiToolCard(
-                                  title: 'AI Assistant',
-                                  subtitle: 'Chat & get guidance',
-                                  icon: Icons.auto_awesome,
-                                  gradientColors: [
-                                    AppColors.gradientStart,
-                                    AppColors.gradientMiddle,
-                                  ],
-                                  onTap: () =>
-                                      context.pushNamed(RouteNames.aiChat),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _AiToolCard(
-                                  title: 'Symptom Checker',
-                                  subtitle: 'Analyze symptoms',
-                                  icon: Icons.medical_services_outlined,
-                                  gradientColors: [
-                                    AppColors.gradientMiddle,
-                                    AppColors.gradientEnd,
-                                  ],
-                                  onTap: () => context.pushNamed(
-                                    RouteNames.symptomChecker,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // ─── Top Doctors ───
-                  SliverToBoxAdapter(
-                    child: Container(
-                      key: _topDoctorsKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                            child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                      // ─── Upcoming Appointment ───
+                      if (summary.upcomingAppointment != null)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            key: _upcomingKey,
+                            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Top Doctors',
+                                  'Upcoming Appointment',
                                   style: AppTextStyles.heading3,
                                 ),
-                                TextButton(
-                                  onPressed: () => context.pushNamed('search'),
-                                  child: const Text('See All'),
+                                const SizedBox(height: 12),
+                                UpcomingAppointmentCard(
+                                  appointment: summary.upcomingAppointment!,
                                 ),
                               ],
                             ),
                           ),
-                          SizedBox(
-                            height: 200,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              itemCount: summary.topDoctors.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(width: 14),
-                              itemBuilder: (context, index) {
-                                final doctor = summary.topDoctors[index];
-                                return TopDoctorCard(
-                                  doctor: doctor,
-                                  onTap: () => context.pushNamed(
-                                    'doctorDetails',
-                                    pathParameters: {'id': doctor.doctorId},
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                        ),
 
-                  // ─── Nearby Clinics CTA ───
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: InkWell(
-                        onTap: () => context.pushNamed('nearbyClinics'),
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                AppColors.gradientStart,
-                                AppColors.gradientEnd,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Row(
+                      // ─── Health Stats ───
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          key: _healthKey,
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withAlpha(40),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.location_on,
-                                  color: Colors.white,
-                                  size: 28,
-                                ),
+                              Text(
+                                'Health Overview',
+                                style: AppTextStyles.heading3,
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Nearby Clinics',
-                                      style: AppTextStyles.heading3.copyWith(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Find clinics around you on the map',
-                                      style: AppTextStyles.bodySm.copyWith(
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.white70,
-                                size: 18,
+                              const SizedBox(height: 12),
+                              HealthStatsCard(
+                                healthSummary: summary.healthSummary,
                               ),
                             ],
                           ),
                         ),
                       ),
+
+                      // ─── AI Health Tools ───
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          key: _aiToolsKey,
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'AI Health Tools',
+                                style: AppTextStyles.heading3,
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _AiToolCard(
+                                      title: 'AI Assistant',
+                                      subtitle: 'Chat & get guidance',
+                                      icon: Icons.auto_awesome,
+                                      gradientColors: [
+                                        AppColors.gradientStart,
+                                        AppColors.gradientMiddle,
+                                      ],
+                                      onTap: () =>
+                                          context.pushNamed(RouteNames.aiChat),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: _AiToolCard(
+                                      title: 'Symptom Checker',
+                                      subtitle: 'Analyze symptoms',
+                                      icon: Icons.medical_services_outlined,
+                                      gradientColors: [
+                                        AppColors.gradientMiddle,
+                                        AppColors.gradientEnd,
+                                      ],
+                                      onTap: () => context.pushNamed(
+                                        RouteNames.symptomChecker,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // ─── Top Doctors ───
+                      SliverToBoxAdapter(
+                        child: Container(
+                          key: _topDoctorsKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  24,
+                                  20,
+                                  8,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Top Doctors',
+                                      style: AppTextStyles.heading3,
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          context.pushNamed('search'),
+                                      child: const Text('See All'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(
+                                height: 200,
+                                child: ListView.separated(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  itemCount: summary.topDoctors.length,
+                                  separatorBuilder: (_, _) =>
+                                      const SizedBox(width: 14),
+                                  itemBuilder: (context, index) {
+                                    final doctor = summary.topDoctors[index];
+                                    return TopDoctorCard(
+                                      doctor: doctor,
+                                      onTap: () => context.pushNamed(
+                                        'doctorDetails',
+                                        pathParameters: {'id': doctor.doctorId},
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // ─── Nearby Clinics CTA ───
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: InkWell(
+                            onTap: () => context.pushNamed('nearbyClinics'),
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    AppColors.gradientStart,
+                                    AppColors.gradientEnd,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withAlpha(40),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Nearby Clinics',
+                                          style: AppTextStyles.heading3
+                                              .copyWith(color: Colors.white),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Find clinics around you on the map',
+                                          style: AppTextStyles.bodySm.copyWith(
+                                            color: Colors.white70,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.arrow_forward_ios,
+                                    color: Colors.white70,
+                                    size: 18,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
+                    ],
+                  ),
+                ),
+              },
+            ),
+            BlocBuilder<PatientHomeCubit, PatientHomeState>(
+              builder: (context, state) {
+                if (state is! PatientHomeLoaded) return const SizedBox.shrink();
+                return Positioned.fill(
+                  child: HomeHighlightsOverlay(
+                    steps: _buildSteps(
+                      hasUpcoming: state.summary.upcomingAppointment != null,
                     ),
                   ),
-
-                  const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
-                ],
-              ),
+                );
+              },
             ),
-          },
+          ],
         ),
-        BlocBuilder<PatientHomeCubit, PatientHomeState>(
-          builder: (context, state) {
-            if (state is! PatientHomeLoaded) return const SizedBox.shrink();
-            return Positioned.fill(
-              child: HomeHighlightsOverlay(
-                steps: _buildSteps(
-                  hasUpcoming: state.summary.upcomingAppointment != null,
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    ),
-   ),
-  );
- }
+      ),
+    );
+  }
 }
 
 class _AiToolCard extends StatelessWidget {

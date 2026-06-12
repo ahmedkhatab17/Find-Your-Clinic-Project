@@ -56,7 +56,23 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       child: Column(
         children: [
-          Image.asset('assets/icons/app_logo.png', height: 56),
+          // استبدال السطر 59 بهذا الـ Container:
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Image.asset('assets/icons/app_logo.png', height: 48),
+          ),
+
           const SizedBox(height: 16),
           Text(
             'Welcome Back!',
@@ -84,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Text(
               'Login to Your Account',
               style: AppTextStyles.heading3.copyWith(
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 24),
@@ -166,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text(
                     'Or continue with',
                     style: AppTextStyles.bodySm.copyWith(
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ),
@@ -202,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Text(
                   "Don't have an account? ",
                   style: AppTextStyles.bodyMd.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 GestureDetector(
@@ -210,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Text(
                     'Sign Up',
                     style: AppTextStyles.label.copyWith(
-                      color: AppColors.secondary,
+                      color: Theme.of(context).colorScheme.secondary,
                     ),
                   ),
                 ),
@@ -233,12 +249,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _onGoogleSignIn() async {
     try {
-      final googleUser = await GoogleSignIn().signIn();
+      final googleSignIn = GoogleSignIn(
+        serverClientId: '80992510984-48oj53m9t3ebdknqvtb810p899v4jc88.apps.googleusercontent.com',
+      );
+      await googleSignIn.signOut();
+      final googleUser = await googleSignIn.signIn();
       if (googleUser == null) return;
       final auth = await googleUser.authentication;
       final idToken = auth.idToken;
       if (idToken == null) return;
-      if (!mounted) { return; }
+      if (!mounted) {
+        return;
+      }
       context.read<AuthCubit>().googleLogin(idToken: idToken);
     } catch (_) {
       // Google sign-in cancelled or failed.
@@ -277,10 +299,13 @@ class _LoginScreenState extends State<LoginScreen> {
         if (lowerMessage.contains('rejected')) {
           String? reason;
           if (message.contains('Reason:')) {
-            reason = message.split(RegExp(r'Reason:\s*', caseSensitive: false)).last;
+            reason = message
+                .split(RegExp(r'Reason:\s*', caseSensitive: false))
+                .last;
           }
           context.goNamed(RouteNames.doctorRejected, extra: reason);
-        } else if (lowerMessage.contains('under review') || lowerMessage.contains('pending')) {
+        } else if (lowerMessage.contains('under review') ||
+            lowerMessage.contains('pending')) {
           context.goNamed(RouteNames.doctorPending);
         } else {
           ScaffoldMessenger.of(context)

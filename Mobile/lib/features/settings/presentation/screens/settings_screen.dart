@@ -118,9 +118,12 @@ class _SettingsBody extends StatelessWidget {
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext context) {
+  void _showDeleteAccountDialog(BuildContext context) async {
+    final isGoogleUser = await sl<TokenStorage>().isGoogleUser();
+    if (!context.mounted) return;
+
     final passwordController = TextEditingController();
-    final authCubit = sl<import_auth.AuthCubit>(); // we will use alias to avoid collision
+    final authCubit = sl<import_auth.AuthCubit>();
     
     showDialog(
       context: context,
@@ -156,15 +159,17 @@ class _SettingsBody extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Are you sure you want to delete your account? This action will schedule your account for permanent deletion after 30 days.'),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter your password to confirm',
-                      border: OutlineInputBorder(),
+                  if (!isGoogleUser) ...[
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Enter your password to confirm',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
               actions: [
@@ -177,7 +182,7 @@ class _SettingsBody extends StatelessWidget {
                   onPressed: isLoading
                       ? null
                       : () {
-                          if (passwordController.text.isEmpty) {
+                          if (!isGoogleUser && passwordController.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Please enter your password'),

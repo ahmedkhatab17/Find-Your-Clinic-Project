@@ -7,20 +7,20 @@ class SupportConstants {
 
   // ─── Contact ───
   /// Support inbox the mail client will pre-fill.
-  static const supportEmail = 'support@findyourclinic.com';
+  static const supportEmail = 'shamsaliii2004@gmail.com';
 
   /// Subject line pre-filled in the mailto: launch.
   static const supportEmailSubject = 'Find Your Clinic — Support';
 
   /// E.164-formatted phone number for the dialer (no spaces, no dashes).
-  static const supportPhoneE164 = '+201000000000';
+  static const supportPhoneE164 = '+201004872384';
 
   /// Human-readable phone shown in the UI.
-  static const supportPhoneDisplay = '+20 100 000 0000';
+  static const supportPhoneDisplay = '+20 100 487 2384';
 
   /// WhatsApp number in international format WITHOUT the leading "+".
   /// Used to build wa.me links of the form `https://wa.me/{number}`.
-  static const supportWhatsAppNumber = '201000000000';
+  static const supportWhatsAppNumber = '201004872384';
 
   /// Pre-filled WhatsApp message (URL-encoded automatically by Uri).
   static const supportWhatsAppMessage = 'Hi, I need help with Find Your Clinic.';

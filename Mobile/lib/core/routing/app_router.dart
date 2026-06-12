@@ -1,9 +1,12 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../di/service_locator.dart';
+import '../network/api_result.dart';
 import '../utils/token_storage.dart';
 import '../../features/accessibility/domain/entities/voice_command_intent.dart';
 import '../../features/accessibility/presentation/cubits/voice_assistant_cubit.dart';
@@ -46,6 +49,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 
 import '../../features/notifications/domain/usecases/notification_usecases.dart';
 import '../../features/notifications/presentation/cubits/notification_badge_cubit.dart';
+import '../../features/notifications/presentation/cubits/notification_badge_state.dart';
 import '../../features/notifications/presentation/cubits/notifications_cubit.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/chat/presentation/cubit/conversations_cubit.dart';
@@ -665,22 +669,35 @@ class _PatientShell extends StatefulWidget {
   State<_PatientShell> createState() => _PatientShellState();
 }
 
-class _PatientShellState extends State<_PatientShell> {
+class _PatientShellState extends State<_PatientShell> with WidgetsBindingObserver {
   DateTime? _lastPressedAt;
   late final ConversationsCubit _conversationsCubit;
   late final NotificationBadgeCubit _notificationBadgeCubit;
   late final VoiceAssistantCubit _voiceAssistantCubit;
   late final VoiceAssistantVisibilityCubit _voiceVisibilityCubit;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _conversationsCubit = sl<ConversationsCubit>()..loadConversations();
     _notificationBadgeCubit = sl<NotificationBadgeCubit>()..loadUnreadCount();
     _voiceVisibilityCubit = sl<VoiceAssistantVisibilityCubit>();
     _voiceAssistantCubit = sl<VoiceAssistantCubit>()
       ..attachNavigationHandler(_handleVoiceIntent);
     _registerFcmToken();
+    _startRefreshTimer();
+  }
+
+  void _startRefreshTimer() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (mounted) {
+        _notificationBadgeCubit.loadUnreadCount();
+        _conversationsCubit.loadConversations();
+      }
+    });
   }
 
   /// Side-effects only (navigation). TTS is owned by the cubit, which has
@@ -727,18 +744,43 @@ class _PatientShellState extends State<_PatientShell> {
   Future<void> _registerFcmToken() async {
     try {
       final token = await FirebaseMessaging.instance.getToken();
-      if (token != null) {
-        await sl<RegisterDeviceTokenUseCase>()(token);
+      if (kDebugMode) {
+        print('FCM Token retrieved: $token');
       }
-    } catch (_) {}
+      if (token != null) {
+        final result = await sl<RegisterDeviceTokenUseCase>()(token);
+        if (kDebugMode) {
+          switch (result) {
+            case Success():
+              print('FCM Token registered successfully with backend.');
+            case Error(:final failure):
+              print('Failed to register FCM Token with backend: ${failure.message}');
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting/registering FCM Token: $e');
+      }
+    }
   }
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _conversationsCubit.close();
     // _notificationBadgeCubit, _voiceVisibilityCubit and _voiceAssistantCubit
     // are lazy singletons shared across screens — not closed here.
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _notificationBadgeCubit.loadUnreadCount();
+      _conversationsCubit.loadConversations();
+    }
   }
 
   @override
@@ -784,47 +826,66 @@ class _PatientShellState extends State<_PatientShell> {
               if (state is ConversationsLoaded) {
                 unreadCount = state.conversations.fold<int>(0, (sum, conv) => sum + conv.unreadCount);
               }
-              return BottomNavigationBar(
-                currentIndex: widget.navigationShell.currentIndex,
-                onTap: (index) => widget.navigationShell.goBranch(
-                  index,
-                  initialLocation: index == widget.navigationShell.currentIndex,
-                ),
-                items: [
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    activeIcon: Icon(Icons.home),
-                    label: 'Home',
-                  ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.calendar_today_outlined),
-                    activeIcon: Icon(Icons.calendar_today),
-                    label: 'Appointments',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Badge(
-                      isLabelVisible: unreadCount > 0,
-                      label: Text(unreadCount.toString()),
-                      child: const Icon(Icons.chat_bubble_outline),
+              return BlocBuilder<NotificationBadgeCubit, NotificationBadgeState>(
+                builder: (context, badgeState) {
+                  final notifCount = badgeState is NotificationBadgeLoaded
+                      ? badgeState.unreadCount
+                      : 0;
+                  return BottomNavigationBar(
+                    currentIndex: widget.navigationShell.currentIndex,
+                    onTap: (index) => widget.navigationShell.goBranch(
+                      index,
+                      initialLocation: index == widget.navigationShell.currentIndex,
                     ),
-                    activeIcon: Badge(
-                      isLabelVisible: unreadCount > 0,
-                      label: Text(unreadCount.toString()),
-                      child: const Icon(Icons.chat_bubble),
-                    ),
-                    label: 'Messages',
-                  ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.description_outlined),
-                    activeIcon: Icon(Icons.description),
-                    label: 'Records',
-                  ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.person_outline),
-                    activeIcon: Icon(Icons.person),
-                    label: 'Profile',
-                  ),
-                ],
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: Badge(
+                          isLabelVisible: notifCount > 0,
+                          label: Text(
+                            notifCount > 99 ? '99+' : notifCount.toString(),
+                          ),
+                          child: const Icon(Icons.home_outlined),
+                        ),
+                        activeIcon: Badge(
+                          isLabelVisible: notifCount > 0,
+                          label: Text(
+                            notifCount > 99 ? '99+' : notifCount.toString(),
+                          ),
+                          child: const Icon(Icons.home),
+                        ),
+                        label: 'Home',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.calendar_today_outlined),
+                        activeIcon: Icon(Icons.calendar_today),
+                        label: 'Appointments',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Badge(
+                          isLabelVisible: unreadCount > 0,
+                          label: Text(unreadCount.toString()),
+                          child: const Icon(Icons.chat_bubble_outline),
+                        ),
+                        activeIcon: Badge(
+                          isLabelVisible: unreadCount > 0,
+                          label: Text(unreadCount.toString()),
+                          child: const Icon(Icons.chat_bubble),
+                        ),
+                        label: 'Messages',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.description_outlined),
+                        activeIcon: Icon(Icons.description),
+                        label: 'Records',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.person_outline),
+                        activeIcon: Icon(Icons.person),
+                        label: 'Profile',
+                      ),
+                    ],
+                  );
+                },
               );
             },
           ),
@@ -843,33 +904,71 @@ class _DoctorShell extends StatefulWidget {
   State<_DoctorShell> createState() => _DoctorShellState();
 }
 
-class _DoctorShellState extends State<_DoctorShell> {
+class _DoctorShellState extends State<_DoctorShell> with WidgetsBindingObserver {
   DateTime? _lastPressedAt;
   late final ConversationsCubit _conversationsCubit;
   late final NotificationBadgeCubit _notificationBadgeCubit;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _conversationsCubit = sl<ConversationsCubit>()..loadConversations();
     _notificationBadgeCubit = sl<NotificationBadgeCubit>()..loadUnreadCount();
     _registerFcmToken();
+    _startRefreshTimer();
+  }
+
+  void _startRefreshTimer() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      if (mounted) {
+        _notificationBadgeCubit.loadUnreadCount();
+        _conversationsCubit.loadConversations();
+      }
+    });
   }
 
   Future<void> _registerFcmToken() async {
     try {
       final token = await FirebaseMessaging.instance.getToken();
-      if (token != null) {
-        await sl<RegisterDeviceTokenUseCase>()(token);
+      if (kDebugMode) {
+        print('FCM Token retrieved: $token');
       }
-    } catch (_) {}
+      if (token != null) {
+        final result = await sl<RegisterDeviceTokenUseCase>()(token);
+        if (kDebugMode) {
+          switch (result) {
+            case Success():
+              print('FCM Token registered successfully with backend.');
+            case Error(:final failure):
+              print('Failed to register FCM Token with backend: ${failure.message}');
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting/registering FCM Token: $e');
+      }
+    }
   }
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _conversationsCubit.close();
     // _notificationBadgeCubit is a lazy singleton — not closed here
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _notificationBadgeCubit.loadUnreadCount();
+      _conversationsCubit.loadConversations();
+    }
   }
 
   @override
@@ -909,47 +1008,66 @@ class _DoctorShellState extends State<_DoctorShell> {
               if (state is ConversationsLoaded) {
                 unreadCount = state.conversations.fold<int>(0, (sum, conv) => sum + conv.unreadCount);
               }
-              return BottomNavigationBar(
-                currentIndex: widget.navigationShell.currentIndex,
-                onTap: (index) => widget.navigationShell.goBranch(
-                  index,
-                  initialLocation: index == widget.navigationShell.currentIndex,
-                ),
-                items: [
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.home_outlined),
-                    activeIcon: Icon(Icons.home),
-                    label: 'Home',
-                  ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.calendar_today_outlined),
-                    activeIcon: Icon(Icons.calendar_today),
-                    label: 'Appointments',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Badge(
-                      isLabelVisible: unreadCount > 0,
-                      label: Text(unreadCount.toString()),
-                      child: const Icon(Icons.chat_bubble_outline),
+              return BlocBuilder<NotificationBadgeCubit, NotificationBadgeState>(
+                builder: (context, badgeState) {
+                  final notifCount = badgeState is NotificationBadgeLoaded
+                      ? badgeState.unreadCount
+                      : 0;
+                  return BottomNavigationBar(
+                    currentIndex: widget.navigationShell.currentIndex,
+                    onTap: (index) => widget.navigationShell.goBranch(
+                      index,
+                      initialLocation: index == widget.navigationShell.currentIndex,
                     ),
-                    activeIcon: Badge(
-                      isLabelVisible: unreadCount > 0,
-                      label: Text(unreadCount.toString()),
-                      child: const Icon(Icons.chat_bubble),
-                    ),
-                    label: 'Chat',
-                  ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.insights_outlined),
-                    activeIcon: Icon(Icons.insights),
-                    label: 'Insights',
-                  ),
-                  const BottomNavigationBarItem(
-                    icon: Icon(Icons.person_outline),
-                    activeIcon: Icon(Icons.person),
-                    label: 'Profile',
-                  ),
-                ],
+                    items: [
+                      BottomNavigationBarItem(
+                        icon: Badge(
+                          isLabelVisible: notifCount > 0,
+                          label: Text(
+                            notifCount > 99 ? '99+' : notifCount.toString(),
+                          ),
+                          child: const Icon(Icons.home_outlined),
+                        ),
+                        activeIcon: Badge(
+                          isLabelVisible: notifCount > 0,
+                          label: Text(
+                            notifCount > 99 ? '99+' : notifCount.toString(),
+                          ),
+                          child: const Icon(Icons.home),
+                        ),
+                        label: 'Home',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.calendar_today_outlined),
+                        activeIcon: Icon(Icons.calendar_today),
+                        label: 'Appointments',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Badge(
+                          isLabelVisible: unreadCount > 0,
+                          label: Text(unreadCount.toString()),
+                          child: const Icon(Icons.chat_bubble_outline),
+                        ),
+                        activeIcon: Badge(
+                          isLabelVisible: unreadCount > 0,
+                          label: Text(unreadCount.toString()),
+                          child: const Icon(Icons.chat_bubble),
+                        ),
+                        label: 'Chat',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.insights_outlined),
+                        activeIcon: Icon(Icons.insights),
+                        label: 'Insights',
+                      ),
+                      const BottomNavigationBarItem(
+                        icon: Icon(Icons.person_outline),
+                        activeIcon: Icon(Icons.person),
+                        label: 'Profile',
+                      ),
+                    ],
+                  );
+                },
               );
             },
           ),

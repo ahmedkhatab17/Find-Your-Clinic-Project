@@ -16,15 +16,43 @@ class HomeHighlightsOverlay extends StatefulWidget {
   State<HomeHighlightsOverlay> createState() => _HomeHighlightsOverlayState();
 }
 
-class _HomeHighlightsOverlayState extends State<HomeHighlightsOverlay> {
+class _HomeHighlightsOverlayState extends State<HomeHighlightsOverlay>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   Rect? _targetRect;
+
+  late final AnimationController _animController;
+  late final Animation<double> _fadeAnim;
+  late final Animation<Offset> _slideAnim;
 
   @override
   void initState() {
     super.initState();
     context.read<HomeHighlightsCubit>().checkVisibility();
+
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+    _fadeAnim = CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeOut,
+    );
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeOutCubic,
+    ));
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _updateRect());
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
   }
 
   @override
@@ -41,7 +69,6 @@ class _HomeHighlightsOverlayState extends State<HomeHighlightsOverlay> {
     final ctx = widget.steps[_currentIndex].targetKey.currentContext;
     final box = ctx?.findRenderObject() as RenderBox?;
     if (box == null || !box.attached) {
-      // Target not rendered (off-screen sliver, conditional widget) — skip it.
       _advance(autoSkip: true);
       return;
     }
@@ -49,6 +76,7 @@ class _HomeHighlightsOverlayState extends State<HomeHighlightsOverlay> {
     final newRect = offset & box.size;
     if (newRect != _targetRect) {
       setState(() => _targetRect = newRect);
+      _animController.forward(from: 0);
     }
   }
 
@@ -62,7 +90,6 @@ class _HomeHighlightsOverlayState extends State<HomeHighlightsOverlay> {
     } else if (!autoSkip) {
       _finish();
     } else {
-      // Auto-skipped the last step — dismiss.
       _finish();
     }
   }
@@ -81,227 +108,255 @@ class _HomeHighlightsOverlayState extends State<HomeHighlightsOverlay> {
 
         final step = widget.steps[_currentIndex];
         final isLast = _currentIndex == widget.steps.length - 1;
-        final rect = _targetRect;
-        final padding = step.cutoutPadding;
-        final inflated = rect == null
-            ? null
-            : Rect.fromLTRB(
-                rect.left - padding.left,
-                rect.top - padding.top,
-                rect.right + padding.right,
-                rect.bottom + padding.bottom,
-              );
 
-        return Material(
-          color: Colors.transparent,
-          child: Stack(
-            children: [
-              // Dark scrim with cut-out — also blocks taps to underlying content.
-              Positioned.fill(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {}, // absorb taps
-                  child: CustomPaint(
-                    painter: _CoachMarkPainter(
-                      cutout: inflated,
-                      radius: step.cutoutRadius,
-                    ),
-                    size: Size.infinite,
-                  ),
-                ),
-              ),
-              // Skip button (top-right).
-              Positioned(
-                top: MediaQuery.paddingOf(context).top + 4,
-                right: 8,
-                child: TextButton(
-                  onPressed: _finish,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.white.withAlpha(30),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: const Text(
-                    'Skip',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-              // Tooltip card.
-              if (inflated != null)
-                _Tooltip(
-                  rect: inflated,
-                  step: step,
-                  index: _currentIndex,
-                  total: widget.steps.length,
-                  isLast: isLast,
-                  onNext: _advance,
-                ),
-            ],
-          ),
+        return _CompactTooltip(
+          step: step,
+          index: _currentIndex,
+          total: widget.steps.length,
+          isLast: isLast,
+          onNext: _advance,
+          onSkip: _finish,
+          fadeAnim: _fadeAnim,
+          slideAnim: _slideAnim,
         );
       },
     );
   }
 }
 
-class _Tooltip extends StatelessWidget {
-  final Rect rect;
+class _CompactTooltip extends StatelessWidget {
   final TourStep step;
   final int index;
   final int total;
   final bool isLast;
   final VoidCallback onNext;
+  final VoidCallback onSkip;
+  final Animation<double> fadeAnim;
+  final Animation<Offset> slideAnim;
 
-  const _Tooltip({
-    required this.rect,
+  const _CompactTooltip({
     required this.step,
     required this.index,
     required this.total,
     required this.isLast,
     required this.onNext,
+    required this.onSkip,
+    required this.fadeAnim,
+    required this.slideAnim,
   });
 
   @override
   Widget build(BuildContext context) {
     final screen = MediaQuery.sizeOf(context);
-    final safeTop = MediaQuery.paddingOf(context).top;
     final safeBottom = MediaQuery.paddingOf(context).bottom;
-    const horizontalMargin = 20.0;
-    const gap = 16.0;
+    final horizontalMargin = screen.width * 0.04;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final spaceAbove = rect.top - safeTop;
-    final spaceBelow = screen.height - rect.bottom - safeBottom;
-    final placeBelow = spaceBelow >= spaceAbove;
+    // Theme-aware colors
+    final cardBg = isDark ? const Color(0xFF1E2030) : Colors.white;
+    final titleColor = isDark ? Colors.white : const Color(0xFF1A1D2E);
+    final descColor = isDark
+        ? Colors.white.withValues(alpha: 0.65)
+        : const Color(0xFF6B7280);
+    final skipBgColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : const Color(0xFFF3F4F6);
+    final skipTextColor = isDark ? Colors.white60 : const Color(0xFF9CA3AF);
+    final dotInactiveColor = isDark
+        ? Colors.white.withValues(alpha: 0.15)
+        : const Color(0xFFE5E7EB);
+    final borderColor = isDark
+        ? AppColors.primary.withValues(alpha: 0.25)
+        : const Color(0xFFE5E7EB);
 
-    final card = Container(
-      width: screen.width - horizontalMargin * 2,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.darkSurface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withAlpha(80), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(120),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          horizontalMargin,
+          0,
+          horizontalMargin,
+          safeBottom + 16,
+        ),
+        child: SlideTransition(
+          position: slideAnim,
+          child: FadeTransition(
+            opacity: fadeAnim,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: borderColor, width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDark
+                        ? AppColors.primary.withValues(alpha: 0.12)
+                        : AppColors.primary.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, -2),
+                  ),
+                  BoxShadow(
+                    color: isDark
+                        ? Colors.black.withValues(alpha: 0.35)
+                        : Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header row: step badge + title + skip
+                  Row(
+                    children: [
+                      Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              AppColors.gradientStart,
+                              AppColors.gradientEnd,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(9),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          step.title,
+                          style: AppTextStyles.heading3.copyWith(
+                            color: titleColor,
+                            fontSize: 15,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: onSkip,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: skipBgColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            'Skip',
+                            style: TextStyle(
+                              color: skipTextColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Description
+                  Text(
+                    step.description,
+                    style: AppTextStyles.bodySm.copyWith(
+                      color: descColor,
+                      height: 1.4,
+                      fontSize: 12.5,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 14),
+                  // Bottom row: dots + next button
+                  Row(
+                    children: [
+                      ...List.generate(total, (i) {
+                        final isActive = i == index;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          margin: const EdgeInsets.only(right: 6),
+                          width: isActive ? 20 : 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(3),
+                            color: isActive
+                                ? AppColors.primary
+                                : dotInactiveColor,
+                          ),
+                        );
+                      }),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: onNext,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppColors.gradientStart,
+                                AppColors.gradientEnd,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                isLast ? 'Got it' : 'Next',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              if (!isLast) ...[
+                                const SizedBox(width: 4),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withAlpha(40),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '${index + 1} of $total',
-              style: AppTextStyles.bodySm.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            step.title,
-            style: AppTextStyles.heading3.copyWith(color: Colors.white),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            step.description,
-            style: AppTextStyles.bodyMd.copyWith(
-              color: Colors.white.withAlpha(220),
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: onNext,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 26,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-              child: Text(
-                isLast ? 'Got it' : 'Next',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
-
-    return Positioned(
-      left: horizontalMargin,
-      right: horizontalMargin,
-      top: placeBelow ? rect.bottom + gap : null,
-      bottom: placeBelow ? null : screen.height - rect.top + gap,
-      child: Align(alignment: Alignment.center, child: card),
-    );
-  }
-}
-
-class _CoachMarkPainter extends CustomPainter {
-  final Rect? cutout;
-  final double radius;
-
-  _CoachMarkPainter({required this.cutout, required this.radius});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.black.withAlpha(200);
-    final full = Offset.zero & size;
-
-    if (cutout == null) {
-      canvas.drawRect(full, paint);
-      return;
-    }
-
-    final outer = Path()..addRect(full);
-    final hole = Path()
-      ..addRRect(RRect.fromRectAndRadius(cutout!, Radius.circular(radius)));
-    canvas.drawPath(
-      Path.combine(PathOperation.difference, outer, hole),
-      paint,
-    );
-
-    // Subtle highlight ring around the cutout.
-    final ringPaint = Paint()
-      ..color = AppColors.primary.withAlpha(180)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(cutout!, Radius.circular(radius)),
-      ringPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _CoachMarkPainter oldDelegate) {
-    return oldDelegate.cutout != cutout || oldDelegate.radius != radius;
   }
 }

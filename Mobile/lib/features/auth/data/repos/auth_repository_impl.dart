@@ -36,6 +36,15 @@ class AuthRepositoryImpl implements AuthRepository {
       final result = AuthResponseModel.fromJson(
         body['data'] as Map<String, dynamic>,
       ).toEntity();
+
+      // Block admin users — they should use the web admin panel.
+      if (result.user.role.toLowerCase() == 'admin') {
+        return Error(ServerFailure(
+          'Admin accounts cannot sign in to the mobile app. '
+          'Please use the web admin panel instead.',
+        ));
+      }
+
       await _persistAuth(result);
       return Success(result);
     } on DioException catch (e) {
@@ -95,10 +104,12 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<ApiResult<GoogleAuthResult>> googleLogin({
     required String idToken,
     String? role,
+    String? specialtyId,
   }) async {
     try {
       final data = <String, dynamic>{'idToken': idToken};
       if (role != null) data['role'] = role;
+      if (specialtyId != null) data['specialtyId'] = specialtyId;
 
       final response = await _apiClient.dio.post(
         ApiEndpoints.googleLogin,
@@ -113,7 +124,14 @@ class AuthRepositoryImpl implements AuthRepository {
       ).toEntity();
 
       if (result.authResult != null) {
-        await _persistAuth(result.authResult!);
+        // Block admin users — they should use the web admin panel.
+        if (result.authResult!.user.role.toLowerCase() == 'admin') {
+          return Error(ServerFailure(
+            'Admin accounts cannot sign in to the mobile app. '
+            'Please use the web admin panel instead.',
+          ));
+        }
+        await _persistAuth(result.authResult!, loginMethod: 'google');
       }
       return Success(result);
     } on DioException catch (e) {
@@ -260,12 +278,13 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   /// Persist tokens and user info after successful auth.
-  Future<void> _persistAuth(AuthResult result) async {
+  Future<void> _persistAuth(AuthResult result, {String loginMethod = 'email'}) async {
     await _tokenStorage.saveTokens(
       accessToken: result.tokens.accessToken,
       refreshToken: result.tokens.refreshToken,
     );
     await _tokenStorage.saveUserRole(result.user.role);
     await _tokenStorage.saveUserId(result.user.id);
+    await _tokenStorage.saveLoginMethod(loginMethod);
   }
 }

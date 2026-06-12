@@ -7,20 +7,12 @@ import '../../domain/entities/ai_chat_message.dart';
 class AiMessageBubble extends StatelessWidget {
   final AiChatMessage message;
 
-  /// Whether TTS is currently reading this message.
-  final bool isSpeaking;
-
-  /// Callback when the speaker icon is tapped (AI messages only).
-  final VoidCallback? onSpeakerTap;
-
   /// TASK 3.2 — Callback for "Find doctors" CTA shown below AI responses.
   final VoidCallback? onFindDoctors;
 
   const AiMessageBubble({
     super.key,
     required this.message,
-    this.isSpeaking = false,
-    this.onSpeakerTap,
     this.onFindDoctors,
   });
 
@@ -86,44 +78,13 @@ class AiMessageBubble extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      timeStr,
-                      style: AppTextStyles.caption.copyWith(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Theme.of(context).colorScheme.onSurfaceVariant
-                            : AppColors.textSecondary,
-                      ),
-                    ),
-                    // Speaker button for AI messages
-                    if (isAssistant && onSpeakerTap != null) ...[
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: onSpeakerTap,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isSpeaking
-                                ? AppColors.primary.withValues(alpha: 0.15)
-                                : Colors.transparent,
-                          ),
-                          child: Icon(
-                            isSpeaking
-                                ? Icons.volume_up_rounded
-                                : Icons.volume_up_outlined,
-                            size: 16,
-                            color: isSpeaking
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                Text(
+                  timeStr,
+                  style: AppTextStyles.caption.copyWith(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.onSurfaceVariant
+                        : AppColors.textSecondary,
+                  ),
                 ),
                 // TASK 3.2 — "Find doctors" CTA chip
                 if (isAssistant && onFindDoctors != null)

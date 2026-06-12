@@ -7,8 +7,8 @@ class AccessibilityPreferencesStore {
 
   Future<bool> isVoiceCardEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-    // Default to true so blind users discover the feature on first install.
-    return prefs.getBool(_kVoiceCardEnabled) ?? true;
+    // Default to false — users opt-in via Settings → Accessibility.
+    return prefs.getBool(_kVoiceCardEnabled) ?? false;
   }
 
   Future<void> setVoiceCardEnabled(bool value) async {

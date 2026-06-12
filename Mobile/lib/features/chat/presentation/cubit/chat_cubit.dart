@@ -87,14 +87,21 @@ class ChatCubit extends Cubit<ChatState> {
     });
 
     _messagesReadSubscription =
-        _chatRepository.onMessagesRead.listen((eventConvId) {
-      if (eventConvId != conversationId) return;
+        _chatRepository.onMessagesRead.listen((event) {
+      if (event.conversationId != conversationId) return;
       if (state is! ChatLoaded) return;
 
       final current = state as ChatLoaded;
-      final updated = current.messages
-          .map((msg) => !msg.isRead ? msg.copyWith(isRead: true) : msg)
-          .toList();
+      final updated = current.messages.map((msg) {
+        if (msg.isRead) return msg;
+        
+        if (event.userId == currentUserId) {
+          if (msg.senderId != currentUserId) return msg.copyWith(isRead: true);
+        } else {
+          if (msg.senderId == currentUserId) return msg.copyWith(isRead: true);
+        }
+        return msg;
+      }).toList();
       emit(current.copyWith(messages: updated));
     });
 

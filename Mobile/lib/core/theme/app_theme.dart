@@ -199,6 +199,12 @@ class AppTheme {
             textStyle: AppTextStyles.button,
           ),
         ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.secondaryLight,
+            textStyle: AppTextStyles.buttonSm,
+          ),
+        ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.darkSurfaceAlt,
@@ -261,7 +267,7 @@ class AppTheme {
   );
 
   static const headerGradientDark = LinearGradient(
-    colors: [Color(0xFF0F2235), Color(0xFF12503C), Color(0xFF1E6B53)],
+    colors: [Color(0xFF0A3D4D), Color(0xFF0D7FA0), Color(0xFF11A8CD)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

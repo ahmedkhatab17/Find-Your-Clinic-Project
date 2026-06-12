@@ -13,28 +13,32 @@ class ApiClient {
   static String get _baseUrl {
     // Use your PC's IP address for physical device testing.
     // Ensure your phone is connected to the same Wi-Fi network as your PC.
-    return 'https://fa67-197-63-206-127.ngrok-free.app';
+    if (Platform.isAndroid) {
+      return 'http://192.168.1.32:5106';
+    }
+    return 'http://localhost:5106';
+    // return 'http://findyourclinic.runasp.net';
   }
 
   final Dio dio;
-  final TokenStorage _tokenStorage; 
+  final TokenStorage _tokenStorage;
 
   String get baseUrl => _baseUrl;
 
   ApiClient({required TokenStorage tokenStorage})
-      : _tokenStorage = tokenStorage,
-        dio = Dio(
-          BaseOptions(
-            baseUrl: _baseUrl,
-            connectTimeout: const Duration(seconds: 20),
-            receiveTimeout: const Duration(seconds: 30),
-            sendTimeout: const Duration(seconds: 20),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-          ),
-        ) {
+    : _tokenStorage = tokenStorage,
+      dio = Dio(
+        BaseOptions(
+          baseUrl: _baseUrl,
+          connectTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 20),
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      ) {
     dio.interceptors.addAll([
       _AuthInterceptor(tokenStorage: _tokenStorage, dio: dio),
       LogInterceptor(
@@ -60,8 +64,8 @@ class _AuthInterceptor extends Interceptor {
   bool _isRefreshing = false;
 
   _AuthInterceptor({required TokenStorage tokenStorage, required Dio dio})
-      : _tokenStorage = tokenStorage,
-        _dio = dio;
+    : _tokenStorage = tokenStorage,
+      _dio = dio;
 
   @override
   Future<void> onRequest(
@@ -126,7 +130,9 @@ Failure mapDioException(DioException e) {
     case DioExceptionType.sendTimeout:
     case DioExceptionType.receiveTimeout:
     case DioExceptionType.connectionError:
-      return NetworkFailure('Connection error: ${e.message ?? "Server is unreachable. Make sure the backend is running."}');
+      return NetworkFailure(
+        'Connection error: ${e.message ?? "Server is unreachable. Make sure the backend is running."}',
+      );
     case DioExceptionType.badResponse:
       final statusCode = e.response?.statusCode;
       final data = e.response?.data;
@@ -149,7 +155,9 @@ Failure mapDioException(DioException e) {
               errors.add(value.toString());
             }
           }
-          if (errors.isNotEmpty && (message == 'Server error' || message.contains('validation errors'))) {
+          if (errors.isNotEmpty &&
+              (message == 'Server error' ||
+                  message.contains('validation errors'))) {
             message = errors.first; // Show the first specific error to the user
           }
         } else if (data['errors'] is List) {

@@ -30,7 +30,8 @@ class ChatBubble extends StatelessWidget {
 
     final bubbleColor = isMe
         ? AppColors.primary
-        : (isDark ? AppColors.darkSurface : AppColors.surface);
+        : (isDark ? const Color(0xFF2E304F) : AppColors.surface);
+
     final textColor = isMe
         ? Colors.white
         : (isDark ? AppColors.darkTextPrimary : AppColors.textPrimary);
@@ -65,7 +66,7 @@ class ChatBubble extends StatelessWidget {
                     borderRadius: radius,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
+                        color: Colors.black.withValues(alpha: 0.08),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -676,14 +677,7 @@ class _StatusRow extends StatelessWidget {
         if (isMe) ...[
           const SizedBox(width: 4),
           if (message.isPending)
-            SizedBox(
-              width: 12,
-              height: 12,
-              child: CircularProgressIndicator(
-                strokeWidth: 1.5,
-                color: timeColor,
-              ),
-            )
+            Icon(Icons.check, size: 15, color: timeColor.withOpacity(0.5))
           else if (message.hasFailed)
             Icon(Icons.error_outline, size: 14, color: Colors.red[200])
           else

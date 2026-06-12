@@ -20,6 +20,7 @@ abstract class AuthRepository {
   Future<ApiResult<GoogleAuthResult>> googleLogin({
     required String idToken,
     String? role,
+    String? specialtyId,
   });
 
   Future<ApiResult<void>> forgotPassword({required String email});

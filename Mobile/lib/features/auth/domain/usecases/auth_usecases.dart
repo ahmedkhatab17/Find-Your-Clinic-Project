@@ -40,7 +40,8 @@ class GoogleLoginUseCase {
   Future<ApiResult<GoogleAuthResult>> call({
     required String idToken,
     String? role,
-  }) => _repository.googleLogin(idToken: idToken, role: role);
+    String? specialtyId,
+  }) => _repository.googleLogin(idToken: idToken, role: role, specialtyId: specialtyId);
 }
 
 class ForgotPasswordUseCase {

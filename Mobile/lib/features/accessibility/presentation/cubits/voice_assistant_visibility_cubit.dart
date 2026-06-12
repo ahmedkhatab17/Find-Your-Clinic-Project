@@ -8,7 +8,7 @@ import '../../data/accessibility_preferences_store.dart';
 class VoiceAssistantVisibilityCubit extends Cubit<bool> {
   final AccessibilityPreferencesStore _store;
 
-  VoiceAssistantVisibilityCubit(this._store) : super(true) {
+  VoiceAssistantVisibilityCubit(this._store) : super(false) {
     _hydrate();
   }
 

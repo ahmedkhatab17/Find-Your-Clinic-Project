@@ -2,6 +2,13 @@ import '../../../../core/network/api_result.dart';
 import '../entities/chat_message.dart';
 import '../entities/conversation.dart';
 
+class MessagesReadEvent {
+  final String conversationId;
+  final String userId;
+
+  MessagesReadEvent(this.conversationId, this.userId);
+}
+
 abstract interface class IChatRepository {
   Future<ApiResult<List<Conversation>>> getConversations();
   Future<ApiResult<List<ChatMessage>>> getMessages(String conversationId);
@@ -41,7 +48,7 @@ abstract interface class IChatRepository {
   // Real-time Streams
   Stream<ChatMessage> get onMessageReceived;
   Stream<String> get onConversationUpdated;
-  Stream<String> get onMessagesRead;
+  Stream<MessagesReadEvent> get onMessagesRead;
   Stream<bool> get onTyping;
   Stream<ReactionUpdate> get onReactionUpdated;
 

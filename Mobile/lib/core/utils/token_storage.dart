@@ -7,6 +7,7 @@ class TokenStorage {
   static const _userRoleKey = 'user_role';
   static const _userIdKey = 'user_id';
   static const _homeHighlightsSeenKey = 'home_highlights_seen';
+  static const _loginMethodKey = 'login_method';
 
   final FlutterSecureStorage _storage;
 
@@ -48,6 +49,17 @@ class TokenStorage {
 
   // ─── Clear All ───
   Future<void> clearAll() => _storage.deleteAll();
+
+  // ─── Login Method ───
+  Future<void> saveLoginMethod(String method) =>
+      _storage.write(key: _loginMethodKey, value: method);
+
+  Future<String?> getLoginMethod() => _storage.read(key: _loginMethodKey);
+
+  Future<bool> isGoogleUser() async {
+    final method = await getLoginMethod();
+    return method == 'google';
+  }
 
   // ─── Check Auth ───
   Future<bool> hasTokens() async {

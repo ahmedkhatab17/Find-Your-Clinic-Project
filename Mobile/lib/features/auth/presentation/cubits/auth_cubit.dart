@@ -73,9 +73,9 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> googleLogin({required String idToken, String? role}) async {
+  Future<void> googleLogin({required String idToken, String? role, String? specialtyId}) async {
     emit(AuthLoading());
-    final result = await _googleLoginUseCase(idToken: idToken, role: role);
+    final result = await _googleLoginUseCase(idToken: idToken, role: role, specialtyId: specialtyId);
     switch (result) {
       case Success(:final data):
         emit(AuthGoogleResult(data));

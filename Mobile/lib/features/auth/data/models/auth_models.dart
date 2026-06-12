@@ -103,9 +103,9 @@ class GoogleAuthResultModel {
   });
 
   factory GoogleAuthResultModel.fromJson(Map<String, dynamic> json) {
-    final hasAuth = json.containsKey('accessToken');
+    final authJson = json['auth'] as Map<String, dynamic>?;
     return GoogleAuthResultModel(
-      authResponse: hasAuth ? AuthResponseModel.fromJson(json) : null,
+      authResponse: authJson != null ? AuthResponseModel.fromJson(authJson) : null,
       pendingToken: json['pendingToken'] as String?,
       requiresRegistration:
           json['requiresRegistration'] as bool? ?? false,

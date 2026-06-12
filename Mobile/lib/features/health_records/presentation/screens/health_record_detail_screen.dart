@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/routing/app_router.dart';
 import '../cubits/health_record_cubit.dart';
@@ -198,6 +199,21 @@ class HealthRecordDetailScreen extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(record.notes!, style: textTheme.bodyMedium),
                   ],
+                  if (record.fileUrl != null && record.fileUrl!.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      'Attachment',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _AttachmentPreview(
+                      url: record.fileUrl!,
+                      colorScheme: colorScheme,
+                      textTheme: textTheme,
+                    ),
+                  ],
                 ],
               ),
             );
@@ -239,5 +255,143 @@ class _DetailRow extends StatelessWidget {
         Text(value, style: textTheme.bodyMedium),
       ],
     );
+  }
+}
+
+class _AttachmentPreview extends StatelessWidget {
+  final String url;
+  final ColorScheme colorScheme;
+  final TextTheme textTheme;
+
+  const _AttachmentPreview({
+    required this.url,
+    required this.colorScheme,
+    required this.textTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isPdf = url.toLowerCase().endsWith('.pdf') || url.contains('/raw/upload/');
+
+    if (isPdf) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.picture_as_pdf_outlined,
+              size: 28,
+              color: colorScheme.error,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'PDF Document',
+                    style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Tap to view document',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton.filledTonal(
+              icon: const Icon(Icons.open_in_new_rounded),
+              onPressed: () => _safeLaunch(
+                context,
+                Uri.parse(url),
+                errorMessage: 'Could not open document',
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => _safeLaunch(
+              context,
+              Uri.parse(url),
+              errorMessage: 'Could not open image',
+              mode: LaunchMode.externalApplication,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.3)),
+                ),
+                child: Image.network(
+                  url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.broken_image_outlined, size: 32, color: colorScheme.error),
+                          const SizedBox(height: 8),
+                          Text('Failed to load image', style: textTheme.bodyMedium),
+                        ],
+                      ),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tap image to view in full screen',
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      );
+    }
+  }
+}
+
+Future<void> _safeLaunch(
+  BuildContext context,
+  Uri uri, {
+  required String errorMessage,
+  LaunchMode mode = LaunchMode.platformDefault,
+}) async {
+  try {
+    final ok = await launchUrl(uri, mode: mode);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    }
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    }
   }
 }

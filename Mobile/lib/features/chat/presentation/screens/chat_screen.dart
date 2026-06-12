@@ -199,8 +199,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         radius: 1.5,
                         colors: [
                           isDark
-                              ? const Color(0xFF1A4D3B).withValues(alpha: 0.4)
-                              : const Color(0xFFD8EFE5),
+                              ? const Color(0xFF0D4F5E).withValues(alpha: 0.4)
+                              : const Color(0xFFD4F0F6),
                           isDark ? AppColors.darkBackground : AppColors.scaffoldLight,
                         ],
                       ),

@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/service_locator.dart';
-import '../../../../core/services/tts_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../cubits/ai_chat_cubit.dart';
@@ -24,13 +23,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final VoiceInputCubit _voiceCubit;
-  late final TtsService _ttsService;
 
   @override
   void initState() {
     super.initState();
     _voiceCubit = sl<VoiceInputCubit>();
-    _ttsService = sl<TtsService>();
   }
 
   @override
@@ -38,7 +35,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
     _inputController.dispose();
     _scrollController.dispose();
     _voiceCubit.close();
-    _ttsService.stop();
     super.dispose();
   }
 
@@ -89,7 +85,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
             onPressed: () {
-              _ttsService.stop();
               context.pop();
             },
           ),
@@ -139,14 +134,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 listener: (context, state) {
                   if (state is AiChatLoaded || state is AiChatSending) {
                     _scrollToBottom();
-                  }
-                  // Auto-read AI response aloud
-                  if (state is AiChatLoaded && state.messages.isNotEmpty) {
-                    final lastMsg = state.messages.last;
-                    if (lastMsg.role == 'assistant') {
-                      _ttsService.speak(lastMsg.content,
-                          messageId: lastMsg.createdAt.toIso8601String());
-                    }
                   }
                 },
                 builder: (context, state) {
@@ -201,37 +188,21 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   };
                   final isSending = state is AiChatSending;
 
-                  return StreamBuilder<bool>(
-                    stream: _ttsService.isSpeaking,
-                    initialData: false,
-                    builder: (context, snapshot) {
-                      final speakingMessageId =
-                          _ttsService.currentMessageId;
-
-                      return ListView(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.only(top: 8, bottom: 12),
-                        children: [
-                          if (messages.isEmpty && !isSending)
-                            _buildWelcomeArea(isDark),
-                          ...messages.map((msg) => AiMessageBubble(
-                                message: msg,
-                                isSpeaking: msg.role == 'assistant' &&
-                                    speakingMessageId ==
-                                        msg.createdAt.toIso8601String(),
-                                onSpeakerTap: msg.role == 'assistant'
-                                    ? () => _onSpeakerTap(msg.content,
-                                        msg.createdAt.toIso8601String())
-                                    : null,
-                                // TASK 3.2 — Find doctors CTA
-                                onFindDoctors: msg.role == 'assistant'
-                                    ? () => context.pushNamed('search')
-                                    : null,
-                              )),
-                          if (isSending) _buildTypingIndicator(isDark),
-                        ],
-                      );
-                    },
+                  return ListView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.only(top: 8, bottom: 12),
+                    children: [
+                      if (messages.isEmpty && !isSending)
+                        _buildWelcomeArea(isDark),
+                      ...messages.map((msg) => AiMessageBubble(
+                            message: msg,
+                            // TASK 3.2 — Find doctors CTA
+                            onFindDoctors: msg.role == 'assistant'
+                                ? () => context.pushNamed('search')
+                                : null,
+                          )),
+                      if (isSending) _buildTypingIndicator(isDark),
+                    ],
                   );
                 },
               ),
@@ -273,14 +244,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
     );
   }
 
-  void _onSpeakerTap(String text, String messageId) {
-    if (_ttsService.isSpeakingNow &&
-        _ttsService.currentMessageId == messageId) {
-      _ttsService.stop();
-    } else {
-      _ttsService.speak(text, messageId: messageId);
-    }
-  }
+
 
   Widget _buildDisclaimer(bool isDark) {
     return Container(

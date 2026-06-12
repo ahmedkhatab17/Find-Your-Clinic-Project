@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:find_your_clinic/features/chat/domain/repositories/i_chat_repository.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/utils/date_utils.dart';
@@ -9,7 +10,7 @@ import '../models/chat_message_model.dart';
 abstract class ChatSignalRDataSource {
   Stream<ChatMessageModel> get onMessageReceived;
   Stream<String> get onConversationUpdated;
-  Stream<String> get onMessagesRead;
+  Stream<MessagesReadEvent> get onMessagesRead;
   Stream<bool> get onTyping;
   Stream<ReactionUpdate> get onReactionUpdated;
 
@@ -30,7 +31,7 @@ class ChatSignalRDataSourceImpl implements ChatSignalRDataSource {
   final _messageReceivedController =
       StreamController<ChatMessageModel>.broadcast();
   final _conversationUpdatedController = StreamController<String>.broadcast();
-  final _messagesReadController = StreamController<String>.broadcast();
+  final _messagesReadController = StreamController<MessagesReadEvent>.broadcast();
   final _typingController = StreamController<bool>.broadcast();
   final _reactionUpdatedController =
       StreamController<ReactionUpdate>.broadcast();
@@ -46,7 +47,7 @@ class ChatSignalRDataSourceImpl implements ChatSignalRDataSource {
       _conversationUpdatedController.stream;
 
   @override
-  Stream<String> get onMessagesRead => _messagesReadController.stream;
+  Stream<MessagesReadEvent> get onMessagesRead => _messagesReadController.stream;
 
   @override
   Stream<bool> get onTyping => _typingController.stream;
@@ -161,7 +162,8 @@ class ChatSignalRDataSourceImpl implements ChatSignalRDataSource {
     final payload = args.first as Map<String, dynamic>;
     final conversationId =
         payload['conversationId'] ?? payload['ConversationId'];
-    _messagesReadController.add(conversationId.toString());
+    final userId = payload['userId'] ?? payload['UserId'];
+    _messagesReadController.add(MessagesReadEvent(conversationId.toString(), userId.toString()));
   }
 
   void _handleReactionUpdated(List<Object?>? args) {

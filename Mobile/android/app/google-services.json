@@ -12,7 +12,20 @@
           "package_name": "com.findyourclinic.find_your_clinic"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "80992510984-sqrm3go37mrt948ukla8ajbnr2a91h3r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.findyourclinic.find_your_clinic",
+            "certificate_hash": "1ae21b0da464ffad2313757175fc6f532a08e83b"
+          }
+        },
+        {
+          "client_id": "80992510984-48oj53m9t3ebdknqvtb810p899v4jc88.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAb0ex9z25R4kvcx5VpfWiri8YHpReB8VM"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "80992510984-48oj53m9t3ebdknqvtb810p899v4jc88.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "80992510984-jgfn6lecn0ptmou1h4g098lifqqmsqh9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.findyourclinic.findYourClinic"
+              }
+            }
+          ]
         }
       }
     }

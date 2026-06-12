@@ -23,7 +23,7 @@ class ChatRepositoryImpl implements IChatRepository {
       _signalRDataSource.onConversationUpdated;
 
   @override
-  Stream<String> get onMessagesRead => _signalRDataSource.onMessagesRead;
+  Stream<MessagesReadEvent> get onMessagesRead => _signalRDataSource.onMessagesRead;
 
   @override
   Stream<bool> get onTyping => _signalRDataSource.onTyping;

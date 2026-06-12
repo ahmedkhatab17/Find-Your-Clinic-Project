@@ -60,12 +60,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       body: BlocListener<AuthCubit, AuthState>(
         listener: _handleAuthState,
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildForm(),
-            ],
-          ),
+          child: Column(children: [_buildHeader(), _buildForm()]),
         ),
       ),
     );
@@ -84,7 +79,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
       child: Column(
         children: [
-          Image.asset('assets/icons/app_logo.png', height: 48),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Image.asset('assets/icons/app_logo.png', height: 48),
+          ),
+
           const SizedBox(height: 12),
           Text(
             'Create Account',
@@ -116,12 +126,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Expanded(child: _buildRoleChip('Patient', Icons.person)),
                 const SizedBox(width: 12),
                 Expanded(
-                    child: _buildRoleChip('Doctor', Icons.medical_services)),
+                  child: _buildRoleChip('Doctor', Icons.medical_services),
+                ),
               ],
             ),
             const SizedBox(height: 20),
 
-            
             // Name fields
             Row(
               children: [
@@ -159,8 +169,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               prefixIcon: const Icon(Icons.email_outlined, size: 20),
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Email is required';
-                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                    .hasMatch(v)) {
+                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
                   return 'Enter a valid email';
                 }
                 return null;
@@ -229,7 +238,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ? specialtyState.specialties
                       : <dynamic>[];
 
-                  final dropdownColor = Theme.of(context).inputDecorationTheme.fillColor;
+                  final dropdownColor = Theme.of(
+                    context,
+                  ).inputDecorationTheme.fillColor;
 
                   return FormField<String>(
                     initialValue: _selectedSpecialtyId,
@@ -237,15 +248,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     builder: (FormFieldState<String> state) {
                       return InputDecorator(
                         decoration: InputDecoration(
-                          hintText: isLoading ? 'Loading...' : 'Select Specialty',
-                          prefixIcon: const Icon(Icons.local_hospital_outlined, size: 20),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                          hintText: isLoading
+                              ? 'Loading...'
+                              : 'Select Specialty',
+                          prefixIcon: const Icon(
+                            Icons.local_hospital_outlined,
+                            size: 20,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 9,
+                          ),
                           errorText: state.errorText,
                         ),
                         isEmpty: _selectedSpecialtyId == null,
                         child: DropdownButtonHideUnderline(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4.0,
+                            ),
                             child: DropdownButton<String>(
                               value: _selectedSpecialtyId,
                               dropdownColor: dropdownColor,
@@ -253,15 +274,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               isExpanded: true,
                               icon: const Icon(Icons.arrow_drop_down, size: 24),
                               items: items
-                                  .map((s) => DropdownMenuItem<String>(
-                                        value: s.id,
-                                        child: Text(s.name),
-                                      ))
+                                  .map(
+                                    (s) => DropdownMenuItem<String>(
+                                      value: s.id,
+                                      child: Text(s.name),
+                                    ),
+                                  )
                                   .toList(),
                               onChanged: isLoading
                                   ? null
                                   : (value) {
-                                      setState(() => _selectedSpecialtyId = value);
+                                      setState(
+                                        () => _selectedSpecialtyId = value,
+                                      );
                                       state.didChange(value);
                                     },
                             ),
@@ -285,8 +310,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline,
-                        color: Colors.orange.shade700, size: 18),
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.orange.shade700,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -303,7 +331,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 16),
             ],
 
-
             // Terms & Conditions checkbox
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,7 +342,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     value: _agreedToTerms,
                     activeColor: AppColors.primary,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4)),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                     onChanged: (v) =>
                         setState(() => _agreedToTerms = v ?? false),
                   ),
@@ -324,8 +352,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Expanded(
                   child: RichText(
                     text: TextSpan(
-                      style: AppTextStyles.bodyMd
-                          .copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodyMd.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                       children: [
                         const TextSpan(text: 'I agree to the '),
                         TextSpan(
@@ -377,8 +406,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
                     'or',
-                    style: AppTextStyles.bodyMd
-                        .copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMd.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
                 const Expanded(child: Divider()),
@@ -396,7 +426,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   side: BorderSide(color: AppColors.divider),
                 ),
               ),
@@ -409,15 +440,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
               children: [
                 Text(
                   'Already have an account? ',
-                  style: AppTextStyles.bodyMd
-                      .copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.bodyMd.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 GestureDetector(
                   onTap: () => context.pop(),
                   child: Text(
                     'Login',
-                    style:
-                        AppTextStyles.label.copyWith(color: AppColors.secondary),
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.secondary,
+                    ),
                   ),
                 ),
               ],
@@ -468,13 +501,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _onGoogleSignUp() async {
+    if (_selectedRole == 'Doctor' && (_selectedSpecialtyId == null || _selectedSpecialtyId!.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select a specialty before signing up as a Doctor.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      return;
+    }
     try {
-      final googleUser = await GoogleSignIn().signIn();
+      final googleSignIn = GoogleSignIn(
+        serverClientId: '80992510984-48oj53m9t3ebdknqvtb810p899v4jc88.apps.googleusercontent.com',
+      );
+      await googleSignIn.signOut();
+      final googleUser = await googleSignIn.signIn();
       if (googleUser == null || !mounted) return;
       final auth = await googleUser.authentication;
       final idToken = auth.idToken;
       if (idToken == null || !mounted) return;
-      context.read<AuthCubit>().googleLogin(idToken: idToken, role: 'Patient');
+      context.read<AuthCubit>().googleLogin(
+        idToken: idToken,
+        role: _selectedRole,
+        specialtyId: _selectedRole == 'Doctor' ? _selectedSpecialtyId : null,
+      );
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -490,8 +542,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           content: const Text('Please agree to the Terms & Conditions.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
       return;
@@ -506,14 +557,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
 
       context.read<AuthCubit>().register(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            firstName: _firstNameController.text.trim(),
-            lastName: _lastNameController.text.trim(),
-            role: _selectedRole,
-            specialtyId:
-                _selectedRole == 'Doctor' ? _selectedSpecialtyId : null,
-          );
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        role: _selectedRole,
+        specialtyId: _selectedRole == 'Doctor' ? _selectedSpecialtyId : null,
+      );
     }
   }
 
@@ -529,7 +579,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
           context.goNamed(RouteNames.patientHome);
         }
       case AuthGoogleResult(:final result):
-        if (result.authResult != null) {
+        if (result.authResult == null && result.pendingToken != null) {
+          // Doctor signed up via Google — needs document upload
+          context.goNamed(
+            RouteNames.doctorDocuments,
+            extra: result.pendingToken ?? '',
+          );
+        } else if (result.authResult != null) {
           context.goNamed(RouteNames.patientHome);
         }
       case AuthError(:final message):
@@ -541,7 +597,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
               backgroundColor: AppColors.error,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           );
       default:
