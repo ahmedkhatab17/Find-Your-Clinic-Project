@@ -1,3 +1,4 @@
+using System.IO;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Configuration;
@@ -28,10 +29,31 @@ public static class FirebaseInitializer
                 credential = GoogleCredential.FromJson(credentialJson);
                 logger.LogInformation("Firebase initialized from credential json.");
             }
-            else if (File.Exists(credentialPath))
+            else
             {
-                credential = GoogleCredential.FromFile(credentialPath);
-                logger.LogInformation("Firebase initialized from credential file path {Path}.", credentialPath);
+                var pathsToTry = new[]
+                {
+                    credentialPath,
+                    Path.Combine(AppContext.BaseDirectory, credentialPath),
+                    Path.Combine(Directory.GetCurrentDirectory(), credentialPath),
+                    Path.Combine(AppContext.BaseDirectory, "..", "..", "..", credentialPath) // From bin/Debug/net10.0 to project root
+                };
+
+                string? resolvedPath = null;
+                foreach (var path in pathsToTry)
+                {
+                    if (File.Exists(path))
+                    {
+                        resolvedPath = path;
+                        break;
+                    }
+                }
+
+                if (resolvedPath != null)
+                {
+                    credential = GoogleCredential.FromFile(resolvedPath);
+                    logger.LogInformation("Firebase initialized from credential file path {Path}.", resolvedPath);
+                }
             }
 
             if (credential is null)

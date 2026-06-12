@@ -8,6 +8,7 @@ public class GoogleLoginCommand : IRequest<ApiResponse<GoogleLoginResultDto>>
 {
     public string IdToken { get; set; } = string.Empty;
     public string? Role { get; set; }
+    public Guid? SpecialtyId { get; set; }
 }
 
 public class GoogleLoginResultDto

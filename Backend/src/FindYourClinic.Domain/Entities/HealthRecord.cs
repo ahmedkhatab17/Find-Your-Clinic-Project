@@ -13,6 +13,8 @@ public class HealthRecord : AuditableEntity
     public string? Unit { get; set; }
     public DateTime RecordedAt { get; set; }
     public string? Notes { get; set; }
+    public string? FileUrl { get; set; }
+    public string? CloudinaryPublicId { get; set; }
 
     public ApplicationUser Patient { get; set; } = default!;
 }

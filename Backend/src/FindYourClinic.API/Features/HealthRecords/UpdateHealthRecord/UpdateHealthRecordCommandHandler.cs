@@ -40,7 +40,7 @@ public class UpdateHealthRecordCommandHandler : IRequestHandler<UpdateHealthReco
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return ApiResponse<HealthRecordDto>.Ok(
-            new HealthRecordDto(record.Id, record.Title, record.Type.ToString(), record.Value, record.Unit, record.RecordedAt, record.Notes),
+            new HealthRecordDto(record.Id, record.Title, record.Type.ToString(), record.Value, record.Unit, record.RecordedAt, record.Notes, record.FileUrl),
             "Health record updated.");
     }
 

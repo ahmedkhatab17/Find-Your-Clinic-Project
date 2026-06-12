@@ -7,7 +7,8 @@ public sealed record HealthRecordDto(
     string? Value,
     string? Unit,
     DateTime RecordedAt,
-    string? Notes);
+    string? Notes,
+    string? FileUrl);
 
 public sealed record HealthSummaryDto(
     int TotalRecords,

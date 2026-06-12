@@ -158,6 +158,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
             entity.Property(x => x.Title).HasMaxLength(200).IsRequired();
             entity.Property(x => x.Value).HasMaxLength(300);
             entity.Property(x => x.Notes).HasMaxLength(2000);
+            entity.Property(x => x.FileUrl).HasMaxLength(1000);
+            entity.Property(x => x.CloudinaryPublicId).HasMaxLength(500);
             entity.HasOne(x => x.Patient)
                 .WithMany(x => x.HealthRecords)
                 .HasForeignKey(x => x.PatientId)

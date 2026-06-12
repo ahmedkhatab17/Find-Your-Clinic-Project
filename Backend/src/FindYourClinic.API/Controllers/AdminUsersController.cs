@@ -1,3 +1,4 @@
+using FindYourClinic.API.Features.Admin.DeleteUser;
 using FindYourClinic.API.Features.Admin.GetUserDocuments;
 using FindYourClinic.API.Features.Admin.GetUsers;
 using FindYourClinic.API.Features.Admin.ToggleUserActive;
@@ -39,4 +40,17 @@ public class AdminUsersController : ControllerBase
         var result = await _mediator.Send(new GetUserDocumentsQuery(userId), cancellationToken);
         return Ok(result);
     }
+
+    [HttpDelete("{userId:guid}")]
+    public async Task<IActionResult> DeleteUser([FromRoute] Guid userId, [FromBody] DeleteUserRequest request, CancellationToken cancellationToken)
+    {
+        var command = new DeleteUserCommand { UserId = userId, Reason = request.Reason };
+        var result = await _mediator.Send(command, cancellationToken);
+        return Ok(result);
+    }
+}
+
+public class DeleteUserRequest
+{
+    public string Reason { get; set; } = string.Empty;
 }

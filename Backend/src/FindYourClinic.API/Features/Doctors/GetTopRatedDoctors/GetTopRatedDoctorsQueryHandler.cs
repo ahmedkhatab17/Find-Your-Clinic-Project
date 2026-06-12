@@ -22,34 +22,25 @@ public class GetTopRatedDoctorsQueryHandler : IRequestHandler<GetTopRatedDoctors
         var pageSize = Math.Clamp(query.PageSize ?? 10, 1, 50);
         var cursor = DecodeTopRatedCursor(query.Cursor);
 
-        var ratingsQuery = _dbContext.DoctorReviews
-            .AsNoTracking()
-            .GroupBy(x => x.DoctorProfileId)
-            .Select(g => new
-            {
-                DoctorProfileId = g.Key,
-                AvgRating = g.Average(r => (double)r.Rating),
-                ReviewsCount = g.Count()
-            });
-
-        var rankedQuery = from doctor in _dbContext.DoctorProfiles
+        var rankedQuery = _dbContext.DoctorProfiles
             .AsNoTracking()
             .Where(x => x.Status == DoctorStatus.Approved && x.User.IsActive && x.Specialty.IsActive)
-                          join rating in ratingsQuery on doctor.Id equals rating.DoctorProfileId into ratingJoin
-                          from rating in ratingJoin.DefaultIfEmpty()
-                          select new TopRatedDoctorProjection
-                          {
-                              DoctorId = doctor.UserId,
-                              DoctorProfileId = doctor.Id,
-                              FullName = $"{doctor.User.FirstName} {doctor.User.LastName}".Trim(),
-                              Specialty = doctor.Specialty.Name,
-                              ProfileImageUrl = doctor.User.ProfileImageUrl,
-                              ConsultationFee = doctor.ConsultationFee,
-                              Latitude = doctor.Latitude,
-                              Longitude = doctor.Longitude,
-                              AvgRating = rating != null ? rating.AvgRating : 0,
-                              ReviewsCount = rating != null ? rating.ReviewsCount : 0
-                          };
+            .Select(doctor => new TopRatedDoctorProjection
+            {
+                DoctorId = doctor.UserId,
+                DoctorProfileId = doctor.Id,
+                FullName = (doctor.User.FirstName + " " + doctor.User.LastName).Trim(),
+                Specialty = doctor.Specialty.Name,
+                ProfileImageUrl = doctor.User.ProfileImageUrl,
+                ConsultationFee = doctor.ConsultationFee,
+                Latitude = doctor.Latitude,
+                Longitude = doctor.Longitude,
+                AvgRating = _dbContext.DoctorReviews
+                    .Where(r => r.DoctorProfileId == doctor.Id)
+                    .Average(r => (double?)r.Rating) ?? 0,
+                ReviewsCount = _dbContext.DoctorReviews
+                    .Count(r => r.DoctorProfileId == doctor.Id)
+            });
 
         if (cursor is not null)
         {

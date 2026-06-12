@@ -29,6 +29,9 @@ public interface IEmailService
     Task SendDoctorActivatedEmailAsync(string toEmail, string doctorName);
     Task SendDoctorDeactivatedEmailAsync(string toEmail, string doctorName);
     Task SendDoctorDeletedEmailAsync(string toEmail, string doctorName, string reason);
+    Task SendPatientActivatedEmailAsync(string toEmail, string patientName);
+    Task SendPatientDeactivatedEmailAsync(string toEmail, string patientName);
+    Task SendPatientDeletedEmailAsync(string toEmail, string patientName, string reason);
 }
 
 public interface IGoogleAuthService

@@ -23,11 +23,63 @@ public static class DataSeeder
 
         logger.LogInformation("Starting development data seeding...");
 
+        await SeedSpecialtiesAsync(db, logger);
         var (patient1Id, patient2Id) = await SeedPatientsAsync(userManager, logger);
         await SeedDoctorsAsync(userManager, db, logger);
         await SeedAppointmentsAsync(db, patient1Id, patient2Id, logger);
 
         logger.LogInformation("Development data seeding completed.");
+    }
+
+    private static async Task SeedSpecialtiesAsync(ApplicationDbContext db, ILogger logger)
+    {
+        var specialties = new (Guid Id, string Name)[]
+        {
+            (new Guid("ECDBFFF5-A41D-4307-A242-3E94DF8162E5"), "Cardiology"),
+            (new Guid("1B07FCE3-AC1C-4FE8-B0E9-A0FD3DBDC0A4"), "Dentistry"),
+            (new Guid("65250CF7-B517-4D2B-9C68-C1EEA196CAFA"), "Dermatology"),
+            (new Guid("59059F56-D68D-4B57-AAEC-A7BAFD6A71C0"), "Emergency Medicine"),
+            (new Guid("6083B2BB-BDB1-4409-AA91-B0AE5646F99D"), "ENT"),
+            (new Guid("82E19C0E-59D3-4303-A26F-4714C363D7A2"), "Family Medicine"),
+            (new Guid("3079E6F0-AF0A-4B9F-ABED-B8D6ACAA05AC"), "Gastroenterology"),
+            (new Guid("8A7E8D84-6429-4D3C-9788-F49E66A55A03"), "General Surgery"),
+            (new Guid("9257DEBA-F767-4D61-B513-AB38F5A4D5F7"), "Hematology"),
+            (new Guid("CEB9C582-001B-4A2D-ABF1-1B82E0C1D75A"), "Infectious Diseases"),
+            (new Guid("7B6CB382-E7B4-44B9-B03C-6E46D06C32E7"), "Internal Medicine"),
+            (new Guid("016CC7AC-2F73-4AC2-81F2-0C28E4540ECF"), "Nephrology"),
+            (new Guid("A50BD034-9E47-4DFE-BF8E-5BF78004231D"), "Oncology"),
+            (new Guid("7A820D80-8048-4E5B-BB6B-A49301FD2E68"), "Ophthalmology"),
+            (new Guid("ECDCBD4C-B7EA-41A5-A5CF-F0AD89F015CD"), "Orthopedics"),
+            (new Guid("9B09362A-AFAA-4086-951B-3656557DF294"), "Pain Management"),
+            (new Guid("D5DAF61E-BC5E-467A-9E2E-DCF5924D900D"), "Pediatrics"),
+            (new Guid("4F466134-A956-4582-8B6C-3571123EA0C7"), "Physical Therapy"),
+            (new Guid("1D2DCA0A-BE2D-43F3-AB54-A43FBB0FD168"), "Psychiatry"),
+            (new Guid("BA25A0C7-6657-45AD-9373-CA70E4A3B3FD"), "Pulmonology"),
+            (new Guid("026F0B5D-225C-4A3A-A2F2-72EA634DBD3F"), "Radiology"),
+            (new Guid("E7B22771-06AD-4044-9DC5-9A658E746FFC"), "Urology")
+        };
+
+        int createdCount = 0;
+        foreach (var spec in specialties)
+        {
+            var exists = await db.Specialties.AnyAsync(s => s.Id == spec.Id);
+            if (!exists)
+            {
+                db.Specialties.Add(new Specialty
+                {
+                    Id = spec.Id,
+                    Name = spec.Name,
+                    IsActive = true
+                });
+                createdCount++;
+            }
+        }
+
+        if (createdCount > 0)
+        {
+            await db.SaveChangesAsync();
+            logger.LogInformation("Seeded {Count} new specialties.", createdCount);
+        }
     }
 
     private static async Task<(Guid, Guid)> SeedPatientsAsync(

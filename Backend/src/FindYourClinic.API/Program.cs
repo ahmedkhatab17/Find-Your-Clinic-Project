@@ -8,6 +8,7 @@ using FindYourClinic.Infrastructure;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
@@ -26,6 +27,16 @@ builder.Services.AddScoped<IPaymobService, PaymobService>();
 builder.Services.AddScoped<PaymobWebhookHandler>();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
+
+// Allow multipart/form-data uploads up to 20 MB (covers images, PDFs, etc. for medical records)
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 20 * 1024 * 1024; // 20 MB
+});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 20 * 1024 * 1024; // 20 MB
+});
 
 builder.Services.AddInfrastructure(builder.Configuration);
 

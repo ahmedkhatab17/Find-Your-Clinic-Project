@@ -54,7 +54,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Api
                 return ApiResponse<GoogleLoginResultDto>.Fail("Role is required for first-time Google login.");
             }
 
-            user = await CreateGoogleUserAsync(googleUser, role, cancellationToken);
+            user = await CreateGoogleUserAsync(googleUser, role, request.SpecialtyId, cancellationToken);
         }
 
         if (user.Role == UserRole.Doctor && !user.IsActive)
@@ -89,6 +89,7 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Api
     private async Task<ApplicationUser> CreateGoogleUserAsync(
         GoogleUserInfo googleUser,
         UserRole role,
+        Guid? specialtyId,
         CancellationToken cancellationToken)
     {
         var user = new ApplicationUser
@@ -120,22 +121,32 @@ public class GoogleLoginCommandHandler : IRequestHandler<GoogleLoginCommand, Api
 
         if (role == UserRole.Doctor)
         {
-            var defaultSpecialty = await _dbContext.Specialties.FirstOrDefaultAsync(x => x.IsActive, cancellationToken);
-            if (defaultSpecialty is null)
+            Guid doctorSpecialtyId;
+            if (specialtyId.HasValue)
             {
-                defaultSpecialty = new Specialty
+                var exists = await _dbContext.Specialties.AnyAsync(s => s.Id == specialtyId.Value && s.IsActive, cancellationToken);
+                doctorSpecialtyId = exists ? specialtyId.Value : throw new InvalidOperationException("Invalid specialty selected.");
+            }
+            else
+            {
+                var defaultSpecialty = await _dbContext.Specialties.FirstOrDefaultAsync(x => x.IsActive, cancellationToken);
+                if (defaultSpecialty is null)
                 {
-                    Name = "General",
-                    IsActive = true
-                };
-                _dbContext.Specialties.Add(defaultSpecialty);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                    defaultSpecialty = new Specialty
+                    {
+                        Name = "General",
+                        IsActive = true
+                    };
+                    _dbContext.Specialties.Add(defaultSpecialty);
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                }
+                doctorSpecialtyId = defaultSpecialty.Id;
             }
 
             _dbContext.DoctorProfiles.Add(new DoctorProfile
             {
                 UserId = user.Id,
-                SpecialtyId = defaultSpecialty.Id,
+                SpecialtyId = doctorSpecialtyId,
                 Status = DoctorStatus.PendingReview
             });
             await _dbContext.SaveChangesAsync(cancellationToken);

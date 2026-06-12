@@ -10,6 +10,7 @@ using FindYourClinic.API.Features.HealthRecords.UpdateHealthRecord;
 using FindYourClinic.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FindYourClinic.API.Controllers;
@@ -41,7 +42,7 @@ public class HealthRecordsController : ControllerBase
 
     /// <summary>Create a new health record (patient only).</summary>
     [HttpPost]
-    public async Task<IActionResult> Add([FromBody] CreateHealthRecordRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Add([FromForm] CreateHealthRecordRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateHealthRecordCommand
         {
@@ -52,7 +53,8 @@ public class HealthRecordsController : ControllerBase
             Value = request.Value,
             Unit = request.Unit,
             RecordedAt = request.RecordedAt,
-            Notes = request.Notes
+            Notes = request.Notes,
+            Attachment = request.Attachment
         }, cancellationToken);
         return Ok(result);
     }
@@ -150,6 +152,7 @@ public class HealthRecordsController : ControllerBase
         public string? Unit { get; set; }
         public DateTime? RecordedAt { get; set; }
         public string? Notes { get; set; }
+        public IFormFile? Attachment { get; set; }
     }
 
     public sealed class UpdateHealthRecordRequest

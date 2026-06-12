@@ -30,4 +30,12 @@
     <ProjectReference Include="..\FindYourClinic.Infrastructure\FindYourClinic.Infrastructure.csproj" />
   </ItemGroup>
 
+  <!-- Ensure the Firebase credentials folder is included in the publish output -->
+  <ItemGroup>
+    <Content Update="Config\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

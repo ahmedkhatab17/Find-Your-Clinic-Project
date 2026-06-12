@@ -41,3 +41,10 @@ public class ServiceUnavailableException : DomainException
     {
     }
 }
+
+public class CloudinaryException : DomainException
+{
+    public CloudinaryException(string message) : base(message)
+    {
+    }
+}

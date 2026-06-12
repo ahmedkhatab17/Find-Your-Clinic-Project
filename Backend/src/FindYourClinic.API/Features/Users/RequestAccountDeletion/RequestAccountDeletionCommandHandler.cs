@@ -28,9 +28,14 @@ public class RequestAccountDeletionCommandHandler : IRequestHandler<RequestAccou
             throw new NotFoundException("User not found.");
         }
 
-        if (!await _userManager.CheckPasswordAsync(user, request.Password))
+        // Google-only users have no password — skip password check for them.
+        var hasPassword = await _userManager.HasPasswordAsync(user);
+        if (hasPassword)
         {
-            throw new BadRequestException("Invalid password. Please enter your correct password to request account deletion.");
+            if (string.IsNullOrWhiteSpace(request.Password) || !await _userManager.CheckPasswordAsync(user, request.Password))
+            {
+                throw new BadRequestException("Invalid password. Please enter your correct password to request account deletion.");
+            }
         }
 
         if (user.DeletionRequestedAt.HasValue)

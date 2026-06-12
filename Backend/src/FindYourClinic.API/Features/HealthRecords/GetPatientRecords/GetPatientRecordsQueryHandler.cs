@@ -53,7 +53,7 @@ public class GetPatientRecordsQueryHandler : IRequestHandler<GetPatientRecordsQu
 
         var records = await query
             .OrderByDescending(x => x.RecordedAt)
-            .Select(x => new HealthRecordDto(x.Id, x.Title, x.Type.ToString(), x.Value, x.Unit, x.RecordedAt, x.Notes))
+            .Select(x => new HealthRecordDto(x.Id, x.Title, x.Type.ToString(), x.Value, x.Unit, x.RecordedAt, x.Notes, x.FileUrl))
             .ToListAsync(cancellationToken);
 
         return ApiResponse<List<HealthRecordDto>>.Ok(records);
