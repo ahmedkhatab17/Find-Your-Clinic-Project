@@ -215,16 +215,16 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="p-8 text-white">
+      <div className="p-8 text-foreground">
         <h1 className="text-3xl font-bold mb-8">Dashboard Overview</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-gray-900 rounded-2xl p-6 border border-gray-800 animate-pulse h-32" />
+            <div key={i} className="bg-surface rounded-2xl p-6 border border-border animate-pulse h-32" />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-gray-900 rounded-2xl p-6 border border-gray-800 animate-pulse h-80" />
+            <div key={i} className="bg-surface rounded-2xl p-6 border border-border animate-pulse h-80" />
           ))}
         </div>
       </div>
@@ -232,10 +232,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-8 text-white">
+    <div className="p-8 text-foreground transition-colors duration-200">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Dashboard Overview</h1>
-        <p className="text-gray-400">Real-time insights into platform activity, users, and revenue.</p>
+        <p className="text-foreground/75">Real-time insights into platform activity, users, and revenue.</p>
       </div>
 
       {/* Stat Cards */}
@@ -243,38 +243,38 @@ export default function Dashboard() {
         <StatCard
           label="Total Users"
           value={totalUsers.toString()}
-          icon={<Users className="w-6 h-6 text-blue-400" />}
-          gradient="from-blue-900/50 to-blue-800/20"
-          border="border-blue-500/20"
-          iconBg="bg-blue-500/20"
-          accent="text-blue-200"
+          icon={<Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />}
+          gradient="from-blue-500/5 to-blue-600/5 dark:from-blue-900/50 dark:to-blue-800/20"
+          border="border-blue-500/10 dark:border-blue-500/20"
+          iconBg="bg-blue-600/10 dark:bg-blue-500/20"
+          accent="text-blue-600 dark:text-blue-200"
         />
         <StatCard
           label="Total Doctors"
           value={totalDoctors.toString()}
-          icon={<UserPlus className="w-6 h-6 text-teal-400" />}
-          gradient="from-teal-900/50 to-teal-800/20"
-          border="border-teal-500/20"
-          iconBg="bg-teal-500/20"
-          accent="text-teal-200"
+          icon={<UserPlus className="w-6 h-6 text-teal-600 dark:text-teal-400" />}
+          gradient="from-teal-500/5 to-teal-600/5 dark:from-teal-900/50 dark:to-teal-800/20"
+          border="border-teal-500/10 dark:border-teal-500/20"
+          iconBg="bg-teal-600/10 dark:bg-teal-500/20"
+          accent="text-teal-600 dark:text-teal-200"
         />
         <StatCard
           label="Pending Approvals"
           value={pendingDoctors.toString()}
-          icon={<FileCheck className="w-6 h-6 text-purple-400" />}
-          gradient="from-purple-900/50 to-purple-800/20"
-          border="border-purple-500/20"
-          iconBg="bg-purple-500/20"
-          accent="text-purple-200"
+          icon={<FileCheck className="w-6 h-6 text-purple-600 dark:text-purple-400" />}
+          gradient="from-purple-500/5 to-purple-600/5 dark:from-purple-900/50 dark:to-purple-800/20"
+          border="border-purple-500/10 dark:border-purple-500/20"
+          iconBg="bg-purple-600/10 dark:bg-purple-500/20"
+          accent="text-purple-600 dark:text-purple-200"
         />
         <StatCard
           label="Platform Revenue"
           value={`EGP ${fmtEgp(stats?.totalRevenue ?? 0)}`}
-          icon={<DollarSign className="w-6 h-6 text-emerald-400" />}
-          gradient="from-emerald-900/50 to-emerald-800/20"
-          border="border-emerald-500/20"
-          iconBg="bg-emerald-500/20"
-          accent="text-emerald-200"
+          icon={<DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />}
+          gradient="from-emerald-500/5 to-emerald-600/5 dark:from-emerald-900/50 dark:to-emerald-800/20"
+          border="border-emerald-500/10 dark:border-emerald-500/20"
+          iconBg="bg-emerald-600/10 dark:bg-emerald-500/20"
+          accent="text-emerald-600 dark:text-emerald-200"
         />
       </div>
 
@@ -284,7 +284,7 @@ export default function Dashboard() {
           className="lg:col-span-2"
           title="User Growth"
           subtitle={`${userGrowthTotal} new registration${userGrowthTotal === 1 ? '' : 's'} in selected period`}
-          icon={<TrendingUp className="w-4 h-4 text-blue-400" />}
+          icon={<TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
           action={<TimeRangeToggle value={userRange} onChange={setUserRange} />}
         >
           <div className="h-64">
@@ -295,7 +295,7 @@ export default function Dashboard() {
         <ChartCard
           title="User Distribution"
           subtitle="By role"
-          icon={<PieChart className="w-4 h-4 text-purple-400" />}
+          icon={<PieChart className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
         >
           <DonutChart data={roleDistribution} centerLabel="Total" centerValue={totalUsers} />
         </ChartCard>
@@ -307,7 +307,7 @@ export default function Dashboard() {
           className="lg:col-span-2"
           title="Revenue Trend"
           subtitle={`EGP ${fmtEgp(revenueTotal)} in platform fees during selected period`}
-          icon={<Activity className="w-4 h-4 text-emerald-400" />}
+          icon={<Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
           action={<TimeRangeToggle value={revenueRange} onChange={setRevenueRange} />}
         >
           <div className="h-64">
@@ -323,7 +323,7 @@ export default function Dashboard() {
         <ChartCard
           title="Payment Methods"
           subtitle="Transaction count by method"
-          icon={<CreditCard className="w-4 h-4 text-blue-400" />}
+          icon={<CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
         >
           <BarChart data={paymentMethods} />
         </ChartCard>
@@ -352,11 +352,11 @@ function StatCard({
   accent: string;
 }) {
   return (
-    <div className={`bg-gradient-to-br ${gradient} border ${border} rounded-2xl p-6 relative overflow-hidden`}>
+    <div className={`bg-gradient-to-br ${gradient} border ${border} rounded-2xl p-6 relative overflow-hidden transition-all duration-200`}>
       <div className="flex justify-between items-start relative z-10">
         <div>
           <p className={`${accent} text-sm font-medium mb-1`}>{label}</p>
-          <h3 className="text-3xl font-bold text-white tabular-nums">{value}</h3>
+          <h3 className="text-3xl font-bold text-foreground tabular-nums">{value}</h3>
         </div>
         <div className={`p-3 ${iconBg} rounded-xl`}>{icon}</div>
       </div>
@@ -380,14 +380,14 @@ function ChartCard({
   action?: React.ReactNode;
 }) {
   return (
-    <div className={`bg-gray-900 border border-gray-800 rounded-2xl p-6 ${className}`}>
+    <div className={`bg-surface border border-border rounded-2xl p-6 ${className} transition-colors duration-200`}>
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
             {icon}
-            <h3 className="text-base font-semibold text-white">{title}</h3>
+            <h3 className="text-base font-semibold text-foreground">{title}</h3>
           </div>
-          {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+          {subtitle && <p className="text-xs text-foreground/60">{subtitle}</p>}
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>

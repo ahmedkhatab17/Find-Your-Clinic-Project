@@ -36,10 +36,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-700">
-        <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">Find Your Clinic</h1>
-        <p className="text-gray-400 text-center mb-8">Admin Portal Login</p>
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground transition-colors duration-200">
+      <div className="bg-surface p-8 rounded-2xl shadow-xl w-full max-w-md border border-border">
+        <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-primary to-teal-500 bg-clip-text text-transparent">Find Your Clinic</h1>
+        <p className="text-foreground/70 text-center mb-8">Admin Portal Login</p>
 
         {error && (
           <div className="bg-red-500/10 border border-red-500 text-red-500 p-3 rounded-lg mb-6 text-sm">
@@ -49,31 +49,31 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+            <label className="block text-sm font-medium text-foreground/90 mb-1">Email Address</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="w-full bg-surface-alt border border-border rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
               placeholder="admin@findyourclinic.com"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+            <label className="block text-sm font-medium text-foreground/90 mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="w-full bg-surface-alt border border-border rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
               placeholder="••••••••"
             />
           </div>
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 flex justify-center items-center"
+            className="w-full bg-gradient-to-r from-primary to-teal-500 hover:from-primary/95 hover:to-teal-600 text-white font-semibold py-3 rounded-lg transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 flex justify-center items-center"
           >
             {isLoading ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

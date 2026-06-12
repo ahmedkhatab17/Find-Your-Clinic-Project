@@ -37,12 +37,12 @@ export default function DocumentsDrawer({ userId, onClose }: DocumentsDrawerProp
         className="fixed inset-0 bg-black/50 z-40"
         onClick={onClose}
       />
-      <div className="fixed right-0 top-0 h-full w-96 bg-gray-900 border-l border-gray-800 z-50 flex flex-col shadow-2xl">
-        <div className="flex items-center justify-between p-6 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white">Documents</h2>
+      <div className="fixed right-0 top-0 h-full w-96 bg-surface border-l border-border z-50 flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground">Documents</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors text-gray-400 hover:text-white"
+            className="p-2 hover:bg-surface-alt rounded-lg transition-colors text-foreground/70 hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
@@ -50,23 +50,23 @@ export default function DocumentsDrawer({ userId, onClose }: DocumentsDrawerProp
 
         <div className="flex-1 overflow-y-auto p-6">
           {isLoading ? (
-            <p className="text-gray-400 text-sm">Loading documents...</p>
+            <p className="text-foreground/70 text-sm">Loading documents...</p>
           ) : documents.length === 0 ? (
             <div className="text-center py-12">
               <FileText className="w-12 h-12 mx-auto mb-3 text-gray-600" />
-              <p className="text-gray-400 text-sm">No documents uploaded.</p>
+              <p className="text-foreground/70 text-sm">No documents uploaded.</p>
             </div>
           ) : (
             <div className="space-y-3">
               {documents.map((doc, index) => (
                 <div
                   key={index}
-                  className="bg-gray-800 rounded-xl p-4 border border-gray-700"
+                  className="bg-surface-alt rounded-xl p-4 border border-border"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate">{doc.name}</p>
-                      <p className="text-gray-400 text-xs mt-1">{doc.type}</p>
+                      <p className="text-foreground text-sm font-medium truncate">{doc.name}</p>
+                      <p className="text-foreground/70 text-xs mt-1">{doc.type}</p>
                       <p className="text-gray-500 text-xs mt-1">
                         {new Date(doc.uploadedAt).toLocaleDateString()}
                       </p>

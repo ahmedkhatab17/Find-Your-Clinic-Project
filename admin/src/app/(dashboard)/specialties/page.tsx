@@ -76,15 +76,15 @@ export default function SpecialtiesPage() {
   };
 
   return (
-    <div className="p-8 text-white relative">
+    <div className="p-8 text-foreground relative">
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Medical Specialties</h1>
-          <p className="text-gray-400">Manage specialties available for doctors to select.</p>
+          <p className="text-foreground/70">Manage specialties available for doctors to select.</p>
         </div>
         <button
           onClick={openAddModal}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center"
+          className="bg-primary hover:bg-primary/90 text-foreground px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center"
         >
           <Plus className="w-5 h-5 mr-2" />
           Add Specialty
@@ -92,13 +92,13 @@ export default function SpecialtiesPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-gray-400 text-center py-12">Loading specialties...</div>
+        <div className="text-foreground/70 text-center py-12">Loading specialties...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {specialties.map((specialty) => (
-            <div key={specialty.id} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col hover:border-gray-700 transition-colors">
+            <div key={specialty.id} className="bg-surface border border-border rounded-2xl p-6 flex flex-col hover:border-border transition-colors">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center text-2xl overflow-hidden border border-gray-700">
+                <div className="w-12 h-12 bg-surface-alt rounded-xl flex items-center justify-center text-2xl overflow-hidden border border-border">
                   {specialty.iconUrl ? (
                     <img src={specialty.iconUrl} alt={specialty.name} className="w-full h-full object-cover" />
                   ) : (
@@ -107,18 +107,18 @@ export default function SpecialtiesPage() {
                 </div>
                 <span className={`px-2.5 py-1 rounded-md text-xs font-medium border ${
                   specialty.isActive 
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                    : 'bg-red-500/10 text-red-400 border-red-500/20'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' 
+                    : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
                 }`}>
                   {specialty.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-white mb-4 flex-1">{specialty.name}</h3>
+              <h3 className="text-lg font-bold text-foreground mb-4 flex-1">{specialty.name}</h3>
               
-              <div className="flex gap-2 border-t border-gray-800 pt-4 mt-auto">
+              <div className="flex gap-2 border-t border-border pt-4 mt-auto">
                 <button
                   onClick={() => openEditModal(specialty)}
-                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 rounded-lg text-sm transition-colors flex items-center justify-center"
+                  className="flex-1 bg-surface-alt hover:bg-surface-alt text-foreground font-medium py-2 rounded-lg text-sm transition-colors flex items-center justify-center"
                 >
                   <Edit2 className="w-4 h-4 mr-2" />
                   Edit
@@ -138,34 +138,34 @@ export default function SpecialtiesPage() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-gray-800">
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-border">
               <h2 className="text-xl font-bold">{editingId ? 'Edit Specialty' : 'Add New Specialty'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => setIsModalOpen(false)} className="text-foreground/70 hover:text-foreground transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Specialty Name</label>
+                <label className="block text-sm font-medium text-foreground/90 mb-1">Specialty Name</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full bg-surface-alt border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                   placeholder="e.g. Cardiology"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Icon URL (optional)</label>
+                <label className="block text-sm font-medium text-foreground/90 mb-1">Icon URL (optional)</label>
                 <input
                   type="url"
                   value={formData.iconUrl}
                   onChange={(e) => setFormData({ ...formData, iconUrl: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full bg-surface-alt border border-border rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                   placeholder="https://example.com/icon.png"
                 />
               </div>
@@ -176,24 +176,24 @@ export default function SpecialtiesPage() {
                   id="isActive"
                   checked={formData.isActive}
                   onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 bg-gray-800 border-gray-700 rounded focus:ring-blue-500 focus:ring-2"
+                  className="w-4 h-4 text-primary bg-surface-alt border-border rounded focus:ring-primary focus:ring-2"
                 />
-                <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-300">
+                <label htmlFor="isActive" className="ml-2 text-sm font-medium text-foreground/90">
                   Active (visible to users)
                 </label>
               </div>
               
-              <div className="flex gap-3 pt-4 border-t border-gray-800">
+              <div className="flex gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 rounded-xl transition-colors"
+                  className="flex-1 bg-surface-alt hover:bg-surface-alt text-foreground font-medium py-2.5 rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition-colors"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-xl transition-colors"
                 >
                   {editingId ? 'Save Changes' : 'Create'}
                 </button>

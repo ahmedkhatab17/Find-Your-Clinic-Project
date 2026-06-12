@@ -114,7 +114,7 @@ export function AreaChart({
             y1={y}
             x2={width - padX}
             y2={y}
-            stroke="#1f2937"
+            stroke="var(--chart-grid)"
             strokeWidth="1"
             strokeDasharray="3 4"
           />
@@ -184,15 +184,14 @@ export function AreaChart({
             transform: 'translate(-50%, calc(-100% - 14px))',
           }}
         >
-          <div className="px-3 py-2 bg-gray-950/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl shadow-black/40 text-xs whitespace-nowrap">
-            <p className="text-gray-400 mb-0.5">{active.label}</p>
-            <p className="font-semibold text-white tabular-nums" style={{ color }}>
+          <div className="px-3 py-2 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-xl shadow-black/40 text-xs whitespace-nowrap">
+            <p className="text-foreground/70 mb-0.5">{active.label}</p>
+            <p className="font-semibold text-foreground tabular-nums" style={{ color }}>
               {valueFormatter ? valueFormatter(active.value) : active.value}
             </p>
           </div>
           <div
-            className="w-2 h-2 mx-auto -mt-1 rotate-45 border-r border-b border-gray-700"
-            style={{ background: 'rgb(3 7 18 / 0.95)' }}
+            className="w-2 h-2 mx-auto -mt-1 rotate-45 border-r border-b border-border bg-background"
           />
         </div>
       )}
@@ -219,15 +218,15 @@ export function TimeRangeToggle({
   onChange: (r: TimeRange) => void;
 }) {
   return (
-    <div className="flex bg-gray-950/60 border border-gray-800 rounded-lg p-0.5">
+    <div className="flex bg-background/60 border border-border rounded-lg p-0.5">
       {TIME_RANGES.map((r) => (
         <button
           key={r.key}
           onClick={() => onChange(r.key)}
           className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
             value === r.key
-              ? 'bg-gray-800 text-white'
-              : 'text-gray-500 hover:text-gray-300'
+              ? 'bg-surface-alt text-foreground'
+              : 'text-gray-500 hover:text-foreground/90'
           }`}
         >
           {r.label}
@@ -334,13 +333,13 @@ export function DonutChart({
               <span className="text-2xl font-bold tabular-nums" style={{ color: active.color }}>
                 {active.value}
               </span>
-              <span className="text-xs text-gray-400 mt-0.5">{active.label}</span>
+              <span className="text-xs text-foreground/70 mt-0.5">{active.label}</span>
               <span className="text-[10px] text-gray-500 mt-0.5">{active.percent.toFixed(1)}%</span>
             </>
           ) : (
             <>
-              <span className="text-2xl font-bold text-white">{centerValue ?? total}</span>
-              {centerLabel && <span className="text-xs text-gray-400 mt-0.5">{centerLabel}</span>}
+              <span className="text-2xl font-bold text-foreground">{centerValue ?? total}</span>
+              {centerLabel && <span className="text-xs text-foreground/70 mt-0.5">{centerLabel}</span>}
             </>
           )}
         </div>
@@ -352,16 +351,16 @@ export function DonutChart({
             onMouseEnter={() => setHoverIdx(i)}
             onMouseLeave={() => setHoverIdx(null)}
             className={`flex items-center justify-between text-sm px-2 py-1.5 rounded-md cursor-pointer transition-colors ${
-              hoverIdx === i ? 'bg-gray-800/70' : 'hover:bg-gray-800/40'
+              hoverIdx === i ? 'bg-surface-alt/70' : 'hover:bg-surface-alt/40'
             }`}
           >
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: s.color }} />
-              <span className="text-gray-300">{s.label}</span>
+              <span className="text-foreground/90">{s.label}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-gray-500 text-xs">{s.percent.toFixed(1)}%</span>
-              <span className="text-white font-medium tabular-nums">{s.value}</span>
+              <span className="text-foreground font-medium tabular-nums">{s.value}</span>
             </div>
           </div>
         ))}
@@ -410,7 +409,7 @@ export function BarChart({
             style={{ opacity: dim ? 0.55 : 1, transition: 'opacity 150ms' }}
           >
             <div className="flex items-center justify-between text-sm mb-1.5">
-              <span className="text-gray-300 flex items-center gap-2">
+              <span className="text-foreground/90 flex items-center gap-2">
                 {d.label}
                 <span
                   className="text-[10px] text-gray-500 tabular-nums transition-opacity"
@@ -419,11 +418,11 @@ export function BarChart({
                   {sharePct.toFixed(1)}%
                 </span>
               </span>
-              <span className="text-white font-medium tabular-nums">
+              <span className="text-foreground font-medium tabular-nums">
                 {valueFormatter ? valueFormatter(d.value) : d.value}
               </span>
             </div>
-            <div className="h-2.5 bg-gray-800 rounded-full overflow-hidden relative">
+            <div className="h-2.5 bg-surface-alt rounded-full overflow-hidden relative">
               <div
                 className="h-full rounded-full transition-all duration-300"
                 style={{
@@ -445,7 +444,7 @@ export function BarChart({
 function EmptyChart({ height }: { height: number }) {
   return (
     <div
-      className="flex items-center justify-center text-gray-600 text-sm border border-dashed border-gray-800 rounded-xl"
+      className="flex items-center justify-center text-gray-600 text-sm border border-dashed border-border rounded-xl"
       style={{ height }}
     >
       No data available

@@ -59,35 +59,35 @@ export default function ReviewsPage() {
   });
 
   return (
-    <div className="p-8 text-white">
+    <div className="p-8 text-foreground">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Reviews Management</h1>
-        <p className="text-gray-400">Moderate patient reviews across all doctors on the platform.</p>
+        <p className="text-foreground/70">Moderate patient reviews across all doctors on the platform.</p>
       </div>
 
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-          <p className="text-gray-400 text-sm mb-1">Total Reviews</p>
+        <div className="bg-surface border border-border rounded-2xl p-5">
+          <p className="text-foreground/70 text-sm mb-1">Total Reviews</p>
           <p className="text-3xl font-bold">{reviews.length}</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-          <p className="text-gray-400 text-sm mb-1">Average Rating</p>
+        <div className="bg-surface border border-border rounded-2xl p-5">
+          <p className="text-foreground/70 text-sm mb-1">Average Rating</p>
           <p className="text-3xl font-bold">
             {reviews.length === 0
               ? '—'
               : (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)}
           </p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
-          <p className="text-gray-400 text-sm mb-1">5-Star Reviews</p>
+        <div className="bg-surface border border-border rounded-2xl p-5">
+          <p className="text-foreground/70 text-sm mb-1">5-Star Reviews</p>
           <p className="text-3xl font-bold">{reviews.filter((r) => r.rating === 5).length}</p>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-gray-800 bg-gray-800/50">
+      <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+        <div className="p-4 border-b border-border bg-surface-alt/50">
           <div className="relative w-full sm:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
             <input
@@ -95,7 +95,7 @@ export default function ReviewsPage() {
               placeholder="Search by doctor, patient or comment..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 text-sm"
+              className="w-full pl-10 pr-4 py-2 bg-surface-alt border border-gray-600 rounded-xl text-foreground placeholder-gray-500 focus:outline-none focus:border-blue-500 text-sm"
             />
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function ReviewsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-400 border-b border-gray-800 text-left">
+                <tr className="text-foreground/70 border-b border-border text-left">
                   <th className="px-6 py-3 font-medium">Doctor</th>
                   <th className="px-6 py-3 font-medium">Patient</th>
                   <th className="px-6 py-3 font-medium">Rating</th>
@@ -121,24 +121,24 @@ export default function ReviewsPage() {
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {filtered.map((review) => (
-                  <tr key={review.id} className="hover:bg-gray-800/40 transition-colors">
+                  <tr key={review.id} className="hover:bg-surface-alt/40 transition-colors">
                     <td className="px-6 py-4 font-medium whitespace-nowrap">
                       Dr. {review.doctorName}
                     </td>
-                    <td className="px-6 py-4 text-gray-300 whitespace-nowrap">
+                    <td className="px-6 py-4 text-foreground/90 whitespace-nowrap">
                       {review.patientName}
                     </td>
                     <td className="px-6 py-4">
                       <StarRating value={review.rating} />
                     </td>
-                    <td className="px-6 py-4 text-gray-400 max-w-xs">
+                    <td className="px-6 py-4 text-foreground/70 max-w-xs">
                       {review.comment ? (
                         <span className="line-clamp-2">{review.comment}</span>
                       ) : (
                         <span className="italic text-gray-600">No comment</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-gray-400 whitespace-nowrap">
+                    <td className="px-6 py-4 text-foreground/70 whitespace-nowrap">
                       {new Date(review.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',

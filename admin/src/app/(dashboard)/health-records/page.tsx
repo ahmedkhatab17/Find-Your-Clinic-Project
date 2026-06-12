@@ -25,17 +25,17 @@ export default function HealthRecordsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 text-white">
+      <div className="p-8 text-foreground">
         <h1 className="text-3xl font-bold mb-8">Health Records</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-gray-900 rounded-2xl p-6 border border-gray-800 animate-pulse h-32"
+              className="bg-surface rounded-2xl p-6 border border-border animate-pulse h-32"
             />
           ))}
         </div>
-        <div className="bg-gray-900 rounded-2xl border border-gray-800 animate-pulse h-64" />
+        <div className="bg-surface rounded-2xl border border-border animate-pulse h-64" />
       </div>
     );
   }
@@ -73,10 +73,10 @@ export default function HealthRecordsPage() {
   const maxCount = typeEntries[0]?.[1] ?? 1;
 
   return (
-    <div className="p-8 text-white">
+    <div className="p-8 text-foreground">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Health Records</h1>
-        <p className="text-gray-400">Aggregate statistics across all patients.</p>
+        <p className="text-foreground/70">Aggregate statistics across all patients.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -88,18 +88,18 @@ export default function HealthRecordsPage() {
               className={`bg-gradient-to-br ${card.gradient} border ${card.border} rounded-2xl p-6`}
             >
               <div className="flex justify-between items-start mb-4">
-                <p className="text-gray-400 text-sm font-medium">{card.label}</p>
+                <p className="text-foreground/70 text-sm font-medium">{card.label}</p>
                 <Icon className={`w-5 h-5 ${card.iconColor}`} />
               </div>
-              <p className="text-4xl font-bold text-white">{card.value.toLocaleString()}</p>
+              <p className="text-4xl font-bold text-foreground">{card.value.toLocaleString()}</p>
             </div>
           );
         })}
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+      <div className="bg-surface border border-border rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-6">
-          <BarChart2 className="w-5 h-5 text-gray-400" />
+          <BarChart2 className="w-5 h-5 text-foreground/70" />
           <h2 className="text-lg font-semibold">Records by Type</h2>
         </div>
 
@@ -110,12 +110,12 @@ export default function HealthRecordsPage() {
             {typeEntries.map(([type, count]) => (
               <div key={type}>
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-gray-300 capitalize">
+                  <span className="text-sm text-foreground/90 capitalize">
                     {type.replace(/([A-Z])/g, ' $1').trim()}
                   </span>
-                  <span className="text-sm font-semibold text-white">{count}</span>
+                  <span className="text-sm font-semibold text-foreground">{count}</span>
                 </div>
-                <div className="w-full bg-gray-800 rounded-full h-2">
+                <div className="w-full bg-surface-alt rounded-full h-2">
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all"
                     style={{ width: `${(count / maxCount) * 100}%` }}
