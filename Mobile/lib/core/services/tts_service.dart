@@ -51,6 +51,12 @@ class TtsService {
     });
   }
 
+  /// Sets the TTS language (e.g. 'en-US' or 'ar-SA')
+  Future<void> setLanguage(String languageCode) async {
+    final ttsLang = languageCode == 'ar' ? 'ar-SA' : 'en-US';
+    await _tts.setLanguage(ttsLang);
+  }
+
   /// Speak the given [text]. If already speaking, stops first.
   /// [messageId] can be used by UI to highlight the active message.
   Future<void> speak(String text, {String? messageId}) async {

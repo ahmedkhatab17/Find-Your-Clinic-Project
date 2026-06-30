@@ -2,6 +2,7 @@
 // Pure Dart — no Flutter imports.
 
 class DoctorDashboard {
+  final String doctorName;
   final QuickStats quickStats;
   final OverallStats overallStats;
   final NextAppointment? nextAppointment;
@@ -9,6 +10,7 @@ class DoctorDashboard {
   final List<ScheduleItem> todaySchedule;
 
   const DoctorDashboard({
+    required this.doctorName,
     required this.quickStats,
     required this.overallStats,
     this.nextAppointment,

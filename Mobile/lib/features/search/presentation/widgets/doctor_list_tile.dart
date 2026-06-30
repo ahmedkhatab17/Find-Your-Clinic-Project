@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/string_extensions.dart';
 import '../../../../core/widgets/user_avatar.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/doctor_search_entities.dart';
 
 class DoctorListTile extends StatelessWidget {
@@ -15,8 +17,9 @@ class DoctorListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTap: onTap,
+    return MergeSemantics(
+      child: GestureDetector(
+        onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -47,7 +50,7 @@ class DoctorListTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Dr. ${doctor.fullName}',
+                    doctor.fullName.withDoctorPrefix,
                     style: AppTextStyles.label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -70,7 +73,7 @@ class DoctorListTile extends StatelessWidget {
                       Icon(Icons.work_outline, size: 14, color: AppColors.textHint),
                       const SizedBox(width: 3),
                       Text(
-                        '${doctor.experienceYears} yrs',
+                        '${doctor.experienceYears} ${context.l10n.yearsAbbr}',
                         style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
                       ),
                       if (doctor.distanceKm != null) ...[
@@ -78,7 +81,7 @@ class DoctorListTile extends StatelessWidget {
                         Icon(Icons.location_on, size: 14, color: AppColors.textHint),
                         const SizedBox(width: 3),
                         Text(
-                          '${doctor.distanceKm!.toStringAsFixed(1)} km',
+                          '${doctor.distanceKm!.toStringAsFixed(1)} ${context.l10n.kilometersAbbr}',
                           style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
                         ),
                       ],
@@ -92,17 +95,18 @@ class DoctorListTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '\$${doctor.consultationFee.toStringAsFixed(0)}',
+                  '${context.l10n.egp} ${doctor.consultationFee.toStringAsFixed(0)}',
                   style: AppTextStyles.heading3.copyWith(color: AppColors.primary),
                 ),
                 Text(
-                  'per visit',
+                  context.l10n.perVisit,
                   style: AppTextStyles.caption.copyWith(color: AppColors.textHint),
                 ),
               ],
             ),
           ],
         ),
+      ),
       ),
     );
   }

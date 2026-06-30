@@ -8,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/password_strength_indicator.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
 
@@ -83,12 +84,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           const Icon(Icons.vpn_key, size: 56, color: Colors.white),
           const SizedBox(height: 16),
           Text(
-            'New Password',
+            context.l10n.newPassword,
             style: AppTextStyles.heading1.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 8),
           Text(
-            'Create a strong password for your account',
+            context.l10n.createStrongPassword,
             style: AppTextStyles.bodyMd.copyWith(color: Colors.white70),
             textAlign: TextAlign.center,
           ),
@@ -106,8 +107,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           children: [
             const SizedBox(height: 24),
             AppTextField(
-              label: 'New Password',
-              hint: 'Min. 8 characters',
+              label: context.l10n.newPassword,
+              hint: context.l10n.min8Chars,
               controller: _passwordController,
               obscureText: _obscure1,
               prefixIcon: const Icon(Icons.lock_outlined, size: 20),
@@ -119,8 +120,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 onPressed: () => setState(() => _obscure1 = !_obscure1),
               ),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'Password is required';
-                if (v.length < 8) return 'Min. 8 characters';
+                if (v == null || v.isEmpty) return context.l10n.passwordRequired;
+                if (v.length < 8) return context.l10n.min8Chars;
                 return null;
               },
             ),
@@ -132,8 +133,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
             const SizedBox(height: 16),
             AppTextField(
-              label: 'Confirm Password',
-              hint: 'Re-enter password',
+              label: context.l10n.confirmPassword,
+              hint: context.l10n.confirmPasswordHint,
               controller: _confirmController,
               obscureText: _obscure2,
               prefixIcon: const Icon(Icons.lock_outlined, size: 20),
@@ -146,7 +147,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
               validator: (v) {
                 if (v != _passwordController.text) {
-                  return 'Passwords do not match';
+                  return context.l10n.passwordsDoNotMatch;
                 }
                 return null;
               },
@@ -160,7 +161,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   curr is AuthError,
               builder: (context, state) {
                 return AppButton(
-                  text: 'Reset Password',
+                  text: context.l10n.resetPassword,
                   isLoading: state is AuthLoading,
                   onPressed: () {
                     if (_formKey.currentState?.validate() ?? false) {
@@ -186,7 +187,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           ..hideCurrentSnackBar()
           ..showSnackBar(
             SnackBar(
-              content: const Text('Password reset successfully! Please login.'),
+              content: Text(context.l10n.passwordResetSuccess),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(

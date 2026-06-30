@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:intl/intl.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/ai_chat_message.dart';
 
 class AiMessageBubble extends StatelessWidget {
@@ -21,10 +24,11 @@ class AiMessageBubble extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isAssistant = message.role == 'assistant';
 
-    final timeStr = _formatTime(message.createdAt);
+    final timeStr = DateFormat.jm(Localizations.localeOf(context).languageCode).format(message.createdAt.toLocal());
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    return MergeSemantics(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment:
@@ -52,11 +56,11 @@ class AiMessageBubble extends StatelessWidget {
                         : (isDark
                             ? AppColors.primaryLight.withValues(alpha: 0.2)
                             : AppColors.primary.withValues(alpha: 0.12)),
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(12),
-                      topRight: const Radius.circular(12),
-                      bottomLeft: Radius.circular(isAssistant ? 4 : 12),
-                      bottomRight: Radius.circular(isAssistant ? 12 : 4),
+                    borderRadius: BorderRadiusDirectional.only(
+                      topStart: const Radius.circular(12),
+                      topEnd: const Radius.circular(12),
+                      bottomStart: Radius.circular(isAssistant ? 4 : 12),
+                      bottomEnd: Radius.circular(isAssistant ? 12 : 4),
                     ),
                     boxShadow: isAssistant
                         ? [
@@ -92,7 +96,7 @@ class AiMessageBubble extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 6),
                     child: ActionChip(
                       avatar: const Icon(Icons.search, size: 14),
-                      label: const Text('Find doctors for this →'),
+                      label: Text(context.l10n.findDoctorsForThis),
                       onPressed: onFindDoctors,
                       visualDensity: VisualDensity.compact,
                       side: BorderSide(
@@ -111,16 +115,10 @@ class AiMessageBubble extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 
-  String _formatTime(DateTime dt) {
-    final local = dt.toLocal();
-    final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
-    final minute = local.minute.toString().padLeft(2, '0');
-    final period = local.hour < 12 ? 'AM' : 'PM';
-    return '$hour:$minute $period';
-  }
 }
 
 class _AvatarCircle extends StatelessWidget {
@@ -133,8 +131,8 @@ class _AvatarCircle extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: LinearGradient(
           colors: [AppColors.gradientStart, AppColors.gradientMiddle],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
         ),
       ),
       child: const Icon(

@@ -4,12 +4,14 @@ import '../../domain/entities/home_entities.dart';
 /// JSON deserialization models for the home summary API response.
 
 class HomeSummaryModel {
+  final String patientName;
   final UpcomingAppointmentModel? upcomingAppointment;
   final HealthSummaryModel healthSummary;
   final List<TopDoctorModel> topDoctors;
   final List<SpecialtySummaryModel> specialties;
 
   const HomeSummaryModel({
+    required this.patientName,
     this.upcomingAppointment,
     required this.healthSummary,
     required this.topDoctors,
@@ -18,6 +20,7 @@ class HomeSummaryModel {
 
   factory HomeSummaryModel.fromJson(Map<String, dynamic> json) {
     return HomeSummaryModel(
+      patientName: json['patientName'] ?? 'Patient',
       upcomingAppointment: json['upcomingAppointment'] != null
           ? UpcomingAppointmentModel.fromJson(json['upcomingAppointment'])
           : null,
@@ -32,6 +35,7 @@ class HomeSummaryModel {
   }
 
   HomeSummary toEntity() => HomeSummary(
+        patientName: patientName,
         upcomingAppointment: upcomingAppointment?.toEntity(),
         healthSummary: healthSummary.toEntity(),
         topDoctors: topDoctors.map((e) => e.toEntity()).toList(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 /// Pulsing microphone indicator shown during voice recording.
 class VoiceRecordingIndicator extends StatefulWidget {
@@ -89,7 +90,7 @@ class _VoiceRecordingIndicatorState extends State<VoiceRecordingIndicator>
                     Icons.close,
                     color: AppColors.error,
                   ),
-                  tooltip: 'Cancel',
+                  tooltip: context.l10n.cancelTooltip,
                 ),
                 const SizedBox(width: 16),
 
@@ -139,14 +140,14 @@ class _VoiceRecordingIndicatorState extends State<VoiceRecordingIndicator>
                     color: AppColors.success,
                     size: 28,
                   ),
-                  tooltip: 'Done',
+                  tooltip: context.l10n.doneTooltip,
                 ),
               ],
             ),
 
             const SizedBox(height: 4),
             Text(
-              'Listening...',
+              context.l10n.listeningLabel,
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/availability_config_entity.dart';
 import '../cubits/manage_availability_cubit.dart';
@@ -27,7 +28,7 @@ class _ManageAvailabilityScreenState extends State<ManageAvailabilityScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Manage Schedule'),
+        title: Text(context.l10n.manageScheduleScreen),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
@@ -51,10 +52,10 @@ class _ManageAvailabilityScreenState extends State<ManageAvailabilityScreen> {
             final slots = state.slots;
 
             if (slots.isEmpty) {
-              return const EmptyStateView(
+              return EmptyStateView(
                 icon: Icons.event_available,
-                title: 'No Availability Set',
-                subtitle: 'Tap the + button to add your working hours.',
+                title: context.l10n.noAvailabilitySet,
+                subtitle: context.l10n.noAvailabilityDesc,
               );
             }
 
@@ -80,7 +81,7 @@ class _ManageAvailabilityScreenState extends State<ManageAvailabilityScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                           child: Text(
-                            day,
+                            context.translateDay(day),
                             style: AppTextStyles.heading3.copyWith(color: AppColors.primary),
                           ),
                         ),

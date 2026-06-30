@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/chat_message.dart';
 
 class ChatInputBar extends StatefulWidget {
@@ -39,11 +42,13 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   bool _hasText = false;
   bool _isRecording = false;
+  bool _isLocked = false;
   bool _startingRecord = false;
   bool _cancelPendingStart = false;
   DateTime? _recordStart;
   String? _recordingPath;
   double _dragOffset = 0.0;
+  double _dragOffsetY = 0.0;
   bool _isCancelled = false;
 
   @override
@@ -86,17 +91,17 @@ class _ChatInputBarState extends State<ChatInputBar> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text('Photo from gallery'),
+              title: Text(context.l10n.photoFromGallery),
               onTap: () => Navigator.pop(ctx, _AttachAction.photoGallery),
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text('Take photo'),
+              title: Text(context.l10n.takePhoto),
               onTap: () => Navigator.pop(ctx, _AttachAction.photoCamera),
             ),
             ListTile(
               leading: const Icon(Icons.videocam_outlined),
-              title: const Text('Video from gallery'),
+              title: Text(context.l10n.videoFromGallery),
               onTap: () => Navigator.pop(ctx, _AttachAction.videoGallery),
             ),
           ],
@@ -128,12 +133,26 @@ class _ChatInputBarState extends State<ChatInputBar> {
     }
   }
 
+  Future<void> _openCamera() async {
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(source: ImageSource.camera);
+      if (file != null) {
+        widget.onSendImage(file.path);
+      }
+    } catch (e) {
+      debugPrint('Error opening camera: $e');
+    }
+  }
+
   Future<void> _startRecording() async {
     if (_startingRecord || _isRecording) return;
     _startingRecord = true;
     _cancelPendingStart = false;
     _isCancelled = false;
+    _isLocked = false;
     _dragOffset = 0.0;
+    _dragOffsetY = 0.0;
 
     final hasPermission = await _recorder.hasPermission();
     if (!hasPermission) {
@@ -195,15 +214,19 @@ class _ChatInputBarState extends State<ChatInputBar> {
     if (mounted) {
       setState(() {
         _isRecording = false;
+        _isLocked = false;
         _recordStart = null;
         _recordingPath = null;
         _dragOffset = 0.0;
+        _dragOffsetY = 0.0;
       });
     } else {
       _isRecording = false;
+      _isLocked = false;
       _recordStart = null;
       _recordingPath = null;
       _dragOffset = 0.0;
+      _dragOffsetY = 0.0;
     }
     if (send && path != null && start != null) {
       final secs = DateTime.now().difference(start).inSeconds;
@@ -215,12 +238,19 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final inputBg = isDark ? AppColors.darkSurface : Colors.white;
-    final iconColor = isDark ? Colors.white70 : Colors.black54;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final inputBg = isDark ? const Color(0xFF202C33) : Colors.white;
+    final iconColor = isDark
+        ? const Color(0xFF8696A0)
+        : const Color(0xFF54656F);
+    final containerBg = isDark
+        ? const Color(0xFF111B21)
+        : AppColors.scaffoldLight;
 
     return Container(
-      color: isDark ? AppColors.darkBackground : AppColors.scaffoldLight,
+      color: containerBg,
       padding: EdgeInsets.only(
         left: 8,
         right: 8,
@@ -244,30 +274,19 @@ class _ChatInputBarState extends State<ChatInputBar> {
                         startedAt: _recordStart ?? DateTime.now(),
                         dragOffset: _dragOffset,
                         inputBg: inputBg,
+                        isLocked: _isLocked,
+                        onCancel: () {
+                          _stopRecording(send: false);
+                        },
                       )
                     : Container(
                         decoration: BoxDecoration(
                           color: inputBg,
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                          borderRadius: BorderRadius.circular(15),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            IconButton(
-                              icon: Icon(
-                                Icons.add_circle_outline_rounded,
-                                color: iconColor,
-                              ),
-                              onPressed: _openAttachments,
-                              tooltip: 'Attach',
-                            ),
                             Expanded(
                               child: TextField(
                                 controller: _controller,
@@ -282,38 +301,68 @@ class _ChatInputBarState extends State<ChatInputBar> {
                                       : AppColors.textPrimary,
                                 ),
                                 decoration: InputDecoration(
-                                  hintText: 'Message',
+                                  hintText: context.l10n.message,
                                   hintStyle: TextStyle(color: iconColor),
                                   border: InputBorder.none,
                                   contentPadding: const EdgeInsets.symmetric(
                                     vertical: 12,
-                                    horizontal: 4,
+                                    horizontal: 16,
                                   ),
                                 ),
                               ),
                             ),
+                            IconButton(
+                              icon: Icon(Icons.attach_file, color: iconColor),
+                              onPressed: _openAttachments,
+                              tooltip: context.l10n.attach,
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.camera_alt, color: iconColor),
+                              onPressed: _openCamera,
+                              tooltip: context.l10n.camera,
+                            ),
+                            const SizedBox(width: 4),
                           ],
                         ),
                       ),
               ),
               const SizedBox(width: 8),
               Transform.translate(
-                offset: Offset(_dragOffset, 0),
+                offset: Offset(_dragOffset, _dragOffsetY),
                 child: Transform.scale(
-                  scale: _isRecording ? 1.2 : 1.0,
+                  scale: (_isRecording && !_isLocked) ? 1.2 : 1.0,
                   child: _SendOrMicButton(
                     hasText: _hasText,
-                    onSend: _sendText,
+                    isLocked: _isLocked,
+                    onSend: _isRecording
+                        ? () => _stopRecording(send: true)
+                        : _sendText,
                     onStartRecord: _startRecording,
-                    onRecordMove: (details) {
-                      if (!_isRecording || _isCancelled) return;
+                    onRecordMove: (Offset offset) {
+                      if (!_isRecording || _isCancelled || _isLocked) return;
                       setState(() {
-                        final dx = details.offsetFromOrigin.dx;
-                        if (dx < 0) {
+                        final dx = offset.dx;
+                        final dy = offset.dy;
+
+                        // Handle drag up to lock
+                        if (dy < 0) {
+                          _dragOffsetY = dy;
+                          if (_dragOffsetY < -30) {
+                            _isLocked = true;
+                            _dragOffsetY = 0.0;
+                            _dragOffset = 0.0;
+                            HapticFeedback.lightImpact();
+                            return;
+                          }
+                        }
+
+                        // Handle drag left to cancel
+                        if (dx < 0 && !_isLocked) {
                           _dragOffset = dx;
-                          if (_dragOffset < -100) {
+                          if (_dragOffset < -60) {
                             _isCancelled = true;
                             _dragOffset = 0.0;
+                            _dragOffsetY = 0.0;
                             _stopRecording(send: false);
                             HapticFeedback.lightImpact();
                           }
@@ -321,22 +370,28 @@ class _ChatInputBarState extends State<ChatInputBar> {
                       });
                     },
                     onStopRecord: () {
-                      if (!_isCancelled) {
+                      if (!_isCancelled && !_isLocked) {
                         _stopRecording(send: true);
                       }
-                      setState(() {
-                        _dragOffset = 0.0;
-                        _isCancelled = false;
-                      });
+                      if (!_isLocked) {
+                        setState(() {
+                          _dragOffset = 0.0;
+                          _dragOffsetY = 0.0;
+                          _isCancelled = false;
+                        });
+                      }
                     },
                     onCancelRecord: () {
-                      if (!_isCancelled) {
+                      if (!_isCancelled && !_isLocked) {
                         _stopRecording(send: false);
                       }
-                      setState(() {
-                        _dragOffset = 0.0;
-                        _isCancelled = false;
-                      });
+                      if (!_isLocked) {
+                        setState(() {
+                          _dragOffset = 0.0;
+                          _dragOffsetY = 0.0;
+                          _isCancelled = false;
+                        });
+                      }
                     },
                   ),
                 ),
@@ -349,16 +404,18 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 }
 
-class _SendOrMicButton extends StatelessWidget {
+class _SendOrMicButton extends StatefulWidget {
   final bool hasText;
+  final bool isLocked;
   final VoidCallback onSend;
   final VoidCallback onStartRecord;
   final VoidCallback onStopRecord;
-  final ValueChanged<LongPressMoveUpdateDetails>? onRecordMove;
+  final ValueChanged<Offset>? onRecordMove;
   final VoidCallback onCancelRecord;
 
   const _SendOrMicButton({
     required this.hasText,
+    required this.isLocked,
     required this.onSend,
     required this.onStartRecord,
     required this.onStopRecord,
@@ -367,15 +424,37 @@ class _SendOrMicButton extends StatelessWidget {
   });
 
   @override
+  State<_SendOrMicButton> createState() => _SendOrMicButtonState();
+}
+
+class _SendOrMicButtonState extends State<_SendOrMicButton> {
+  Offset? _panOrigin;
+
+  @override
   Widget build(BuildContext context) {
-    if (hasText) {
-      return _CircleButton(icon: Icons.send_rounded, onTap: onSend);
+    if (widget.hasText || widget.isLocked) {
+      return _CircleButton(icon: Icons.send_rounded, onTap: widget.onSend);
     }
     return GestureDetector(
-      onLongPressStart: (_) => onStartRecord(),
-      onLongPressMoveUpdate: onRecordMove,
-      onLongPressEnd: (_) => onStopRecord(),
-      onLongPressCancel: onCancelRecord,
+      onPanDown: (details) {
+        _panOrigin = details.globalPosition;
+        widget.onStartRecord();
+      },
+      onPanUpdate: (details) {
+        if (_panOrigin != null && widget.onRecordMove != null) {
+          final dx = details.globalPosition.dx - _panOrigin!.dx;
+          final dy = details.globalPosition.dy - _panOrigin!.dy;
+          widget.onRecordMove!(Offset(dx, dy));
+        }
+      },
+      onPanEnd: (_) {
+        _panOrigin = null;
+        widget.onStopRecord();
+      },
+      onPanCancel: () {
+        _panOrigin = null;
+        widget.onCancelRecord();
+      },
       child: const _CircleButton(icon: Icons.mic_rounded),
     );
   }
@@ -418,11 +497,11 @@ class _ReplyBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final summary = switch (message.type) {
-      ChatMessageType.image => '📷 Photo',
-      ChatMessageType.video => '🎥 Video',
-      ChatMessageType.voice => '🎙 Voice message',
+      ChatMessageType.image => context.l10n.photoReply,
+      ChatMessageType.video => context.l10n.videoReply,
+      ChatMessageType.voice => context.l10n.voiceReply,
       ChatMessageType.text =>
-        message.content.isEmpty ? 'Message' : message.content,
+        message.content.isEmpty ? context.l10n.message : message.content,
     };
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
@@ -442,7 +521,7 @@ class _ReplyBanner extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Replying',
+                  context.l10n.replying,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -477,11 +556,15 @@ class _RecordingBanner extends StatefulWidget {
   final DateTime startedAt;
   final double dragOffset;
   final Color inputBg;
+  final bool isLocked;
+  final VoidCallback onCancel;
 
   const _RecordingBanner({
     required this.startedAt,
     required this.dragOffset,
     required this.inputBg,
+    required this.isLocked,
+    required this.onCancel,
   });
 
   @override
@@ -490,24 +573,30 @@ class _RecordingBanner extends StatefulWidget {
 
 class _RecordingBannerState extends State<_RecordingBanner>
     with SingleTickerProviderStateMixin {
-  late Stream<DateTime> _ticker;
   late AnimationController _pulseController;
+  Timer? _timer;
+  Duration _duration = Duration.zero;
 
   @override
   void initState() {
     super.initState();
-    _ticker = Stream.periodic(
-      const Duration(milliseconds: 500),
-      (_) => DateTime.now(),
-    );
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
+
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      if (mounted) {
+        setState(() {
+          _duration = DateTime.now().difference(widget.startedAt);
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -528,59 +617,55 @@ class _RecordingBannerState extends State<_RecordingBanner>
       decoration: BoxDecoration(
         color: widget.inputBg,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         children: [
-          FadeTransition(
-            opacity: _pulseController,
-            child: const Icon(Icons.mic, color: Colors.redAccent, size: 20),
-          ),
+          if (widget.isLocked)
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              onPressed: widget.onCancel,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            )
+          else
+            FadeTransition(
+              opacity: _pulseController,
+              child: const Icon(Icons.mic, color: Colors.redAccent, size: 20),
+            ),
           const SizedBox(width: 8),
-          StreamBuilder<DateTime>(
-            stream: _ticker,
-            builder: (_, _) {
-              final d = DateTime.now().difference(widget.startedAt);
-              return Text(
-                _format(d),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              );
-            },
-          ),
-          const Spacer(),
-          Opacity(
-            opacity: opacity,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.chevron_left,
-                  color: isDark ? Colors.white54 : Colors.black45,
-                  size: 20,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Slide to cancel',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isDark ? Colors.white54 : Colors.black45,
-                  ),
-                ),
-                const SizedBox(
-                  width: 16,
-                ), // space so it's not right up against the mic
-              ],
+          Text(
+            _format(_duration),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
+          const Spacer(),
+          if (!widget.isLocked)
+            Opacity(
+              opacity: opacity,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.chevron_left,
+                    color: isDark ? Colors.white54 : Colors.black45,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    context.l10n.slideToCancel,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white54 : Colors.black45,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 16,
+                  ), // space so it's not right up against the mic
+                ],
+              ),
+            ),
         ],
       ),
     );

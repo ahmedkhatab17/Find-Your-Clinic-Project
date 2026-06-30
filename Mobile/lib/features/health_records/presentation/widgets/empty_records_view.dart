@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
+
 class EmptyRecordsView extends StatelessWidget {
   const EmptyRecordsView({super.key});
 
@@ -21,14 +23,14 @@ class EmptyRecordsView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No records yet',
+              context.l10n.noRecordsYet,
               style: textTheme.titleMedium?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              'Tap + to add your first health record',
+              context.l10n.tapToAddFirstRecord,
               style: textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurface.withValues(alpha: 0.35),
               ),

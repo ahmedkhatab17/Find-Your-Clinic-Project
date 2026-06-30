@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../cubits/payment_history_cubit.dart';
 import '../widgets/transaction_tile.dart';
@@ -25,7 +26,7 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Transaction History'),
+        title: Text(context.l10n.transactionHistory),
         centerTitle: true,
       ),
       body: BlocBuilder<PaymentHistoryCubit, PaymentHistoryState>(
@@ -67,7 +68,7 @@ class _Body extends StatelessWidget {
                       )
                     : ListView.separated(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                        padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 24),
                         itemCount: transactions.length,
                         separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (context, i) => TransactionTile(

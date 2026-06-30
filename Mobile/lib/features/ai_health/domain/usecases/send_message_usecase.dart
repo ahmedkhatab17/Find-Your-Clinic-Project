@@ -6,6 +6,6 @@ class SendMessageUseCase {
   final AiHealthRepository _repository;
   const SendMessageUseCase(this._repository);
 
-  Future<ApiResult<AiChatMessage>> call(String content) =>
-      _repository.sendMessage(content);
+  Future<ApiResult<AiChatMessage>> call(String content, String language) =>
+      _repository.sendMessage(content, language);
 }

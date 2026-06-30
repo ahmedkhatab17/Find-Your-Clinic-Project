@@ -16,7 +16,7 @@ class AvatarViewer extends StatelessWidget {
         opaque: false,
         barrierDismissible: true,
         barrierColor: Colors.black,
-        pageBuilder: (context, _, __) => AvatarViewer(imageProvider: imageProvider, tag: tag),
+        pageBuilder: (context, animation, secondaryAnimation) => AvatarViewer(imageProvider: imageProvider, tag: tag),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

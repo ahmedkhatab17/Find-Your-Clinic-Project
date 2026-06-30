@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
 
@@ -44,13 +45,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Change Password')),
+      appBar: AppBar(title: Text(context.l10n.changePassword)),
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthPasswordChanged) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Password changed successfully'),
+              SnackBar(
+                content: Text(context.l10n.passwordChangedSuccess),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -75,7 +76,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 children: [
                   const SizedBox(height: 8),
                   Text(
-                    'Enter your current password to verify your identity, then choose a new password.',
+                    context.l10n.changePasswordDesc,
                     style: AppTextStyles.bodyMd.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -83,24 +84,24 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   const SizedBox(height: 32),
                   _PasswordField(
                     controller: _currentPasswordController,
-                    label: 'Current Password',
+                    label: context.l10n.currentPassword,
                     show: _showCurrent,
                     onToggle: () =>
                         setState(() => _showCurrent = !_showCurrent),
                     validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Required' : null,
+                        (v == null || v.isEmpty) ? context.l10n.requiredField : null,
                   ),
                   const SizedBox(height: 16),
                   _PasswordField(
                     controller: _newPasswordController,
-                    label: 'New Password',
+                    label: context.l10n.newPassword,
                     show: _showNew,
                     onToggle: () => setState(() => _showNew = !_showNew),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Required';
-                      if (v.length < 8) return 'At least 8 characters';
+                      if (v == null || v.isEmpty) return context.l10n.requiredField;
+                      if (v.length < 8) return context.l10n.atLeast8Chars;
                       if (v == _currentPasswordController.text) {
-                        return 'New password must differ from current';
+                        return context.l10n.newPasswordMustDiffer;
                       }
                       return null;
                     },
@@ -108,21 +109,21 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   const SizedBox(height: 16),
                   _PasswordField(
                     controller: _confirmPasswordController,
-                    label: 'Confirm New Password',
+                    label: context.l10n.confirmNewPassword,
                     show: _showConfirm,
                     onToggle: () =>
                         setState(() => _showConfirm = !_showConfirm),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Required';
+                      if (v == null || v.isEmpty) return context.l10n.requiredField;
                       if (v != _newPasswordController.text) {
-                        return 'Passwords do not match';
+                        return context.l10n.passwordsDoNotMatch;
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 32),
                   AppButton(
-                    text: 'Change Password',
+                    text: context.l10n.changePassword,
                     onPressed: isLoading ? null : _submit,
                     isLoading: isLoading,
                   ),

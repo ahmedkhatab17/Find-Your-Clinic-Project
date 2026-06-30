@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../data/preferred_payment_method_store.dart';
 import '../../domain/entities/payment_entities.dart';
 
@@ -39,9 +40,9 @@ class _PatientPaymentMethodsScreenState
     await _store.write(method);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Default payment method updated'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text(context.l10n.paymentMethod),
+        duration: const Duration(seconds: 1),
       ),
     );
   }
@@ -52,18 +53,18 @@ class _PatientPaymentMethodsScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Payment Methods'),
+        title: Text(context.l10n.paymentMethods),
         centerTitle: true,
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 24),
               children: [
                 _SecurityBanner(isDark: isDark),
                 const SizedBox(height: 18),
                 Text(
-                  'Default Method',
+                  context.l10n.defaultMethod,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
@@ -75,9 +76,8 @@ class _PatientPaymentMethodsScreenState
                 _MethodTile(
                   icon: Icons.money_rounded,
                   iconColor: AppColors.success,
-                  title: 'Pay at Clinic (Cash)',
-                  subtitle:
-                      'Pay in person at the doctor\'s clinic. Doctor must approve before confirmation.',
+                  title: context.l10n.payAtClinicCash,
+                  subtitle: context.l10n.payAtClinicSubtitle,
                   selected: _selected == PaymentMethod.cash,
                   onTap: () => _select(PaymentMethod.cash),
                 ),
@@ -85,9 +85,8 @@ class _PatientPaymentMethodsScreenState
                 _MethodTile(
                   icon: Icons.phone_android_rounded,
                   iconColor: AppColors.primary,
-                  title: 'Mobile Wallet',
-                  subtitle:
-                      'Pay with Vodafone Cash, Orange Money, etisalat Cash, or WE Pay via Paymob.',
+                  title: context.l10n.mobileWallet,
+                  subtitle: context.l10n.mobileWalletSubtitle,
                   selected: _selected == PaymentMethod.wallet,
                   onTap: () => _select(PaymentMethod.wallet),
                 ),
@@ -95,8 +94,7 @@ class _PatientPaymentMethodsScreenState
                 _InfoTile(
                   isDark: isDark,
                   icon: Icons.info_outline_rounded,
-                  text:
-                      'Your selected method becomes the pre-selected option at checkout — you can still change it per booking.',
+                  text: context.l10n.paymentMethodInfo,
                 ),
               ],
             ),
@@ -115,8 +113,8 @@ class _SecurityBanner extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.gradientStart, AppColors.gradientEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
         ),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -131,22 +129,22 @@ class _SecurityBanner extends StatelessWidget {
             child: const Icon(Icons.lock_rounded, color: Colors.white),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Secure Payments',
-                  style: TextStyle(
+                  context.l10n.securePayments,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 15,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
-                  'All online payments are processed by Paymob with bank-grade encryption.',
-                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                  context.l10n.securePaymentsDesc,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
             ),

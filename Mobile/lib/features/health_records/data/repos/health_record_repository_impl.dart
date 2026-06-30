@@ -114,14 +114,14 @@ class HealthRecordRepositoryImpl implements HealthRecordRepository {
           'attachment': await MultipartFile.fromFile(attachmentPath),
         });
       } else {
-        requestData = {
+        requestData = FormData.fromMap({
           'title': title,
           'type': type.index,
           'value': ?value,
           'unit': ?unit,
           'recordedAt': recordedAt.toUtc().toIso8601String(),
           'notes': ?notes,
-        };
+        });
       }
 
       final response = await _apiClient.dio.post(

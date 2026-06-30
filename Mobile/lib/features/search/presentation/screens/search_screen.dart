@@ -8,6 +8,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../accessibility/domain/entities/screen_context.dart';
 import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
 import '../../domain/entities/doctor_search_entities.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../cubits/search_cubit.dart';
 import '../cubits/search_state.dart';
 import '../widgets/doctor_list_tile.dart';
@@ -69,15 +70,15 @@ class _SearchScreenState extends State<SearchScreen> {
       SearchLoadingMore(:final currentResult) => currentResult.items,
       _ => const <DoctorSearchResult>[],
     };
-    if (items.isEmpty) return 'No doctors found.';
-    final buffer = StringBuffer('${items.length} doctors. ');
+    if (items.isEmpty) return context.l10n.noDoctorsFoundTitle;
+    final buffer = StringBuffer('${items.length} ${context.l10n.doctorsPrefix} ');
     final readN = items.length > 6 ? 6 : items.length;
     for (var i = 0; i < readN; i++) {
       final d = items[i];
       buffer.write('${i + 1}: Doctor ${d.fullName}, ${d.specialty}. ');
     }
     if (items.length > readN) {
-      buffer.write('And ${items.length - readN} more.');
+      buffer.write('${context.l10n.and} ${items.length - readN} ${context.l10n.more}');
     }
     return buffer.toString();
   }
@@ -129,9 +130,8 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Find a Doctor'),
+        title: Text(context.l10n.findADoctor),
         actions: [
-          // ─── TASK 1.4: Active filter badge ───
           BlocBuilder<SearchCubit, SearchState>(
             builder: (context, state) {
               final hasActiveFilters = switch (state) {
@@ -146,7 +146,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 isLabelVisible: hasActiveFilters,
                 child: IconButton(
                   icon: const Icon(Icons.tune),
-                  tooltip: 'Filters',
+                  tooltip: context.l10n.filtersTooltip,
                   onPressed: () => _showFilters(context),
                 ),
               );
@@ -162,7 +162,7 @@ class _SearchScreenState extends State<SearchScreen> {
               controller: _searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Search by doctor name...',
+                hintText: context.l10n.searchDoctorNameHint,
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -171,7 +171,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
           ),
-          // ─── TASK 1.3: Result count label ───
           BlocBuilder<SearchCubit, SearchState>(
             buildWhen: (prev, curr) =>
                 curr is SearchLoaded || curr is SearchLoadingMore,
@@ -187,7 +186,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Text(
-                  '$count doctor${count == 1 ? '' : 's'} available',
+                  '$count ${context.l10n.doctorsAvailableSuffix}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -198,12 +197,11 @@ class _SearchScreenState extends State<SearchScreen> {
           Expanded(
             child: BlocBuilder<SearchCubit, SearchState>(
               builder: (context, state) => switch (state) {
-          // ─── TASK 1.2: Shimmer loading ───
           SearchInitial() || SearchLoading() => ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: 6,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (_, __) => const DoctorShimmerCard(),
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) => const DoctorShimmerCard(),
             ),
           SearchError(:final message) => ErrorView(
               message: message,
@@ -212,11 +210,10 @@ class _SearchScreenState extends State<SearchScreen> {
           SearchLoaded(result: final result) ||
           SearchLoadingMore(currentResult: final result) =>
             result.items.isEmpty
-                ? const EmptyStateView(
+                ? EmptyStateView(
                     icon: Icons.search_off,
-                    title: 'No Doctors Found',
-                    subtitle:
-                        'Try adjusting your filters or search in a different area.',
+                    title: context.l10n.noDoctorsFoundTitle,
+                    subtitle: context.l10n.noDoctorsFoundSubtitle,
                   )
                 : ListView.separated(
                     controller: _scrollController,

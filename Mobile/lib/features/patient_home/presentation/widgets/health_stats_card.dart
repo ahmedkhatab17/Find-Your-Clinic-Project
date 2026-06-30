@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/home_entities.dart';
 
 class HealthStatsCard extends StatelessWidget {
@@ -31,21 +32,21 @@ class HealthStatsCard extends StatelessWidget {
           _StatItem(
             icon: Icons.favorite,
             iconColor: AppColors.error,
-            label: 'Heart Rate',
+            label: context.l10n.heartRate,
             value: healthSummary.latestHeartRate ?? '—',
           ),
           _divider(),
           _StatItem(
             icon: Icons.bloodtype,
             iconColor: AppColors.secondary,
-            label: 'Blood Pressure',
+            label: context.l10n.bloodPressure,
             value: healthSummary.latestBloodPressure ?? '—',
           ),
           _divider(),
           _StatItem(
             icon: Icons.description_outlined,
             iconColor: AppColors.primary,
-            label: 'Records',
+            label: context.l10n.medicalRecordsLabel,
             value: '${healthSummary.medicalRecordsCount}',
           ),
         ],

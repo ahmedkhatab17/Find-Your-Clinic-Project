@@ -8,8 +8,10 @@ import '../../../../core/routing/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/token_storage.dart';
 import '../../../../core/widgets/user_avatar.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../appointments/domain/entities/appointment_entity.dart';
 import '../../../appointments/domain/usecases/appointment_usecases.dart';
+import '../../../../core/extensions/appointment_status_l10n_extension.dart';
 
 class CounterpartyInfoSheet extends StatefulWidget {
   /// The user id of the counterparty (other side of the conversation).
@@ -72,7 +74,7 @@ class _CounterpartyInfoSheetState extends State<CounterpartyInfoSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final roleLabel = _role == 'Doctor' ? 'Patient' : 'Doctor';
+    final roleLabel = _role == 'Doctor' ? context.l10n.patient : context.l10n.doctor;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.55,
@@ -131,7 +133,7 @@ class _CounterpartyInfoSheetState extends State<CounterpartyInfoSheet> {
               child: Row(
                 children: [
                   Text(
-                    'Appointments together',
+                    context.l10n.appointmentsTogether,
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -206,8 +208,7 @@ class _AppointmentTile extends StatelessWidget {
       AppointmentStatus.pendingPayment => AppColors.warning,
       AppointmentStatus.scheduled => AppColors.warning,
     };
-    final label =
-        isDoctorView ? status.doctorLabel : status.patientLabel;
+    final label = status.getLocalizedLabel(context, isDoctorView);
 
     return ListTile(
       leading: Container(

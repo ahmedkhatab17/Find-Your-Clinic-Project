@@ -5,6 +5,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/payment_entities.dart';
 import '../cubits/paymob_webview_cubit.dart';
 import '../cubits/paymob_webview_state.dart';
@@ -118,10 +119,10 @@ class _PaymobWebViewBodyState extends State<_PaymobWebViewBody> {
           case PaymobWebViewReady():
             _initController(state.iframeUrl);
           case PaymobWebViewSuccess():
-            GoRouter.of(context).go('/booking-success', extra: {
+            GoRouter.of(context).go('/booking-success', extra: <String, dynamic>{
               'isConfirmed': true,
               'doctorName': state.doctorName,
-              'scheduledAt': state.scheduledAt,
+              'scheduledAt': state.scheduledAt.toIso8601String(),
               'appointmentId': state.appointmentId,
             });
           case PaymobWebViewFailure():
@@ -136,15 +137,15 @@ class _PaymobWebViewBodyState extends State<_PaymobWebViewBody> {
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop && state is PaymobWebViewConfirming) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Confirming payment, please wait…'),
+                SnackBar(
+                  content: Text(context.l10n.confirmingPaymentWait),
                 ),
               );
             }
           },
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('Secure Payment'),
+              title: Text(context.l10n.securePayment),
               centerTitle: true,
               leading: IconButton(
                 icon: const Icon(Icons.close_rounded),
@@ -181,20 +182,20 @@ class _PaymobWebViewBodyState extends State<_PaymobWebViewBody> {
     final shouldCancel = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cancel payment?'),
-        content: const Text(
-          'If you leave now, your booking will not be created.',
+        title: Text(context.l10n.cancelPaymentQ),
+        content: Text(
+          context.l10n.leavePaymentWarning,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Stay'),
+            child: Text(context.l10n.stay),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Leave',
-              style: TextStyle(color: AppColors.error),
+            child: Text(
+              context.l10n.leavePaymentButton,
+              style: const TextStyle(color: AppColors.error),
             ),
           ),
         ],
@@ -219,9 +220,9 @@ class _PaymobWebViewBodyState extends State<_PaymobWebViewBody> {
               color: AppColors.error,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Payment Failed',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              context.l10n.paymentFailed,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -246,7 +247,7 @@ class _PaymobWebViewBodyState extends State<_PaymobWebViewBody> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Try Again'),
+              child: Text(context.l10n.tryAgain),
             ),
           ),
         ],
@@ -260,7 +261,7 @@ class _ConfirmingOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return ColoredBox(
       color: Colors.black.withValues(alpha: 0.55),
-      child: const Center(
+      child: Center(
         child: Card(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(14)),
@@ -276,7 +277,7 @@ class _ConfirmingOverlay extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2.5),
                 ),
                 SizedBox(width: 16),
-                Text('Confirming payment…',
+                Text(context.l10n.confirmingPayment,
                     style: TextStyle(fontWeight: FontWeight.w600)),
               ],
             ),

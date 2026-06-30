@@ -18,6 +18,8 @@ enum PatientScreen {
   aiChat,
   nearbyClinics,
   settings,
+  conversations,
+  editProfile,
   unknown,
 }
 
@@ -37,6 +39,8 @@ extension PatientScreenLabel on PatientScreen {
         PatientScreen.aiChat => 'ai_chat',
         PatientScreen.nearbyClinics => 'nearby_clinics',
         PatientScreen.settings => 'settings',
+        PatientScreen.conversations => 'conversations',
+        PatientScreen.editProfile => 'edit_profile',
         PatientScreen.unknown => 'unknown',
       };
 }

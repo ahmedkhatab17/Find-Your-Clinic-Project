@@ -52,6 +52,10 @@ class VoiceCommandResponseModel {
         return const NavigateNotificationsIntent();
       case VoiceIntentIds.navigateHealthRecords:
         return const NavigateHealthRecordsIntent();
+      case VoiceIntentIds.navigateConversations:
+        return const NavigateConversationsIntent();
+      case VoiceIntentIds.navigateEditProfile:
+        return const NavigateEditProfileIntent();
       case VoiceIntentIds.bookAppointment:
         return BookAppointmentIntent(
           doctorName: parameters['doctorName'] as String?,
@@ -77,6 +81,10 @@ class VoiceCommandResponseModel {
         return const HelpIntent();
       case VoiceIntentIds.cancel:
         return const CancelIntent();
+      case VoiceIntentIds.confirm:
+        return const ConfirmIntent();
+      case VoiceIntentIds.deny:
+        return const DenyIntent();
       default:
         return UnknownIntent(originalTranscript);
     }

@@ -1,3 +1,5 @@
+import '../../domain/entities/voice_command_intent.dart';
+
 sealed class VoiceAssistantState {
   const VoiceAssistantState();
 }
@@ -34,4 +36,10 @@ class VoiceAssistantSpoken extends VoiceAssistantState {
 class VoiceAssistantError extends VoiceAssistantState {
   final String message;
   const VoiceAssistantError(this.message);
+}
+
+class VoiceAssistantAwaitingConfirmation extends VoiceAssistantState {
+  final VoiceCommandIntent pendingIntent;
+  final String promptMessage;
+  const VoiceAssistantAwaitingConfirmation(this.pendingIntent, this.promptMessage);
 }

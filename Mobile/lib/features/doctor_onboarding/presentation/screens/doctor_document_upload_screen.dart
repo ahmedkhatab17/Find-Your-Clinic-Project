@@ -10,6 +10,7 @@ import '../../../../core/routing/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../../core/widgets/avatar_viewer.dart';
 import '../../domain/entities/onboarding_entities.dart';
@@ -23,12 +24,15 @@ const _documentTypes = [
   'specialty_certificate',
 ];
 
-const _documentLabels = {
-  'medical_license': 'Medical License',
-  'national_id': 'National ID',
-  'degree_certificate': 'Degree Certificate',
-  'specialty_certificate': 'Specialty Certificate',
-};
+String _getDocumentLabel(BuildContext context, String type) {
+  switch (type) {
+    case 'medical_license': return context.l10n.medicalLicense;
+    case 'national_id': return context.l10n.nationalId;
+    case 'degree_certificate': return context.l10n.degreeCertificate;
+    case 'specialty_certificate': return context.l10n.specialtyCertificate;
+    default: return type;
+  }
+}
 
 class DoctorDocumentUploadScreen extends StatefulWidget {
   final String pendingToken;
@@ -73,7 +77,7 @@ class _DoctorDocumentUploadScreenState
   void _submit() {
     if (_selectedFiles.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please add at least one document.')),
+        SnackBar(content: Text(context.l10n.pleaseAddDoc)),
       );
       return;
     }
@@ -106,10 +110,10 @@ class _DoctorDocumentUploadScreenState
                   BlocBuilder<OnboardingCubit, OnboardingState>(
                     builder: (context, state) => AppButton(
                       text: widget.isResubmission
-                          ? 'Resubmit for Review'
+                          ? context.l10n.resubmitReview
                           : _isProfileUpdateMode
-                              ? 'Update Documents'
-                              : 'Submit Documents',
+                              ? context.l10n.updateDocs
+                              : context.l10n.submitDocs,
                       isLoading: state is OnboardingLoading,
                       onPressed: _submit,
                     ),
@@ -142,12 +146,12 @@ class _DoctorDocumentUploadScreenState
           const Icon(Icons.upload_file_outlined, size: 52, color: Colors.white),
           const SizedBox(height: 12),
           Text(
-            'Verify Your License',
+            context.l10n.verifyLicense,
             style: AppTextStyles.heading1.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 6),
           Text(
-            'Upload your medical documents for review',
+            context.l10n.uploadDocsReview,
             style: AppTextStyles.bodyMd.copyWith(color: Colors.white70),
             textAlign: TextAlign.center,
           ),
@@ -172,8 +176,7 @@ class _DoctorDocumentUploadScreenState
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Our team reviews submitted documents within 1-2 business days. '
-              'Accepted formats: JPG, PNG, PDF. Max 5MB per file.',
+              context.l10n.docReviewInfo,
               style: AppTextStyles.bodySm.copyWith(color: colorScheme.primary),
             ),
           ),
@@ -183,7 +186,7 @@ class _DoctorDocumentUploadScreenState
   }
 
   Widget _buildDocumentTile(String type) {
-    final label = _documentLabels[type] ?? type;
+    final label = _getDocumentLabel(context, type);
     final picked = _selectedFiles.containsKey(type);
     final uploaded = _uploadedFiles.containsKey(type);
     final filename = picked ? _selectedFiles[type]!.split('/').last : null;
@@ -234,10 +237,10 @@ class _DoctorDocumentUploadScreenState
                     const SizedBox(height: 2),
                     Text(
                       picked
-                          ? 'Selected: $filename (tap to replace)'
+                          ? context.l10n.docSelected(filename ?? '')
                           : uploaded
-                              ? 'Uploaded (tap to replace)'
-                              : 'Tap to select file',
+                              ? context.l10n.docUploaded
+                              : context.l10n.tapToSelectDoc,
                       style: AppTextStyles.bodySm.copyWith(
                         color: picked
                             ? colorScheme.primary
@@ -260,7 +263,7 @@ class _DoctorDocumentUploadScreenState
                         color: colorScheme.onSurfaceVariant,
                         size: 20,
                       ),
-                      tooltip: 'View document',
+                      tooltip: context.l10n.viewDocument,
                     ),
                   Icon(
                     Icons.chevron_right_rounded,
@@ -296,8 +299,8 @@ class _DoctorDocumentUploadScreenState
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(
-              content: Text('Documents resubmitted. Your application is back under review.'),
+            SnackBar(
+              content: Text(context.l10n.docsResubmitted),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -306,8 +309,8 @@ class _DoctorDocumentUploadScreenState
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
-            const SnackBar(
-              content: Text('Documents updated successfully.'),
+            SnackBar(
+              content: Text(context.l10n.docsUpdated),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -347,9 +350,9 @@ class _DoctorDocumentUploadScreenState
       await showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: Text(_documentLabels[type] ?? 'Document'),
-          content: const Text(
-            'This file type cannot be previewed directly inside the app. You can copy the link.',
+          title: Text(_getDocumentLabel(context, type)),
+          content: Text(
+            context.l10n.fileNoPreview,
           ),
           actions: [
             TextButton(
@@ -357,14 +360,14 @@ class _DoctorDocumentUploadScreenState
                 Clipboard.setData(ClipboardData(text: remoteUrl));
                 Navigator.of(dialogContext).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Document link copied')),
+                  SnackBar(content: Text(context.l10n.linkCopied)),
                 );
               },
-              child: const Text('Copy Link'),
+              child: Text(context.l10n.copyLink),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Close'),
+              child: Text(context.l10n.closeWord),
             ),
           ],
         ),
@@ -373,7 +376,7 @@ class _DoctorDocumentUploadScreenState
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No document available to view yet.')),
+      SnackBar(content: Text(context.l10n.noDocAvailable)),
     );
   }
 

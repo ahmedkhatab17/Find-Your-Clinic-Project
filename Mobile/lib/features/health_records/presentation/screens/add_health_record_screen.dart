@@ -2,6 +2,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
+
 import '../../domain/entities/health_record_entity.dart';
 import '../cubits/health_record_cubit.dart';
 import '../cubits/health_record_state.dart';
@@ -29,20 +31,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
 
   bool get _isEditing => widget.existingRecord != null;
 
-  static const _typeLabels = <HealthRecordType, String>{
-    HealthRecordType.bloodPressure: 'Blood Pressure',
-    HealthRecordType.heartRate: 'Heart Rate',
-    HealthRecordType.labResult: 'Lab Result',
-    HealthRecordType.prescription: 'Prescription',
-    HealthRecordType.bloodTest: 'Blood Test',
-    HealthRecordType.radiology: 'Radiology',
-    HealthRecordType.vaccination: 'Vaccination',
-    HealthRecordType.bloodSugar: 'Blood Sugar',
-    HealthRecordType.temperature: 'Temperature',
-    HealthRecordType.weight: 'Weight',
-    HealthRecordType.spO2: 'SpO2',
-    HealthRecordType.other: 'Other',
-  };
+
 
   static const _defaultUnits = <HealthRecordType, String>{
     HealthRecordType.bloodPressure: 'mmHg',
@@ -177,9 +166,24 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
+    final typeLabels = <HealthRecordType, String>{
+      HealthRecordType.bloodPressure: context.l10n.typeBloodPressure,
+      HealthRecordType.heartRate: context.l10n.typeHeartRate,
+      HealthRecordType.labResult: context.l10n.typeLabResult,
+      HealthRecordType.prescription: context.l10n.typePrescription,
+      HealthRecordType.bloodTest: context.l10n.typeBloodTest,
+      HealthRecordType.radiology: context.l10n.typeRadiology,
+      HealthRecordType.vaccination: context.l10n.typeVaccination,
+      HealthRecordType.bloodSugar: context.l10n.typeBloodSugar,
+      HealthRecordType.temperature: context.l10n.typeTemperature,
+      HealthRecordType.weight: context.l10n.typeWeight,
+      HealthRecordType.spO2: context.l10n.typeSpO2,
+      HealthRecordType.other: context.l10n.typeOther,
+    };
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Record' : 'Add Record'),
+        title: Text(_isEditing ? context.l10n.editRecord : context.l10n.addNewRecord),
       ),
       body: BlocListener<HealthRecordCubit, HealthRecordState>(
         listener: (context, state) {
@@ -198,19 +202,19 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title *',
-                    hintText: 'e.g. Morning blood pressure',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.titleFieldLabel,
+                    hintText: context.l10n.titleFieldHint,
                   ),
                   textCapitalization: TextCapitalization.sentences,
                   validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Title is required' : null,
+                      (v == null || v.trim().isEmpty) ? context.l10n.titleRequired : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<HealthRecordType>(
                   initialValue: _selectedType,
-                  decoration: const InputDecoration(labelText: 'Type'),
-                  items: _typeLabels.entries
+                  decoration: InputDecoration(labelText: context.l10n.typeFieldLabel),
+                  items: typeLabels.entries
                       .map((e) => DropdownMenuItem(
                             value: e.key,
                             child: Text(e.value),
@@ -225,7 +229,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                       flex: 2,
                       child: TextFormField(
                         controller: _valueController,
-                        decoration: const InputDecoration(labelText: 'Value'),
+                        decoration: InputDecoration(labelText: context.l10n.valueFieldLabel),
                         keyboardType:
                             const TextInputType.numberWithOptions(decimal: true),
                       ),
@@ -234,7 +238,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                     Expanded(
                       child: TextFormField(
                         controller: _unitController,
-                        decoration: const InputDecoration(labelText: 'Unit'),
+                        decoration: InputDecoration(labelText: context.l10n.unitFieldLabel),
                       ),
                     ),
                   ],
@@ -244,9 +248,9 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                   onTap: _pickDate,
                   borderRadius: BorderRadius.circular(8),
                   child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Date',
-                      suffixIcon: Icon(Icons.calendar_today_outlined),
+                    decoration: InputDecoration(
+                      labelText: context.l10n.dateFieldLabel,
+                      suffixIcon: const Icon(Icons.calendar_today_outlined),
                     ),
                     child: Text(
                       '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
@@ -257,8 +261,8 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _notesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes (optional)',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.notesOptionalLabel,
                     alignLabelWithHint: true,
                   ),
                   maxLines: 3,
@@ -290,7 +294,7 @@ class _AddHealthRecordScreenState extends State<AddHealthRecordScreen> {
                                 color: colorScheme.onPrimary,
                               ),
                             )
-                          : Text(_isEditing ? 'Save Changes' : 'Add Record'),
+                          : Text(_isEditing ? context.l10n.editRecord : context.l10n.addNewRecord),
                     );
                   },
                 ),
@@ -322,7 +326,7 @@ class _AttachmentSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Attachment (PDF, PNG, JPG)',
+          context.l10n.attachmentLabel,
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: cs.onSurface.withAlpha(160),
               ),
@@ -365,7 +369,7 @@ class _AttachmentSection extends StatelessWidget {
         else
           OutlinedButton.icon(
             icon: const Icon(Icons.attach_file),
-            label: const Text('Attach File'),
+            label: Text(context.l10n.attachmentTitle),
             onPressed: onPick,
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/string_extensions.dart';
 import '../../../../core/widgets/user_avatar.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/home_entities.dart';
 
 class TopDoctorCard extends StatelessWidget {
@@ -45,7 +47,7 @@ class TopDoctorCard extends StatelessWidget {
             const SizedBox(height: 10),
             // Name
             Text(
-              'Dr. ${doctor.fullName}',
+              doctor.fullName.withDoctorPrefix,
               style: AppTextStyles.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -77,7 +79,7 @@ class TopDoctorCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '\$${doctor.consultationFee.toStringAsFixed(0)}',
+                  '${context.l10n.egp} ${doctor.consultationFee.toStringAsFixed(0)}',
                   style: AppTextStyles.labelSm.copyWith(color: AppColors.primary),
                 ),
               ],

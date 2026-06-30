@@ -21,6 +21,10 @@ abstract class VoiceIntentIds {
   static const goBack = 'go_back';
   static const help = 'help';
   static const cancel = 'cancel';
+  static const confirm = 'confirm';
+  static const deny = 'deny';
+  static const navigateConversations = 'navigate_conversations';
+  static const navigateEditProfile = 'navigate_edit_profile';
   static const unknown = 'unknown';
 }
 
@@ -63,6 +67,14 @@ class NavigateHealthRecordsIntent extends VoiceCommandIntent {
   const NavigateHealthRecordsIntent();
 }
 
+class NavigateConversationsIntent extends VoiceCommandIntent {
+  const NavigateConversationsIntent();
+}
+
+class NavigateEditProfileIntent extends VoiceCommandIntent {
+  const NavigateEditProfileIntent();
+}
+
 class BookAppointmentIntent extends VoiceCommandIntent {
   final String? doctorName;
   final String? specialty;
@@ -103,4 +115,12 @@ class CancelIntent extends VoiceCommandIntent {
 class UnknownIntent extends VoiceCommandIntent {
   final String originalText;
   const UnknownIntent(this.originalText);
+}
+
+class ConfirmIntent extends VoiceCommandIntent {
+  const ConfirmIntent();
+}
+
+class DenyIntent extends VoiceCommandIntent {
+  const DenyIntent();
 }

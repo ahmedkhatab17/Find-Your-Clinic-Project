@@ -9,8 +9,10 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/network/api_result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/string_extensions.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../accessibility/domain/entities/screen_context.dart';
 import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
 import '../../../chat/domain/usecases/start_conversation_usecase.dart';
@@ -87,16 +89,13 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen>
       DoctorProfileReviewError(:final loaded) => loaded,
       _ => null,
     };
-    if (loaded == null) return 'Doctor profile. Still loading.';
+    if (loaded == null) return context.l10n.doctorProfileLoadingSummary;
     final d = loaded.details;
     final fee = d.consultationFee.toStringAsFixed(0);
     final rating = d.avgRating > 0
-        ? '${d.avgRating.toStringAsFixed(1)} stars from ${d.reviewsCount} reviews. '
-        : 'No reviews yet. ';
-    return 'Doctor ${d.fullName}, ${d.specialty}. '
-        '$rating'
-        'Consultation fee $fee. '
-        "Say 'book appointment' to book, or 'go back' to return.";
+        ? context.l10n.doctorProfileRatingSummary(d.avgRating.toStringAsFixed(1), '${d.reviewsCount}')
+        : context.l10n.doctorProfileNoReviewsSummary;
+    return context.l10n.doctorProfileSummary(d.fullName, d.specialty, rating, fee);
   }
 
   @override
@@ -185,7 +184,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen>
                     IconButton(
                       icon: const Icon(Icons.message_outlined,
                           color: Colors.white),
-                      tooltip: 'Message Doctor',
+                      tooltip: context.l10n.messageDoctorButton,
                       onPressed: () => _startConversation(context),
                     ),
                 ],
@@ -214,7 +213,7 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen>
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Dr. ${details.fullName}',
+                            details.fullName.withDoctorPrefix,
                             style: AppTextStyles.heading2
                                 .copyWith(color: Colors.white),
                           ),
@@ -231,17 +230,17 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen>
                               _HeaderStat(
                                   icon: Icons.star,
                                   value: details.avgRating.toStringAsFixed(1),
-                                  label: 'Rating'),
+                                  label: context.l10n.statRating),
                               const SizedBox(width: 24),
                               _HeaderStat(
                                   icon: Icons.reviews,
                                   value: '${details.reviewsCount}',
-                                  label: 'Reviews'),
+                                  label: context.l10n.statReviews),
                               const SizedBox(width: 24),
                               _HeaderStat(
                                   icon: Icons.work,
                                   value: '${details.experienceYears}',
-                                  label: 'Years'),
+                                  label: context.l10n.statYears),
                             ],
                           ),
                         ],
@@ -259,11 +258,11 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen>
                     labelColor: AppColors.primary,
                     unselectedLabelColor: AppColors.textHint,
                     indicatorColor: AppColors.primary,
-                    tabs: const [
-                      Tab(text: 'About'),
-                      Tab(text: 'Schedule'),
-                      Tab(text: 'Reviews'),
-                      Tab(text: 'Location'),
+                    tabs: [
+                      Tab(text: context.l10n.tabAbout),
+                      Tab(text: context.l10n.tabSchedule),
+                      Tab(text: context.l10n.reviews),
+                      Tab(text: context.l10n.tabLocation),
                     ],
                   ),
                 ),
@@ -288,16 +287,15 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen>
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: AppButton(
-                text:
-                    'Book Appointment — \$${details.consultationFee.toStringAsFixed(0)}',
+                text: context.l10n.bookAppointmentFee(details.consultationFee.toStringAsFixed(0)),
                 onPressed: () {
                   context.push('/book-appointment', extra: {
                     'doctorProfileId': details.doctorProfileId,
                     'doctorUserId': details.doctorId,
-                    'doctorName': 'Dr. ${details.fullName}',
+                    'doctorName': details.fullName.withDoctorPrefix,
                     'specialty': details.specialty,
                     'consultationFee':
-                        '\$${details.consultationFee.toStringAsFixed(0)}',
+                        'EGP ${details.consultationFee.toStringAsFixed(0)}',
                     'clinicName': details.clinicName,
                     'doctorImageUrl': details.profileImageUrl,
                   });
@@ -326,15 +324,17 @@ class _HeaderStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white70, size: 18),
-        const SizedBox(height: 4),
-        Text(value,
-            style: AppTextStyles.label.copyWith(color: Colors.white)),
-        Text(label,
-            style: AppTextStyles.caption.copyWith(color: Colors.white60)),
-      ],
+    return MergeSemantics(
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.white70, size: 18),
+          const SizedBox(height: 4),
+          Text(value,
+              style: AppTextStyles.label.copyWith(color: Colors.white)),
+          Text(label,
+              style: AppTextStyles.caption.copyWith(color: Colors.white60)),
+        ],
+      ),
     );
   }
 }
@@ -371,15 +371,15 @@ class _AboutTab extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       children: [
         if (details.bio != null && details.bio!.isNotEmpty) ...[
-          Text('About', style: AppTextStyles.heading3),
+          Text(context.l10n.tabAbout, style: AppTextStyles.heading3),
           const SizedBox(height: 8),
           Text(details.bio!, style: AppTextStyles.bodyMd),
           const SizedBox(height: 20),
         ],
-        _InfoRow(icon: Icons.local_hospital, label: 'Clinic', value: details.clinicName ?? 'N/A'),
-        _InfoRow(icon: Icons.location_on, label: 'Address', value: details.clinicAddress ?? 'N/A'),
-        _InfoRow(icon: Icons.attach_money, label: 'Consultation Fee', value: '\$${details.consultationFee.toStringAsFixed(0)}'),
-        _InfoRow(icon: Icons.work_outline, label: 'Experience', value: '${details.experienceYears} years'),
+        _InfoRow(icon: Icons.local_hospital, label: context.l10n.clinicLabel, value: details.clinicName ?? context.l10n.notAvailable),
+        _InfoRow(icon: Icons.location_on, label: context.l10n.addressLabel, value: details.clinicAddress ?? context.l10n.notAvailable),
+        _InfoRow(icon: Icons.attach_money, label: context.l10n.consultationFeeLabel, value: 'EGP ${details.consultationFee.toStringAsFixed(0)}'),
+        _InfoRow(icon: Icons.work_outline, label: context.l10n.experienceLabel, value: '${details.experienceYears} ${context.l10n.yearsLabel}'),
       ],
     );
   }
@@ -468,7 +468,7 @@ class _ScheduleTab extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  day,
+                  context.translateDay(day),
                   style: AppTextStyles.labelSm.copyWith(
                     color: hasSlots
                         ? theme.colorScheme.primary
@@ -503,7 +503,7 @@ class _ScheduleTab extends StatelessWidget {
                     size: 16),
                 const SizedBox(width: 6),
                 Text(
-                  'Not Available',
+                  context.l10n.notAvailable,
                   style: AppTextStyles.bodyMd.copyWith(
                     color: isDark ? AppColors.darkTextSecondary : AppColors.textHint,
                   ),
@@ -537,7 +537,7 @@ class _ReviewsTab extends StatelessWidget {
         if (canReview) ...[
           OutlinedButton.icon(
             icon: const Icon(Icons.star_outline),
-            label: const Text('Write a Review'),
+            label: Text(context.l10n.writeReviewButton),
             onPressed: () => showModalBottomSheet(
               context: context,
               isScrollControlled: true,
@@ -550,12 +550,12 @@ class _ReviewsTab extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         if (reviews.isEmpty)
-          const SizedBox(
+          SizedBox(
             height: 200,
             child: EmptyStateView(
               icon: Icons.rate_review,
-              title: 'No Reviews Yet',
-              subtitle: 'Be the first to review this doctor.',
+              title: context.l10n.noReviewsYetTitle,
+              subtitle: context.l10n.noReviewsYetDesc,
             ),
           )
         else
@@ -629,10 +629,10 @@ class _LocationTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (details.latitude == null || details.longitude == null) {
-      return const EmptyStateView(
+      return EmptyStateView(
         icon: Icons.location_off,
-        title: 'Location Not Available',
-        subtitle: 'This clinic has not set up their location yet.',
+        title: context.l10n.locationNotAvailableTitle,
+        subtitle: context.l10n.locationNotAvailableDesc,
       );
     }
 
@@ -681,10 +681,10 @@ class _LocationTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(details.clinicName ?? 'Clinic', style: AppTextStyles.heading3),
+              Text(details.clinicName ?? context.l10n.clinicLabel, style: AppTextStyles.heading3),
               const SizedBox(height: 4),
               Text(
-                details.clinicAddress ?? 'Address not available',
+                details.clinicAddress ?? context.l10n.addressNotAvailableLabel,
                 style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
               ),
             ],

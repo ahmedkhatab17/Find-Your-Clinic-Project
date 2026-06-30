@@ -6,6 +6,9 @@ import '../constants/api_endpoints.dart';
 import '../utils/token_storage.dart';
 import 'failure.dart';
 
+import '../locale/locale_cubit.dart';
+import '../di/service_locator.dart';
+
 /// Configures and provides the singleton Dio instance.
 class ApiClient {
   // Use 10.0.2.2 for Android emulator to reach host localhost.
@@ -13,11 +16,11 @@ class ApiClient {
   static String get _baseUrl {
     // Use your PC's IP address for physical device testing.
     // Ensure your phone is connected to the same Wi-Fi network as your PC.
-    if (Platform.isAndroid) {
-      return 'http://192.168.1.32:5106';
-    }
-    return 'http://localhost:5106';
-    // return 'http://findyourclinic.runasp.net';
+    // if (Platform.isAndroid) {
+    //   return 'http://192.168.1.32:5106';
+    // }
+    // return 'http://localhost:5106';
+    return 'http://findyourclinic.runasp.net';
   }
 
   final Dio dio;
@@ -40,20 +43,35 @@ class ApiClient {
         ),
       ) {
     dio.interceptors.addAll([
+      _LocaleInterceptor(),
       _AuthInterceptor(tokenStorage: _tokenStorage, dio: dio),
       LogInterceptor(
         requestBody: true,
         responseBody: true,
         logPrint: (obj) {
-          // Only log in debug mode, never log sensitive data.
+          
           assert(() {
-            // ignore: avoid_print
+            // ignore: avoid_print we in debug mode
             print(obj);
             return true;
           }());
         },
       ),
     ]);
+  }
+}
+
+class _LocaleInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    try {
+      final cubit = sl<LocaleCubit>();
+      final code = cubit.effectiveLanguageCode;
+      options.headers['Accept-Language'] = (code == 'ar') ? 'ar' : 'en';
+    } catch (_) {
+      options.headers['Accept-Language'] = 'en';
+    }
+    handler.next(options);
   }
 }
 

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/string_extensions.dart';
 import '../../domain/entities/home_entities.dart';
 
 class UpcomingAppointmentCard extends StatelessWidget {
@@ -64,7 +65,7 @@ class UpcomingAppointmentCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Dr. ${appointment.doctorName}',
+                  appointment.doctorName.withDoctorPrefix,
                   style: AppTextStyles.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

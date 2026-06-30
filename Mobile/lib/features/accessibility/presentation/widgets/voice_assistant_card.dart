@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../cubits/voice_assistant_cubit.dart';
@@ -20,8 +21,8 @@ class VoiceAssistantCard extends StatelessWidget {
     return Semantics(
       container: true,
       button: true,
-      label: 'Voice assistant. Double tap to start listening',
-      hint: 'Speak a command after tapping',
+      label: context.l10n.voiceAssistantLabel,
+      hint: context.l10n.voiceAssistantHint,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -71,12 +72,12 @@ class VoiceAssistantCard extends StatelessWidget {
                     top: 4,
                     right: 4,
                     child: Semantics(
-                      label: 'Dismiss voice assistant',
+                      label: context.l10n.voiceAssistantDismiss,
                       button: true,
                       child: IconButton(
                         icon: const Icon(Icons.close, size: 20),
                         color: AppColors.textSecondary,
-                        tooltip: 'Hide voice assistant',
+                        tooltip: context.l10n.voiceAssistantHide,
                         onPressed: () {
                           // Stop any in-flight STT/TTS, then hide.
                           context.read<VoiceAssistantCubit>().cancel();

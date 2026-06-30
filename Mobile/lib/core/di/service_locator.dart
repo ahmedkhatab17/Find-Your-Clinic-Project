@@ -130,6 +130,8 @@ import '../../features/payment/presentation/cubits/doctor_payment_info_cubit.dar
 import '../../features/payment/presentation/cubits/payment_history_cubit.dart';
 import '../../features/payment/presentation/cubits/paymob_webview_cubit.dart';
 
+import '../locale/locale_cubit.dart';
+
 final sl = GetIt.instance;
 
 /// Initialize all dependencies. Called once at app startup.
@@ -140,6 +142,7 @@ Future<void> initServiceLocator() async {
     () => ApiClient(tokenStorage: sl<TokenStorage>()),
   );
   sl.registerLazySingleton<ThemeModeCubit>(() => ThemeModeCubit());
+  sl.registerLazySingleton<LocaleCubit>(() => LocaleCubit());
 
   // ─── Auth Feature ───
   _initAuth();

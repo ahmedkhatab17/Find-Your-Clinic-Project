@@ -7,6 +7,7 @@ import '../../../../core/network/api_result.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/utils/token_storage.dart';
 import '../../domain/usecases/auth_usecases.dart';
 
@@ -134,7 +135,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                 const SizedBox(height: 24),
                 Text(
-                  'Find Your Clinic',
+                  context.l10n.appName,
                   style: AppTextStyles.heading1.copyWith(
                     color: Colors.white,
                     letterSpacing: 1.2,
@@ -142,7 +143,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Healthcare at your fingertips',
+                  context.l10n.splashSubtitle,
                   style: AppTextStyles.bodyMd.copyWith(color: Colors.white70),
                 ),
                 const SizedBox(height: 48),

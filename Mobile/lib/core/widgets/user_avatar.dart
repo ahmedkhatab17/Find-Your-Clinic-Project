@@ -44,7 +44,7 @@ class UserAvatar extends StatelessWidget {
     final hasImage = imageUrl != null && imageUrl!.isNotEmpty;
     
     final imageProvider = hasImage ? CachedNetworkImageProvider(imageUrl!) : null;
-    final heroTag = 'avatar_${imageUrl ?? displayInitials}_${radius}_${hashCode}';
+    final heroTag = 'avatar_${imageUrl ?? displayInitials}_${radius}_$hashCode';
 
     Widget avatar = Hero(
       tag: heroTag,

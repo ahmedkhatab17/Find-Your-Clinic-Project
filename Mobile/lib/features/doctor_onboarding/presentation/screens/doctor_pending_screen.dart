@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -79,12 +80,12 @@ class _DoctorPendingScreenState extends State<DoctorPendingScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Under Review',
+                    context.l10n.underReview,
                     style: AppTextStyles.heading1.copyWith(color: Colors.white),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Your application is pending admin approval',
+                    context.l10n.appPending,
                     style: AppTextStyles.bodyMd.copyWith(color: Colors.white70),
                     textAlign: TextAlign.center,
                   ),
@@ -109,32 +110,32 @@ class _DoctorPendingScreenState extends State<DoctorPendingScreen> {
                           children: [
                             _buildStep(
                               icon: Icons.check_circle_rounded,
-                              title: 'Account Created',
-                              subtitle: 'Your doctor account has been created',
+                              title: context.l10n.accountCreated,
+                              subtitle: context.l10n.accountCreatedDesc,
                               isDone: true,
                               isDark: isDark,
                             ),
                             _buildConnector(isDone: true, isDark: isDark),
                             _buildStep(
                               icon: Icons.upload_file_rounded,
-                              title: 'Documents Submitted',
-                              subtitle: 'Your credentials are being reviewed',
+                              title: context.l10n.docsSubmitted,
+                              subtitle: context.l10n.docsReviewDesc,
                               isDone: true,
                               isDark: isDark,
                             ),
                             _buildConnector(isDone: false, isDark: isDark),
                             _buildStep(
                               icon: Icons.verified_rounded,
-                              title: 'Admin Verification',
-                              subtitle: 'Usually takes 1–2 business days',
+                              title: context.l10n.adminVerification,
+                              subtitle: context.l10n.adminVerifDesc,
                               isDone: false,
                               isDark: isDark,
                             ),
                             _buildConnector(isDone: false, isDark: isDark),
                             _buildStep(
                               icon: Icons.rocket_launch_rounded,
-                              title: 'Start Practicing',
-                              subtitle: 'Welcome aboard, Doctor!',
+                              title: context.l10n.startPracticing,
+                              subtitle: context.l10n.welcomeDoctor,
                               isDone: false,
                               isDark: isDark,
                             ),
@@ -165,8 +166,7 @@ class _DoctorPendingScreenState extends State<DoctorPendingScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              'We\'ll notify you once your account is approved. '
-                              'You can safely close the app and come back.',
+                              context.l10n.pendingNotifyInfo,
                               style: AppTextStyles.bodySm.copyWith(
                                 color: AppColors.secondary,
                               ),
@@ -186,7 +186,7 @@ class _DoctorPendingScreenState extends State<DoctorPendingScreen> {
                           if (context.mounted) context.go('/login');
                         },
                         icon: const Icon(Icons.logout_rounded, size: 18),
-                        label: const Text('Sign Out'),
+                        label: Text(context.l10n.logout),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(0, 52),
                           shape: RoundedRectangleBorder(

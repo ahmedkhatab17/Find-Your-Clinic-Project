@@ -7,6 +7,7 @@ import '../../../../core/routing/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
@@ -75,12 +76,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
           const SizedBox(height: 16),
           Text(
-            'Welcome Back!',
+            context.l10n.welcomeBack,
             style: AppTextStyles.heading1.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 4),
           Text(
-            'Sign in to continue',
+            context.l10n.signInToContinue,
             style: AppTextStyles.bodyMd.copyWith(color: Colors.white70),
           ),
         ],
@@ -98,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             const SizedBox(height: 8),
             Text(
-              'Login to Your Account',
+              context.l10n.loginToYourAccount,
               style: AppTextStyles.heading3.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
@@ -107,15 +108,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // Email
             AppTextField(
-              label: 'Email Address',
-              hint: 'your.email@example.com',
+              label: context.l10n.emailAddress,
+              hint: context.l10n.emailHint,
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               prefixIcon: const Icon(Icons.email_outlined, size: 20),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'Email is required';
+                if (v == null || v.isEmpty) return context.l10n.emailRequired;
                 if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
-                  return 'Enter a valid email';
+                  return context.l10n.emailInvalid;
                 }
                 return null;
               },
@@ -124,8 +125,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
             // Password
             AppTextField(
-              label: 'Password',
-              hint: 'Enter your password',
+              label: context.l10n.password,
+              hint: context.l10n.passwordHint,
               controller: _passwordController,
               obscureText: _obscurePassword,
               prefixIcon: const Icon(Icons.lock_outlined, size: 20),
@@ -138,9 +139,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     setState(() => _obscurePassword = !_obscurePassword),
               ),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'Password is required';
+                if (v == null || v.isEmpty) return context.l10n.passwordRequired;
                 if (v.length < 8) {
-                  return 'Password must be at least 8 characters';
+                  return context.l10n.passwordTooShort(8);
                 }
                 return null;
               },
@@ -152,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => context.pushNamed(RouteNames.forgotPassword),
-                child: const Text('Forgot Password?'),
+                child: Text(context.l10n.forgotPasswordQ),
               ),
             ),
             const SizedBox(height: 16),
@@ -165,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   curr is AuthSuccess,
               builder: (context, state) {
                 return AppButton(
-                  text: 'Login',
+                  text: context.l10n.login,
                   isLoading: state is AuthLoading,
                   onPressed: _onLogin,
                 );
@@ -180,7 +181,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    'Or continue with',
+                    context.l10n.orContinueWith,
                     style: AppTextStyles.bodySm.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -198,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _onGoogleSignIn,
                     icon: const Icon(Icons.g_mobiledata, size: 24),
-                    label: const Text('Google'),
+                    label: Text(context.l10n.google),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(0, 48),
                       shape: RoundedRectangleBorder(
@@ -216,7 +217,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Don't have an account? ",
+                  context.l10n.dontHaveAccount,
                   style: AppTextStyles.bodyMd.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -224,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 GestureDetector(
                   onTap: () => context.pushNamed(RouteNames.signUp),
                   child: Text(
-                    'Sign Up',
+                    context.l10n.signUp,
                     style: AppTextStyles.label.copyWith(
                       color: Theme.of(context).colorScheme.secondary,
                     ),

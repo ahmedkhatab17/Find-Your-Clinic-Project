@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/health_record_entity.dart';
 
 /// Pinned red-accented banner showing the patient's active allergies.
@@ -40,7 +41,7 @@ class AllergyAlertBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Allergy Alert',
+                  context.l10n.allergyAlert,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: Colors.red.shade700,
                     fontWeight: FontWeight.w700,

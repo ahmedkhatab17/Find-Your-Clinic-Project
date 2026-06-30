@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 class GreetingHeader extends StatelessWidget {
   final VoidCallback? onNotificationTap;
   final int unreadNotificationCount;
+  final String? userName;
 
   const GreetingHeader({
     super.key,
     this.onNotificationTap,
     this.unreadNotificationCount = 0,
+    this.userName,
   });
 
-  String get _greeting {
+  String _greeting(BuildContext context) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return context.l10n.goodMorning;
+    if (hour < 17) return context.l10n.goodAfternoon;
+    return context.l10n.goodEvening;
   }
 
   @override
@@ -29,12 +32,15 @@ class GreetingHeader extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '$_greeting 👋',
-                style: AppTextStyles.heading2.copyWith(color: Colors.white),
+                '${_greeting(context)}${userName != null ? ',\n$userName' : ''} 👋',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-              const SizedBox(height: 4),
               Text(
-                'How are you feeling today?',
+                context.l10n.howAreYouFeelingToday,
                 style: AppTextStyles.bodyMd.copyWith(color: Colors.white70),
               ),
             ],
@@ -55,8 +61,11 @@ class GreetingHeader extends StatelessWidget {
                 color: Colors.white.withAlpha(30),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.notifications_outlined,
-                  color: Colors.white, size: 24),
+              child: const Icon(
+                Icons.notifications_outlined,
+                color: Colors.white,
+                size: 24,
+              ),
             ),
           ),
         ),

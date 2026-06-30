@@ -5,6 +5,10 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/locale/l10n_extension.dart';
+import '../../../../core/utils/string_extensions.dart';
+import '../../../accessibility/domain/entities/screen_context.dart';
+import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
 import '../../data/preferred_payment_method_store.dart';
 import '../../domain/entities/payment_entities.dart';
 import '../cubits/checkout_cubit.dart';
@@ -75,10 +79,23 @@ class _CheckoutViewState extends State<_CheckoutView> {
   PaymentMethod _selectedMethod = PaymentMethod.cash;
   final _walletPhoneCtrl = TextEditingController();
 
+  static const _screenContext = ScreenContext(screen: PatientScreen.checkout);
+
   @override
   void initState() {
     super.initState();
     _loadPreferredMethod();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<VoiceAssistantCubit>().setScreenContext(
+            _screenContext,
+            summary: _buildScreenSummary,
+          );
+    });
+  }
+
+  String _buildScreenSummary() {
+    return 'Checkout for appointment with ${widget.doctorName}. Total fee: ${widget.consultationFee.toStringAsFixed(0)} EGP. Select payment method and confirm.';
   }
 
   @override
@@ -100,17 +117,17 @@ class _CheckoutViewState extends State<_CheckoutView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Checkout'),
+        title: Text(context.l10n.checkout),
         centerTitle: true,
       ),
       body: BlocConsumer<CheckoutCubit, CheckoutState>(
         listener: (context, state) {
           switch (state) {
             case CheckoutCashSuccess():
-              GoRouter.of(context).go('/booking-success', extra: {
+              GoRouter.of(context).go('/booking-success', extra: <String, dynamic>{
                 'isConfirmed': false,
                 'doctorName': widget.doctorName,
-                'scheduledAt': widget.scheduledAt,
+                'scheduledAt': widget.scheduledAt.toIso8601String(),
                 'appointmentId': null,
               });
             case CheckoutPaymentReady():
@@ -343,7 +360,8 @@ class _DoctorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return MergeSemantics(
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -374,7 +392,7 @@ class _DoctorCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Dr. $name',
+                  name.withDoctorPrefix,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -394,6 +412,7 @@ class _DoctorCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -411,7 +430,8 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return MergeSemantics(
+      child: Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -436,6 +456,7 @@ class _SectionCard extends StatelessWidget {
           ...children,
         ],
       ),
+    ),
     );
   }
 }
@@ -523,7 +544,8 @@ class _PaymentMethodTile extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return InkWell(
+    return MergeSemantics(
+      child: InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: AnimatedContainer(
@@ -569,6 +591,7 @@ class _PaymentMethodTile extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

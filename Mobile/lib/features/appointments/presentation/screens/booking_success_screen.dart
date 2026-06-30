@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/string_extensions.dart';
 
 class BookingSuccessScreen extends StatefulWidget {
   final bool isConfirmed;
@@ -92,7 +94,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
                   child: Column(
                     children: [
                       Text(
-                        confirmed ? 'Booking Confirmed!' : 'Booking Request Sent',
+                        confirmed ? context.l10n.bookingConfirmedTitle : context.l10n.bookingRequestSentTitle,
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -101,8 +103,8 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
                       const SizedBox(height: 10),
                       Text(
                         confirmed
-                            ? 'Your payment was processed successfully. Your appointment is confirmed.'
-                            : 'Your booking request has been sent. Waiting for the doctor to confirm.',
+                            ? context.l10n.bookingConfirmedDesc
+                            : context.l10n.bookingRequestSentDesc,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                           height: 1.5,
@@ -131,19 +133,19 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
                       children: [
                         _DetailRow(
                           icon: Icons.person_rounded,
-                          label: 'Doctor',
-                          value: 'Dr. ${widget.doctorName}',
+                          label: context.l10n.bookingDoctorLabel,
+                          value: widget.doctorName.withDoctorPrefix,
                         ),
                         const SizedBox(height: 12),
                         _DetailRow(
                           icon: Icons.calendar_today_rounded,
-                          label: 'Date',
+                          label: context.l10n.bookingDateLabel,
                           value: DateFormat('EEE, MMM dd, yyyy').format(widget.scheduledAt),
                         ),
                         const SizedBox(height: 12),
                         _DetailRow(
                           icon: Icons.access_time_rounded,
-                          label: 'Time',
+                          label: context.l10n.bookingTimeLabel,
                           value: DateFormat('hh:mm a').format(widget.scheduledAt),
                         ),
                         if (!confirmed) ...[
@@ -161,7 +163,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'You will be notified once the doctor confirms.',
+                                    context.l10n.bookingNotifiedOnceConfirmed,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: AppColors.warning,
@@ -204,7 +206,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
                             elevation: 0,
                           ),
                           child: Text(
-                            confirmed ? 'View Appointment' : 'View Appointments',
+                            confirmed ? context.l10n.bookingViewAppointment : context.l10n.bookingViewAppointments,
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w600),
                           ),
@@ -214,7 +216,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen>
                       TextButton(
                         onPressed: () => context.go('/patient/home'),
                         child: Text(
-                          'Go Home',
+                          context.l10n.bookingGoHome,
                           style: TextStyle(color: AppColors.textSecondary),
                         ),
                       ),

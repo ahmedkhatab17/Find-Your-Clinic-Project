@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/symptom_analysis.dart';
 
 class SymptomResultScreen extends StatelessWidget {
@@ -34,9 +35,9 @@ class SymptomResultScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Analysis Result',
-          style: TextStyle(
+        title: Text(
+          context.l10n.analysisResultTitle,
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -48,7 +49,7 @@ class SymptomResultScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildResultCard(isDark),
+            _buildResultCard(context, isDark),
             const SizedBox(height: 16),
             _buildFindSpecialistsButton(context),
             const SizedBox(height: 8),
@@ -58,7 +59,7 @@ class SymptomResultScreen extends StatelessWidget {
               child: TextButton(
                 onPressed: () => context.pop(),
                 child: Text(
-                  'Check New Symptoms',
+                  context.l10n.checkNewSymptoms,
                   style: AppTextStyles.label.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -71,7 +72,7 @@ class SymptomResultScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildResultCard(bool isDark) {
+  Widget _buildResultCard(BuildContext context, bool isDark) {
     final severity = analysis.severity.toLowerCase();
 
     final (badgeBg, badgeText) = switch (severity) {
@@ -82,14 +83,10 @@ class SymptomResultScreen extends StatelessWidget {
     };
 
     final description = switch (severity) {
-      'mild' =>
-        'Your symptoms appear mild. Rest, hydration, and over-the-counter remedies may help. Monitor your condition closely.',
-      'moderate' =>
-        'Your symptoms are moderate. It is advisable to consult a healthcare professional soon for a proper evaluation.',
-      'severe' =>
-        'Your symptoms may be serious. Please seek medical attention promptly or visit the nearest emergency facility.',
-      _ =>
-        'Based on your symptoms, a medical consultation is recommended for accurate diagnosis.',
+      'mild' => context.l10n.severityMildDesc,
+      'moderate' => context.l10n.severityModerateDesc,
+      'severe' => context.l10n.severitySevereDesc,
+      _ => context.l10n.severityDefaultDesc,
     };
 
     return Container(
@@ -172,7 +169,7 @@ class SymptomResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Recommendations:',
+            context.l10n.recommendationsLabel,
             style: AppTextStyles.label.copyWith(
               color: isDark
                   ? AppColors.darkTextPrimary
@@ -209,7 +206,7 @@ class SymptomResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Recommended Specialists:',
+            context.l10n.recommendedSpecialists,
             style: AppTextStyles.label.copyWith(
               color: isDark
                   ? AppColors.darkTextPrimary
@@ -255,7 +252,7 @@ class SymptomResultScreen extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            'Find Specialists',
+            context.l10n.findSpecialists,
             style: AppTextStyles.button.copyWith(color: Colors.white),
           ),
         ),
@@ -265,7 +262,10 @@ class SymptomResultScreen extends StatelessWidget {
 
   Widget _buildChatWithAiButton(BuildContext context) {
     return OutlinedButton(
-      onPressed: () => context.pushNamed(RouteNames.aiChat),
+      onPressed: () {
+        final message = context.l10n.iHaveSymptomsMessage(analysis.condition, analysis.severity);
+        context.pushNamed(RouteNames.aiChat, extra: message);
+      },
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
         side: const BorderSide(color: AppColors.primary),
@@ -275,7 +275,7 @@ class SymptomResultScreen extends StatelessWidget {
         ),
       ),
       child: Text(
-        'Chat with AI',
+        context.l10n.chatWithAi,
         style: AppTextStyles.button.copyWith(color: AppColors.primary),
       ),
     );

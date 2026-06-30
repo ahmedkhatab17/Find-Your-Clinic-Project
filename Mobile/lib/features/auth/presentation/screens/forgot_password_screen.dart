@@ -6,6 +6,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../cubits/auth_cubit.dart';
 import '../cubits/auth_state.dart';
 
@@ -67,12 +68,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           const Icon(Icons.lock_reset, size: 56, color: Colors.white),
           const SizedBox(height: 16),
           Text(
-            'Forgot Password?',
+            context.l10n.forgotPasswordQ,
             style: AppTextStyles.heading1.copyWith(color: Colors.white),
           ),
           const SizedBox(height: 8),
           Text(
-            "Enter your email and we'll send you a reset link",
+            context.l10n.enterEmailForReset,
             style: AppTextStyles.bodyMd.copyWith(color: Colors.white70),
             textAlign: TextAlign.center,
           ),
@@ -90,15 +91,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           children: [
             const SizedBox(height: 24),
             AppTextField(
-              label: 'Email Address',
-              hint: 'your.email@example.com',
+              label: context.l10n.emailAddress,
+              hint: context.l10n.emailHint,
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               prefixIcon: const Icon(Icons.email_outlined, size: 20),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'Email is required';
+                if (v == null || v.isEmpty) return context.l10n.emailRequired;
                 if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) {
-                  return 'Enter a valid email';
+                  return context.l10n.emailInvalid;
                 }
                 return null;
               },
@@ -111,7 +112,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   curr is AuthError,
               builder: (context, state) {
                 return AppButton(
-                  text: 'Send Reset Link',
+                  text: context.l10n.sendResetLink,
                   isLoading: state is AuthLoading,
                   icon: Icons.send,
                   onPressed: () {
@@ -127,7 +128,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             const SizedBox(height: 16),
             TextButton(
               onPressed: () => context.pop(),
-              child: const Text('Back to Login'),
+              child: Text(context.l10n.backToLogin),
             ),
           ],
         ),
@@ -142,8 +143,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ..hideCurrentSnackBar()
           ..showSnackBar(
             SnackBar(
-              content: const Text(
-                  'Reset link sent! Tap the link in your email to open the app.'),
+              content: Text(context.l10n.resetLinkSent),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(

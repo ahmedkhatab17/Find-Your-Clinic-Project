@@ -3,6 +3,8 @@ import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/string_extensions.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/payment_entities.dart';
 import '../helpers/payment_display.dart';
 
@@ -22,12 +24,12 @@ class ReceiptDetailScreen extends StatelessWidget {
     final status = paymentStatusDisplay(transaction.status);
     final method = paymentMethodDisplay(transaction.paymentMethod);
     final counterparty = isPatient
-        ? 'Dr. ${transaction.doctorName ?? '—'}'
+        ? transaction.doctorName!.withDoctorPrefix
         : (transaction.patientName ?? '—');
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Receipt'),
+        title: Text(context.l10n.receipt),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -44,7 +46,7 @@ class ReceiptDetailScreen extends StatelessWidget {
             const SizedBox(height: 20),
             _DetailsCard(isDark: isDark, children: [
               _Row(
-                  label: 'Status',
+                  label: context.l10n.status,
                   child: Text(
                     status.label,
                     style: TextStyle(
@@ -53,7 +55,7 @@ class ReceiptDetailScreen extends StatelessWidget {
                     ),
                   )),
               _Row(
-                  label: 'Method',
+                  label: context.l10n.paymentMethod,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -65,29 +67,29 @@ class ReceiptDetailScreen extends StatelessWidget {
                     ],
                   )),
               _Row(
-                  label: 'Date',
+                  label: context.l10n.recordDate,
                   value: DateFormat('MMM dd, yyyy · hh:mm a')
                       .format(transaction.createdAt)),
               if (transaction.completedAt != null)
                 _Row(
-                    label: 'Completed',
+                    label: context.l10n.completed,
                     value: DateFormat('MMM dd, yyyy · hh:mm a')
                         .format(transaction.completedAt!)),
             ]),
             const SizedBox(height: 16),
             _DetailsCard(
               isDark: isDark,
-              title: 'Breakdown',
+              title: context.l10n.breakdown,
               children: [
                 _Row(
-                    label: 'Consultation Fee',
+                    label: context.l10n.consultationFee,
                     value: '${transaction.amount.toStringAsFixed(2)} EGP'),
                 _Row(
-                    label: 'Platform Fee',
+                    label: context.l10n.platformFee,
                     value: '-${transaction.platformFee.toStringAsFixed(2)} EGP'),
                 const Divider(height: 24),
                 _Row(
-                  label: isPatient ? 'You Paid' : 'You Earned',
+                  label: isPatient ? context.l10n.youPaid : context.l10n.youEarned,
                   child: Text(
                     '${(isPatient ? transaction.amount : transaction.doctorEarnings).toStringAsFixed(2)} EGP',
                     style: const TextStyle(
@@ -102,11 +104,11 @@ class ReceiptDetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _DetailsCard(
               isDark: isDark,
-              title: 'Reference',
+              title: context.l10n.referenceTitle,
               children: [
-                _CopyRow(label: 'Transaction ID', value: transaction.id),
+                _CopyRow(label: context.l10n.transactionId, value: transaction.id),
                 _CopyRow(
-                    label: 'Appointment ID', value: transaction.appointmentId),
+                    label: context.l10n.appointmentId, value: transaction.appointmentId),
               ],
             ),
             const SizedBox(height: 24),
@@ -135,8 +137,8 @@ class _HeroCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.gradientStart, AppColors.gradientEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
         ),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
@@ -294,7 +296,7 @@ class _CopyRow extends StatelessWidget {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$label copied'),
+              content: Text(context.l10n.copiedToClipboard),
               duration: const Duration(seconds: 1),
             ),
           );

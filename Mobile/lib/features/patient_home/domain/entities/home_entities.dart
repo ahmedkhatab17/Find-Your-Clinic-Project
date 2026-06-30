@@ -2,12 +2,14 @@
 // Pure Dart — no Flutter imports.
 
 class HomeSummary {
+  final String patientName;
   final UpcomingAppointment? upcomingAppointment;
   final HealthSummary healthSummary;
   final List<TopDoctor> topDoctors;
   final List<SpecialtySummary> specialties;
 
   const HomeSummary({
+    required this.patientName,
     this.upcomingAppointment,
     required this.healthSummary,
     required this.topDoctors,

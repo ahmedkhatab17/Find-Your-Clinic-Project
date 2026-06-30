@@ -4,9 +4,9 @@ import '../models/ai_chat_message_model.dart';
 import '../models/symptom_analysis_model.dart';
 
 abstract class AiHealthRemoteDataSource {
-  Future<AiChatMessageModel> sendMessage(String content);
+  Future<AiChatMessageModel> sendMessage(String content, String language);
   Future<List<AiChatMessageModel>> getChatHistory();
-  Future<SymptomAnalysisModel> analyzeSymptoms(List<String> symptoms);
+  Future<SymptomAnalysisModel> analyzeSymptoms(List<String> symptoms, String language);
 }
 
 class AiHealthRemoteDataSourceImpl implements AiHealthRemoteDataSource {
@@ -15,10 +15,10 @@ class AiHealthRemoteDataSourceImpl implements AiHealthRemoteDataSource {
   AiHealthRemoteDataSourceImpl(this._apiClient);
 
   @override
-  Future<AiChatMessageModel> sendMessage(String content) async {
+  Future<AiChatMessageModel> sendMessage(String content, String language) async {
     final response = await _apiClient.dio.post(
       ApiEndpoints.aiChat,
-      data: {'content': content},
+      data: {'content': content, 'language': language},
     );
     return AiChatMessageModel.fromJson(response.data['data'] as Map<String, dynamic>);
   }
@@ -31,10 +31,10 @@ class AiHealthRemoteDataSourceImpl implements AiHealthRemoteDataSource {
   }
 
   @override
-  Future<SymptomAnalysisModel> analyzeSymptoms(List<String> symptoms) async {
+  Future<SymptomAnalysisModel> analyzeSymptoms(List<String> symptoms, String language) async {
     final response = await _apiClient.dio.post(
       ApiEndpoints.aiSymptomsAnalyze,
-      data: {'symptoms': symptoms},
+      data: {'symptoms': symptoms, 'language': language},
     );
     return SymptomAnalysisModel.fromJson(response.data['data'] as Map<String, dynamic>);
   }

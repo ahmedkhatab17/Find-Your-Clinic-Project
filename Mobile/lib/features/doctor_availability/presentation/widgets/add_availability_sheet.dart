@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 class AddAvailabilitySheet extends StatefulWidget {
   final void Function(String dayOfWeek, String startTime, String endTime) onAdd;
@@ -41,9 +42,9 @@ class _AddAvailabilitySheetState extends State<AddAvailabilitySheet> {
         color: bgColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
+      padding: EdgeInsetsDirectional.only(
+        start: 24,
+        end: 24,
         top: 24,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
@@ -66,8 +67,10 @@ class _AddAvailabilitySheetState extends State<AddAvailabilitySheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Add Availability',
-                  style: AppTextStyles.heading3.copyWith(color: textColor)),
+              Text(
+                context.l10n.addAvailabilityTitle,
+                style: AppTextStyles.heading3.copyWith(color: textColor),
+              ),
               IconButton(
                 onPressed: () => Navigator.pop(context),
                 icon: Icon(Icons.close, color: textColor),
@@ -75,7 +78,7 @@ class _AddAvailabilitySheetState extends State<AddAvailabilitySheet> {
             ],
           ),
           const SizedBox(height: 24),
-          Text('Day of Week',
+          Text(context.l10n.dayOfWeek,
               style: AppTextStyles.label.copyWith(color: textColor)),
           const SizedBox(height: 8),
           Container(
@@ -95,7 +98,7 @@ class _AddAvailabilitySheetState extends State<AddAvailabilitySheet> {
                 items: _days
                     .map((day) => DropdownMenuItem(
                           value: day,
-                          child: Text(day, style: TextStyle(color: textColor)),
+                          child: Text(context.translateDay(day), style: TextStyle(color: textColor)),
                         ))
                     .toList(),
                 onChanged: (val) {
@@ -111,7 +114,7 @@ class _AddAvailabilitySheetState extends State<AddAvailabilitySheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Start Time',
+                    Text(context.l10n.startTime,
                         style: AppTextStyles.label.copyWith(color: textColor)),
                     const SizedBox(height: 8),
                     _TimePickerTile(
@@ -135,7 +138,7 @@ class _AddAvailabilitySheetState extends State<AddAvailabilitySheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('End Time',
+                    Text(context.l10n.endTime,
                         style: AppTextStyles.label.copyWith(color: textColor)),
                     const SizedBox(height: 8),
                     _TimePickerTile(
@@ -158,7 +161,7 @@ class _AddAvailabilitySheetState extends State<AddAvailabilitySheet> {
           ),
           const SizedBox(height: 32),
           AppButton(
-            text: 'Save Slot',
+            text: context.l10n.saveAvailability,
             onPressed: () {
               final startStr =
                   '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}:00';

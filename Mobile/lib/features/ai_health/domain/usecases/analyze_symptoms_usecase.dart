@@ -6,6 +6,6 @@ class AnalyzeSymptomsUseCase {
   final AiHealthRepository _repository;
   const AnalyzeSymptomsUseCase(this._repository);
 
-  Future<ApiResult<SymptomAnalysis>> call(List<String> symptoms) =>
-      _repository.analyzeSymptoms(symptoms);
+  Future<ApiResult<SymptomAnalysis>> call(List<String> symptoms, String language) =>
+      _repository.analyzeSymptoms(symptoms, language);
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/entities/doctor_dashboard_entities.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 class PerformanceCard extends StatelessWidget {
   final PerformanceSummary performance;
@@ -12,6 +13,7 @@ class PerformanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -31,21 +33,21 @@ class PerformanceCard extends StatelessWidget {
           _PerformanceItem(
             icon: Icons.people,
             iconColor: AppColors.primary,
-            label: 'Patients',
+            label: l10n.statPatients,
             value: '${performance.totalPatients}',
           ),
           _divider(),
           _PerformanceItem(
             icon: Icons.star,
             iconColor: AppColors.starRating,
-            label: 'Avg. Rating',
+            label: l10n.statRating,
             value: performance.averageRating.toStringAsFixed(1),
           ),
           _divider(),
           _PerformanceItem(
             icon: Icons.rate_review,
             iconColor: AppColors.secondary,
-            label: 'Reviews',
+            label: l10n.statReviews,
             value: '${performance.totalReviews}',
           ),
         ],

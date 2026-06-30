@@ -7,6 +7,7 @@ import '../../../../core/network/api_result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../chat/domain/usecases/start_conversation_usecase.dart';
 import '../../domain/entities/appointment_entity.dart';
 import '../cubits/appointment_cubit.dart';
@@ -88,7 +89,7 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Appointments',
+                              context.l10n.appointmentsTitle,
                               style: AppTextStyles.heading1.copyWith(
                                 color: Colors.white,
                               ),
@@ -103,7 +104,7 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
                                 color: theme.colorScheme.onSurface,
                               ),
                               decoration: InputDecoration(
-                                hintText: 'Search patients...',
+                                hintText: context.l10n.searchPatientsHint,
                                 prefixIcon: const Icon(Icons.search),
                                 filled: true,
                                 fillColor: theme.cardTheme.color,
@@ -134,7 +135,13 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
-                        children: ['Confirmed', 'Completed', 'Pending', 'Cancelled', 'Total']
+                        children: [
+                          context.l10n.tabConfirmed,
+                          context.l10n.tabCompleted,
+                          context.l10n.tabPending,
+                          context.l10n.tabCancelled,
+                          context.l10n.tabTotal
+                        ]
                             .asMap()
                             .entries
                             .map((e) => _pillTab(e.key, e.value, theme))
@@ -167,7 +174,7 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
                             onPressed: () => context
                                 .read<AppointmentCubit>()
                                 .loadDoctorAppointments(),
-                            child: const Text('Retry'),
+                            child: Text(context.l10n.retryButton),
                           ),
                         ],
                       ),
@@ -241,8 +248,8 @@ class _DoctorAppointmentsScreenState extends State<DoctorAppointmentsScreen> {
               const SizedBox(height: 16),
               Text(
                 _searchQuery.isNotEmpty
-                    ? 'No patients found'
-                    : 'No appointments',
+                    ? context.l10n.noPatientsFound
+                    : context.l10n.noAppointments,
                 style: AppTextStyles.heading3.copyWith(
                   color: theme.colorScheme.onSurface,
                 ),

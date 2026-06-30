@@ -22,20 +22,20 @@ class SymptomCheckerCubit extends Cubit<SymptomCheckerState> {
     emit(SymptomCheckerSelecting(current));
   }
 
-  Future<void> analyzeSymptoms() async {
+  Future<void> analyzeSymptoms(String language) async {
     final selected = switch (state) {
       SymptomCheckerSelecting(:final selected) => selected,
       _ => <String>[],
     };
     if (selected.isEmpty) return;
 
-    emit(SymptomCheckerAnalyzing());
-    final result = await _analyzeSymptoms(selected);
+    emit(SymptomCheckerAnalyzing(selected));
+    final result = await _analyzeSymptoms(selected, language);
     switch (result) {
       case Success(:final data):
         emit(SymptomCheckerResult(data));
       case Error(:final failure):
-        emit(SymptomCheckerError(failure.message));
+        emit(SymptomCheckerError(failure.message, selected));
     }
   }
 

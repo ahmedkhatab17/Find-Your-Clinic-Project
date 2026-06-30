@@ -6,6 +6,7 @@ import '../../../../core/routing/app_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../accessibility/domain/entities/screen_context.dart';
 import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
@@ -16,6 +17,7 @@ import '../../../notifications/presentation/cubits/notification_badge_state.dart
 import '../../../home_highlights/domain/entities/tour_step.dart';
 import '../../../home_highlights/presentation/cubits/home_highlights_cubit.dart';
 import '../../../home_highlights/presentation/widgets/home_highlights_overlay.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../cubits/patient_home_cubit.dart';
 import '../cubits/patient_home_state.dart';
 import '../widgets/greeting_header.dart';
@@ -45,39 +47,36 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
     return [
       TourStep(
         targetKey: _headerKey,
-        title: 'Welcome',
-        description:
-            'Your personalized greeting and notifications live here. Tap the bell anytime.',
+        title: context.l10n.tourWelcome,
+        description: context.l10n.tourWelcomeDesc,
         cutoutPadding: EdgeInsets.zero,
         cutoutRadius: 0,
       ),
       TourStep(
         targetKey: _specialtiesKey,
-        title: 'Browse by Specialty',
-        description:
-            'Tap a specialty to quickly find the right doctor for your needs.',
+        title: context.l10n.tourBrowseSpecialty,
+        description: context.l10n.tourBrowseSpecialtyDesc,
       ),
       if (hasUpcoming)
         TourStep(
           targetKey: _upcomingKey,
-          title: 'Next Appointment',
-          description: 'A quick view of your upcoming visit.',
+          title: context.l10n.tourNextAppointment,
+          description: context.l10n.tourNextAppointmentDesc,
         ),
       TourStep(
         targetKey: _healthKey,
-        title: 'Health Overview',
-        description: 'Track your key health stats at a glance.',
+        title: context.l10n.tourHealthOverview,
+        description: context.l10n.tourHealthOverviewDesc,
       ),
       TourStep(
         targetKey: _aiToolsKey,
-        title: 'AI Health Tools',
-        description:
-            'Chat with the AI assistant or check your symptoms anytime.',
+        title: context.l10n.tourAITools,
+        description: context.l10n.tourAIToolsDesc,
       ),
       TourStep(
         targetKey: _topDoctorsKey,
-        title: 'Top Doctors',
-        description: 'Discover highly rated doctors near you.',
+        title: context.l10n.tourTopDoctors,
+        description: context.l10n.tourTopDoctorsDesc,
       ),
     ];
   }
@@ -107,28 +106,26 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
   String _buildScreenSummary() {
     final state = context.read<PatientHomeCubit>().state;
     if (state is! PatientHomeLoaded) {
-      return 'Home. Loading your dashboard.';
+      return context.l10n.homeLoadingDashboard;
     }
     final summary = state.summary;
     final upcoming = summary.upcomingAppointment;
-    final parts = <String>['Home.'];
+    final parts = <String>[context.l10n.homePrefix];
     if (upcoming != null) {
-      parts.add('Your next appointment is with Doctor ${upcoming.doctorName}.');
+      parts.add('${context.l10n.nextAppointmentWith}${upcoming.doctorName}.');
     } else {
-      parts.add('You have no upcoming appointments.');
+      parts.add(context.l10n.noUpcomingAppointments);
     }
     if (summary.topDoctors.isNotEmpty) {
-      parts.add('${summary.topDoctors.length} top doctors are listed.');
+      parts.add('${summary.topDoctors.length} ${context.l10n.topDoctorsListed}');
     }
-    parts.add(
-      "Tap the microphone or say things like 'find a cardiologist', "
-      "'my appointments', or 'help'.",
-    );
+    parts.add(context.l10n.voiceAssistantHint);
     return parts.join(' ');
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return BlocProvider(
       create: (context) => sl<HomeHighlightsCubit>(),
       child: Scaffold(
@@ -158,16 +155,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                         flexibleSpace: FlexibleSpaceBar(
                           background: Container(
                             key: _headerKey,
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  AppColors.gradientStart,
-                                  AppColors.gradientMiddle,
-                                  AppColors.gradientEnd,
-                                ],
-                              ),
+                            decoration: BoxDecoration(
+                              gradient: isDark ? AppTheme.headerGradientDark : AppTheme.headerGradient,
                             ),
                             child: SafeArea(
                               child: Padding(
@@ -188,19 +177,24 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                                 is NotificationBadgeLoaded
                                             ? badgeState.unreadCount
                                             : 0;
-                                        return GreetingHeader(
-                                          unreadNotificationCount: count,
-                                          onNotificationTap: () => context
-                                              .pushNamed('notifications')
-                                              .then((_) {
-                                                if (context.mounted) {
-                                                  context
-                                                      .read<
-                                                        NotificationBadgeCubit
-                                                      >()
-                                                      .loadUnreadCount();
-                                                }
-                                              }),
+                                        return Semantics(
+                                          header: true,
+                                          label: '${context.l10n.tourWelcome} ${summary.patientName}',
+                                          child: GreetingHeader(
+                                            userName: summary.patientName,
+                                            unreadNotificationCount: count,
+                                            onNotificationTap: () => context
+                                                .pushNamed('notifications')
+                                                .then((_) {
+                                                  if (context.mounted) {
+                                                    context
+                                                        .read<
+                                                          NotificationBadgeCubit
+                                                        >()
+                                                        .loadUnreadCount();
+                                                  }
+                                                }),
+                                          ),
                                         );
                                       },
                                     ),
@@ -214,44 +208,48 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
-                          child: GestureDetector(
-                            onTap: () => context.pushNamed('search'),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? AppColors.darkSurface
-                                    : AppColors.surface,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: AppColors.divider),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.shadow,
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.search,
-                                    color: AppColors.textHint,
-                                    size: 22,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Search doctors, specialties...',
-                                    style: AppTextStyles.bodyMd.copyWith(
-                                      color: AppColors.textHint,
+                          child: Semantics(
+                            button: true,
+                            label: context.l10n.searchDoctorsSpecialties,
+                            child: GestureDetector(
+                              onTap: () => context.pushNamed('search'),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.darkSurface
+                                      : AppColors.surface,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(color: AppColors.divider),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.shadow,
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.search,
+                                      color: AppColors.textHint,
+                                      size: 22,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      context.l10n.searchDoctorsSpecialties,
+                                      style: AppTextStyles.bodyMd.copyWith(
+                                        color: AppColors.textHint,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -272,9 +270,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                   20,
                                   8,
                                 ),
-                                child: Text(
-                                  'Specialties',
-                                  style: AppTextStyles.heading3,
+                                child: Semantics(
+                                  header: true,
+                                  child: Text(
+                                    context.l10n.specialties,
+                                    style: AppTextStyles.heading3,
+                                  ),
                                 ),
                               ),
                               SizedBox(
@@ -326,9 +327,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Upcoming Appointment',
-                                  style: AppTextStyles.heading3,
+                                Semantics(
+                                  header: true,
+                                  child: Text(
+                                    context.l10n.upcomingAppointment,
+                                    style: AppTextStyles.heading3,
+                                  ),
                                 ),
                                 const SizedBox(height: 12),
                                 UpcomingAppointmentCard(
@@ -347,9 +351,12 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Health Overview',
-                                style: AppTextStyles.heading3,
+                              Semantics(
+                                header: true,
+                                child: Text(
+                                  context.l10n.healthOverview,
+                                  style: AppTextStyles.heading3,
+                                ),
                               ),
                               const SizedBox(height: 12),
                               HealthStatsCard(
@@ -368,17 +375,20 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'AI Health Tools',
-                                style: AppTextStyles.heading3,
+                              Semantics(
+                                header: true,
+                                child: Text(
+                                  context.l10n.aiHealthTools,
+                                  style: AppTextStyles.heading3,
+                                ),
                               ),
                               const SizedBox(height: 10),
                               Row(
                                 children: [
                                   Expanded(
                                     child: _AiToolCard(
-                                      title: 'AI Assistant',
-                                      subtitle: 'Chat & get guidance',
+                                      title: context.l10n.aiAssistant,
+                                      subtitle: context.l10n.chatGetGuidance,
                                       icon: Icons.auto_awesome,
                                       gradientColors: [
                                         AppColors.gradientStart,
@@ -391,8 +401,8 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: _AiToolCard(
-                                      title: 'Symptom Checker',
-                                      subtitle: 'Analyze symptoms',
+                                      title: context.l10n.symptomChecker,
+                                      subtitle: context.l10n.analyzeSymptoms,
                                       icon: Icons.medical_services_outlined,
                                       gradientColors: [
                                         AppColors.gradientMiddle,
@@ -428,14 +438,17 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      'Top Doctors',
-                                      style: AppTextStyles.heading3,
+                                    Semantics(
+                                      header: true,
+                                      child: Text(
+                                        context.l10n.topDoctors,
+                                        style: AppTextStyles.heading3,
+                                      ),
                                     ),
                                     TextButton(
                                       onPressed: () =>
                                           context.pushNamed('search'),
-                                      child: const Text('See All'),
+                                      child: Text(context.l10n.seeAll),
                                     ),
                                   ],
                                 ),
@@ -471,61 +484,65 @@ class _PatientHomeScreenState extends State<PatientHomeScreen> {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.all(20),
-                          child: InkWell(
-                            onTap: () => context.pushNamed('nearbyClinics'),
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    AppColors.gradientStart,
-                                    AppColors.gradientEnd,
+                          child: Semantics(
+                            button: true,
+                            label: context.l10n.nearbyClinics,
+                            child: InkWell(
+                              onTap: () => context.pushNamed('nearbyClinics'),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      AppColors.gradientStart,
+                                      AppColors.gradientEnd,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withAlpha(40),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.location_on,
+                                        color: Colors.white,
+                                        size: 28,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            context.l10n.nearbyClinics,
+                                            style: AppTextStyles.heading3
+                                                .copyWith(color: Colors.white),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            context.l10n.findClinicsMap,
+                                            style: AppTextStyles.bodySm.copyWith(
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: Colors.white70,
+                                      size: 18,
+                                    ),
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withAlpha(40),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Nearby Clinics',
-                                          style: AppTextStyles.heading3
-                                              .copyWith(color: Colors.white),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Find clinics around you on the map',
-                                          style: AppTextStyles.bodySm.copyWith(
-                                            color: Colors.white70,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.white70,
-                                    size: 18,
-                                  ),
-                                ],
                               ),
                             ),
                           ),

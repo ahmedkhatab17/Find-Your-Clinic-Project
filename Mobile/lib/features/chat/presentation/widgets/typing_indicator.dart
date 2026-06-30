@@ -80,7 +80,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
               children: List.generate(3, (i) {
                 return AnimatedBuilder(
                   animation: _animations[i],
-                  builder: (_, __) => Transform.translate(
+                  builder: (context, child) => Transform.translate(
                     offset: Offset(0, _animations[i].value),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 3),

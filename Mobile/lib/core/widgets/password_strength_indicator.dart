@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../locale/l10n_extension.dart';
 
 /// Shared password strength widget showing checklist-style rules.
 /// Used on SignUpScreen and ResetPasswordScreen.
@@ -14,7 +15,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     if (password.isEmpty) return const SizedBox.shrink();
 
-    final rules = _buildRules(password);
+    final rules = _buildRules(context, password);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,11 +43,11 @@ class PasswordStrengthIndicator extends StatelessWidget {
     );
   }
 
-  static List<_Rule> _buildRules(String pw) => [
-        _Rule('8+ characters', pw.length >= 8),
-        _Rule('Uppercase', RegExp(r'[A-Z]').hasMatch(pw)),
-        _Rule('Number', RegExp(r'[0-9]').hasMatch(pw)),
-        _Rule('Special char', RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(pw)),
+  static List<_Rule> _buildRules(BuildContext context, String pw) => [
+        _Rule(context.l10n.rule8Chars, pw.length >= 8),
+        _Rule(context.l10n.ruleUppercase, RegExp(r'[A-Z]').hasMatch(pw)),
+        _Rule(context.l10n.ruleNumber, RegExp(r'[0-9]').hasMatch(pw)),
+        _Rule(context.l10n.ruleSpecialChar, RegExp(r'[!@#\$%^&*(),.?":{}|<>]').hasMatch(pw)),
       ];
 
   static double _strength(List<_Rule> rules) {

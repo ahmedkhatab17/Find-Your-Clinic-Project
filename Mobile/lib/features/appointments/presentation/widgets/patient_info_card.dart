@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -360,6 +361,60 @@ class _RecordTile extends StatelessWidget {
               ),
             ),
           ),
+          if (record.fileUrl != null && record.fileUrl!.isNotEmpty) ...[
+            const SizedBox(width: 4),
+            IconButton(
+              icon: const Icon(Icons.attachment_outlined),
+              color: AppColors.primary,
+              tooltip: 'View Attachment',
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.all(4),
+              onPressed: () {
+                final url = record.fileUrl!;
+                final isPdf = url.toLowerCase().endsWith('.pdf') || url.contains('/raw/upload/');
+                if (isPdf) {
+                  launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication).catchError((_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not open document')),
+                      );
+                    }
+                    return false;
+                  });
+                } else {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      fullscreenDialog: true,
+                      builder: (context) => Scaffold(
+                        backgroundColor: Colors.black,
+                        appBar: AppBar(
+                          backgroundColor: Colors.black,
+                          iconTheme: const IconThemeData(color: Colors.white),
+                        ),
+                        body: Center(
+                          child: InteractiveViewer(
+                            panEnabled: true,
+                            minScale: 0.5,
+                            maxScale: 4.0,
+                            child: Image.network(
+                              url,
+                              fit: BoxFit.contain,
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return const Center(
+                                  child: CircularProgressIndicator(color: Colors.white),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
         ],
       ),
     );

@@ -26,6 +26,7 @@ void main() {
     test('returns "Just now" for under one minute', () {
       final result = formatRelativeTime(
         now.subtract(const Duration(seconds: 30)),
+        null,
         now: now,
       );
 
@@ -35,6 +36,7 @@ void main() {
     test('returns minute labels', () {
       final result = formatRelativeTime(
         now.subtract(const Duration(minutes: 5)),
+        null,
         now: now,
       );
 
@@ -44,6 +46,7 @@ void main() {
     test('returns hour labels', () {
       final result = formatRelativeTime(
         now.subtract(const Duration(hours: 2)),
+        null,
         now: now,
       );
 
@@ -53,6 +56,7 @@ void main() {
     test('returns day labels', () {
       final result = formatRelativeTime(
         now.subtract(const Duration(days: 3)),
+        null,
         now: now,
       );
 

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/payment_entities.dart';
@@ -28,7 +29,7 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Earnings'),
+        title: Text(context.l10n.earnings),
         centerTitle: true,
       ),
       body: BlocBuilder<DoctorEarningsCubit, DoctorEarningsState>(
@@ -72,7 +73,7 @@ class _Loaded extends StatelessWidget {
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 24),
       children: [
         _HeroBalanceCard(pending: earnings.pendingBalance),
         const SizedBox(height: 16),
@@ -81,7 +82,7 @@ class _Loaded extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 isDark: isDark,
-                label: 'Total Earned',
+                label: context.l10n.insightsTotalEarned,
                 value: '${earnings.totalEarnings.toStringAsFixed(2)} EGP',
                 icon: Icons.trending_up_rounded,
                 color: AppColors.success,
@@ -91,7 +92,7 @@ class _Loaded extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 isDark: isDark,
-                label: 'Withdrawn',
+                label: context.l10n.earningsWithdrawn,
                 value: '${earnings.withdrawnAmount.toStringAsFixed(2)} EGP',
                 icon: Icons.account_balance_rounded,
                 color: AppColors.secondary,
@@ -102,7 +103,7 @@ class _Loaded extends StatelessWidget {
         const SizedBox(height: 12),
         _StatCard(
           isDark: isDark,
-          label: 'Paid Transactions',
+          label: context.l10n.earningsPaidTransactions,
           value: '${earnings.totalTransactions}',
           icon: Icons.receipt_long_rounded,
           color: AppColors.info,
@@ -112,16 +113,16 @@ class _Loaded extends StatelessWidget {
         _ActionTile(
           isDark: isDark,
           icon: Icons.history_rounded,
-          title: 'Transaction History',
-          subtitle: 'View every paid appointment',
+          title: context.l10n.transactionHistoryTitle,
+          subtitle: context.l10n.earningsTransactionSubtitle,
           onTap: () => context.push('/doctor/payments/history'),
         ),
         const SizedBox(height: 12),
         _ActionTile(
           isDark: isDark,
           icon: Icons.account_balance_wallet_rounded,
-          title: 'Payout Details',
-          subtitle: 'Manage your bank account or wallet for payouts',
+          title: context.l10n.payoutDetails,
+          subtitle: context.l10n.earningsPayoutSubtitle,
           onTap: () => context.push('/doctor/payment-info'),
         ),
       ],
@@ -136,12 +137,12 @@ class _HeroBalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 24),
+      padding: const EdgeInsetsDirectional.fromSTEB(22, 22, 22, 24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.gradientStart, AppColors.gradientEnd],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -167,9 +168,9 @@ class _HeroBalanceCard extends StatelessWidget {
                     color: Colors.white, size: 18),
               ),
               const SizedBox(width: 10),
-              const Text(
-                'Available Balance',
-                style: TextStyle(
+              Text(
+                context.l10n.insightsAvailableBalance,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
@@ -189,7 +190,7 @@ class _HeroBalanceCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Earnings ready to be withdrawn',
+            context.l10n.earningsAvailableSubtitle,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 12,

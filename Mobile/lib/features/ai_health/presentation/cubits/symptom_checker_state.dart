@@ -12,7 +12,10 @@ class SymptomCheckerSelecting extends SymptomCheckerState {
   const SymptomCheckerSelecting(this.selected);
 }
 
-class SymptomCheckerAnalyzing extends SymptomCheckerState {}
+class SymptomCheckerAnalyzing extends SymptomCheckerState {
+  final List<String> selected;
+  const SymptomCheckerAnalyzing(this.selected);
+}
 
 class SymptomCheckerResult extends SymptomCheckerState {
   final SymptomAnalysis analysis;
@@ -21,5 +24,6 @@ class SymptomCheckerResult extends SymptomCheckerState {
 
 class SymptomCheckerError extends SymptomCheckerState {
   final String message;
-  const SymptomCheckerError(this.message);
+  final List<String> selected;
+  const SymptomCheckerError(this.message, this.selected);
 }

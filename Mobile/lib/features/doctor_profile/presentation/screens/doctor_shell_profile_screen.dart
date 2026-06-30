@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../cubits/doctor_shell_profile_cubit.dart';
 import '../cubits/doctor_shell_profile_state.dart';
@@ -102,7 +103,7 @@ class _ProfileBody extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${state.specialty} Specialist',
+                            context.l10n.specialtySpecialist(state.specialty),
                             style: AppTextStyles.bodySm.copyWith(
                               color: cs.onSurface.withAlpha(160),
                             ),
@@ -117,7 +118,7 @@ class _ProfileBody extends StatelessWidget {
                               ),
                               const SizedBox(width: 2),
                               Text(
-                                '${state.avgRating.toStringAsFixed(1)} (${state.reviewsCount} reviews)',
+                                context.l10n.ratingReviewsLabel(state.avgRating.toStringAsFixed(1), '${state.reviewsCount}'),
                                 style: AppTextStyles.bodySm.copyWith(
                                   color: cs.onSurface.withAlpha(160),
                                 ),
@@ -134,19 +135,19 @@ class _ProfileBody extends StatelessWidget {
                   children: [
                     _StatItem(
                       value: state.totalPatients.toString(),
-                      label: 'Patients',
+                      label: context.l10n.statPatients,
                       color: AppColors.primary,
                     ),
                     _StatDivider(),
                     _StatItem(
                       value: '${state.experienceYears}',
-                      label: 'Years Exp.',
+                      label: context.l10n.statYearsExp,
                       color: AppColors.secondary,
                     ),
                     _StatDivider(),
                     _StatItem(
                       value: '${state.consultationFee.toStringAsFixed(0)} EGP',
-                      label: 'Fee',
+                      label: context.l10n.statFee,
                       color: AppColors.success,
                     ),
                   ],
@@ -156,74 +157,74 @@ class _ProfileBody extends StatelessWidget {
           ),
 
           // ─── Profile Settings ───
-          _SectionHeader('PROFILE SETTINGS'),
+          _SectionHeader(context.l10n.profileSettingsHeader),
           _SettingsTile(
             icon: Icons.person_outline,
             iconBg: AppColors.primary.withAlpha(25),
             iconColor: AppColors.primary,
-            title: 'Edit Profile',
-            subtitle: 'Update personal & professional info',
+            title: context.l10n.editProfileTitle,
+            subtitle: context.l10n.editProfileDesc,
             onTap: () => context.push('/doctor/profile/edit'),
           ),
           _SettingsTile(
             icon: Icons.calendar_month_outlined,
             iconBg: AppColors.secondary.withAlpha(25),
             iconColor: AppColors.secondary,
-            title: 'Manage Schedule',
-            subtitle: 'Set availability & working hours',
+            title: context.l10n.manageScheduleTitle,
+            subtitle: context.l10n.manageScheduleDesc,
             onTap: () => context.push('/doctor/home/availability'),
           ),
           _SettingsTile(
             icon: Icons.location_on_outlined,
             iconBg: const Color(0xFFFF9800).withAlpha(25),
             iconColor: const Color(0xFFFF9800),
-            title: 'My Clinics',
-            subtitle: 'Add or edit clinic locations',
+            title: context.l10n.myClinicsTitle,
+            subtitle: context.l10n.myClinicsDesc,
             onTap: () => context.push('/doctor/profile/edit'),
           ),
           _SettingsTile(
             icon: Icons.description_outlined,
             iconBg: AppColors.info.withAlpha(25),
             iconColor: AppColors.info,
-            title: 'Documents',
-            subtitle: 'View & update certificates',
+            title: context.l10n.documentsTitle,
+            subtitle: context.l10n.documentsDesc,
             onTap: () => context.push('/doctor/profile/documents'),
           ),
 
           const SizedBox(height: 8),
 
           // ─── Account Settings ───
-          _SectionHeader('ACCOUNT'),
+          _SectionHeader(context.l10n.accountSettingsHeader),
           _SettingsTile(
             icon: Icons.notifications_outlined,
             iconBg: AppColors.warning.withAlpha(25),
             iconColor: AppColors.warning,
-            title: 'Notifications',
-            subtitle: 'Manage your alerts',
+            title: context.l10n.notificationsTitle,
+            subtitle: context.l10n.notificationsDesc,
             onTap: () => context.push('/notifications'),
           ),
           _SettingsTile(
             icon: Icons.account_balance_wallet_outlined,
             iconBg: AppColors.success.withAlpha(25),
             iconColor: AppColors.success,
-            title: 'Earnings',
-            subtitle: 'View your wallet & balance',
+            title: context.l10n.earningsTitle,
+            subtitle: context.l10n.earningsDesc,
             onTap: () => context.push('/doctor/earnings'),
           ),
           _SettingsTile(
             icon: Icons.receipt_long_outlined,
             iconBg: const Color(0xFF9C27B0).withAlpha(25),
             iconColor: const Color(0xFF9C27B0),
-            title: 'Transaction History',
-            subtitle: 'View past transactions',
+            title: context.l10n.transactionHistoryTitle,
+            subtitle: context.l10n.transactionHistoryDesc,
             onTap: () => context.push('/doctor/payments/history'),
           ),
           _SettingsTile(
             icon: Icons.language_outlined,
             iconBg: AppColors.primary.withAlpha(25),
             iconColor: AppColors.primary,
-            title: 'App Settings',
-            subtitle: 'Theme, language & more',
+            title: context.l10n.appSettingsTitle,
+            subtitle: context.l10n.appSettingsDesc,
             onTap: () => context.push('/settings'),
           ),
 
@@ -233,8 +234,8 @@ class _ProfileBody extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: OutlinedButton.icon(
               icon: const Icon(Icons.logout, color: AppColors.error),
-              label: const Text(
-                'Sign Out',
+              label: Text(
+                context.l10n.signOutButton,
                 style: TextStyle(color: AppColors.error),
               ),
               style: OutlinedButton.styleFrom(
@@ -257,12 +258,12 @@ class _ProfileBody extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: Text(context.l10n.signOutButton),
+        content: Text(context.l10n.signOutConfirmDesc),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancelButton),
           ),
           TextButton(
             onPressed: () async {
@@ -270,8 +271,8 @@ class _ProfileBody extends StatelessWidget {
               await sl<AuthCubit>().logout();
               if (context.mounted) context.go('/login');
             },
-            child: const Text(
-              'Sign Out',
+            child: Text(
+              context.l10n.signOutButton,
               style: TextStyle(color: AppColors.error),
             ),
           ),

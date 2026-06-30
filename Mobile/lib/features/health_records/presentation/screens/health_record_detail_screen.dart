@@ -1,10 +1,11 @@
+import 'package:find_your_clinic/l10n/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../../../../core/routing/app_router.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../cubits/health_record_cubit.dart';
 import '../cubits/health_record_state.dart';
 
@@ -13,29 +14,30 @@ class HealthRecordDetailScreen extends StatelessWidget {
 
   const HealthRecordDetailScreen({super.key, required this.recordId});
 
-  static const _typeLabels = {
-    'bloodPressure': 'Blood Pressure',
-    'heartRate': 'Heart Rate',
-    'labResult': 'Lab Result',
-    'prescription': 'Prescription',
-    'other': 'Other',
-    'bloodTest': 'Blood Test',
-    'radiology': 'Radiology',
-    'vaccination': 'Vaccination',
-    'bloodSugar': 'Blood Sugar',
-    'temperature': 'Temperature',
-    'weight': 'Weight',
-    'spO2': 'SpO2',
-  };
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
+    final typeLabels = <String, String>{
+      'bloodPressure': context.l10n.typeBloodPressure,
+      'heartRate': context.l10n.typeHeartRate,
+      'labResult': context.l10n.typeLabResult,
+      'prescription': context.l10n.typePrescription,
+      'other': context.l10n.typeOther,
+      'bloodTest': context.l10n.typeBloodTest,
+      'radiology': context.l10n.typeRadiology,
+      'vaccination': context.l10n.typeVaccination,
+      'bloodSugar': context.l10n.typeBloodSugar,
+      'temperature': context.l10n.typeTemperature,
+      'weight': context.l10n.typeWeight,
+      'spO2': context.l10n.typeSpO2,
+    };
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Record Detail'),
+        title: Text(context.l10n.recordDetail),
         actions: [
           BlocBuilder<HealthRecordCubit, HealthRecordState>(
             builder: (context, state) {
@@ -48,7 +50,7 @@ class HealthRecordDetailScreen extends StatelessWidget {
                     label: 'Edit ${record.title}',
                     child: IconButton(
                       icon: const Icon(Icons.edit_outlined),
-                      tooltip: 'Edit',
+                      tooltip: context.l10n.editTooltip,
                       onPressed: () async {
                         await context.pushNamed(
                           RouteNames.addHealthRecord,
@@ -66,24 +68,24 @@ class HealthRecordDetailScreen extends StatelessWidget {
                     label: 'Delete ${record.title}',
                     child: IconButton(
                       icon: const Icon(Icons.delete_outline),
-                      tooltip: 'Delete',
+                      tooltip: context.l10n.deleteTooltip,
                       color: Colors.red.shade400,
                       onPressed: () async {
                         final confirmed = await showDialog<bool>(
                           context: context,
                           builder: (ctx) => AlertDialog(
-                            title: const Text('Delete record?'),
+                            title: Text(context.l10n.deleteRecordQ),
                             content: Text(
-                                'Remove "${record.title}" permanently?'),
+                                context.l10n.removeRecordPermanent(record.title)),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, false),
-                                child: const Text('Cancel'),
+                                child: Text(context.l10n.cancelButton),
                               ),
                               TextButton(
                                 onPressed: () => Navigator.pop(ctx, true),
                                 child: Text(
-                                  'Delete',
+                                  context.l10n.delete,
                                   style:
                                       TextStyle(color: Colors.red.shade400),
                                 ),
@@ -125,7 +127,7 @@ class HealthRecordDetailScreen extends StatelessWidget {
 
           if (state is HealthRecordDetailLoaded) {
             final record = state.record;
-            final typeLabel = _typeLabels[record.type.name] ?? record.type.name;
+            final typeLabel = typeLabels[record.type.name] ?? record.type.name;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -183,14 +185,14 @@ class HealthRecordDetailScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _DetailRow(
                     icon: Icons.calendar_today_outlined,
-                    label: 'Recorded',
+                    label: context.l10n.recorded,
                     value: DateFormat('MMMM d, y')
                         .format(record.recordedAt.toLocal()),
                   ),
                   if (record.notes != null && record.notes!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
-                      'Notes',
+                      context.l10n.notes,
                       style: textTheme.labelLarge?.copyWith(
                         color:
                             colorScheme.onSurface.withValues(alpha: 0.6),
@@ -202,7 +204,7 @@ class HealthRecordDetailScreen extends StatelessWidget {
                   if (record.fileUrl != null && record.fileUrl!.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     Text(
-                      'Attachment',
+                      context.l10n.attachmentTitle,
                       style: textTheme.labelLarge?.copyWith(
                         color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
@@ -212,6 +214,7 @@ class HealthRecordDetailScreen extends StatelessWidget {
                       url: record.fileUrl!,
                       colorScheme: colorScheme,
                       textTheme: textTheme,
+                      l10n: context.l10n,
                     ),
                   ],
                 ],
@@ -262,11 +265,13 @@ class _AttachmentPreview extends StatelessWidget {
   final String url;
   final ColorScheme colorScheme;
   final TextTheme textTheme;
+  final AppLocalizations l10n;
 
   const _AttachmentPreview({
     required this.url,
     required this.colorScheme,
     required this.textTheme,
+    required this.l10n,
   });
 
   @override
@@ -294,11 +299,11 @@ class _AttachmentPreview extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'PDF Document',
+                    l10n.pdfDocument,
                     style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'Tap to view document',
+                    l10n.tapToViewDocument,
                     style: textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
@@ -311,7 +316,7 @@ class _AttachmentPreview extends StatelessWidget {
               onPressed: () => _safeLaunch(
                 context,
                 Uri.parse(url),
-                errorMessage: 'Could not open document',
+                errorMessage: l10n.couldNotOpenDocument,
                 mode: LaunchMode.externalApplication,
               ),
             ),
@@ -323,12 +328,37 @@ class _AttachmentPreview extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GestureDetector(
-            onTap: () => _safeLaunch(
-              context,
-              Uri.parse(url),
-              errorMessage: 'Could not open image',
-              mode: LaunchMode.externalApplication,
-            ),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  fullscreenDialog: true,
+                  builder: (context) => Scaffold(
+                    backgroundColor: Colors.black,
+                    appBar: AppBar(
+                      backgroundColor: Colors.black,
+                      iconTheme: const IconThemeData(color: Colors.white),
+                    ),
+                    body: Center(
+                      child: InteractiveViewer(
+                        panEnabled: true,
+                        minScale: 0.5,
+                        maxScale: 4.0,
+                        child: Image.network(
+                          url,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(color: Colors.white),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Container(
@@ -348,7 +378,7 @@ class _AttachmentPreview extends StatelessWidget {
                         children: [
                           Icon(Icons.broken_image_outlined, size: 32, color: colorScheme.error),
                           const SizedBox(height: 8),
-                          Text('Failed to load image', style: textTheme.bodyMedium),
+                          Text(l10n.failedToLoadImage, style: textTheme.bodyMedium),
                         ],
                       ),
                     );
@@ -363,7 +393,7 @@ class _AttachmentPreview extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Tap image to view in full screen',
+            l10n.tapImageFullScreen,
             style: textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
             ),

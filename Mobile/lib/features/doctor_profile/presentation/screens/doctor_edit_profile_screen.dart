@@ -12,6 +12,7 @@ import '../../../../core/utils/token_storage.dart';
 import '../../domain/entities/doctor_profile_entities.dart';
 import '../cubits/edit_doctor_profile_cubit.dart';
 import '../cubits/edit_doctor_profile_state.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 class DoctorEditProfileScreen extends StatefulWidget {
   const DoctorEditProfileScreen({super.key});
@@ -134,7 +135,7 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile')),
+      appBar: AppBar(title: Text(context.l10n.editProfileTitle)),
       body: BlocConsumer<EditDoctorProfileCubit, EditDoctorProfileState>(
         listener: (context, state) {
           if (state is EditDoctorProfileLoaded) {
@@ -143,7 +144,7 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
           }
           if (state is EditDoctorProfileSaved) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Profile updated successfully')),
+              SnackBar(content: Text(context.l10n.profileUpdatedMessage)),
             );
             context.pop();
           }
@@ -166,7 +167,7 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                   Text(state.message, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   FilledButton(
-                      onPressed: _loadProfile, child: const Text('Retry')),
+                      onPressed: _loadProfile, child: Text(context.l10n.retryButton)),
                 ],
               ),
             );
@@ -202,7 +203,7 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
 
                   // ─── Personal info ───
                   _FormCard(cs: cs, children: [
-                    Text('Personal Information',
+                    Text(context.l10n.personalInfoTitle,
                         style: AppTextStyles.bodyMd
                             .copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 16),
@@ -211,13 +212,13 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _firstNameCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'First Name',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: context.l10n.firstNameLabel,
+                              border: const OutlineInputBorder(),
                             ),
                             textCapitalization: TextCapitalization.words,
                             validator: (v) => (v == null || v.trim().isEmpty)
-                                ? 'Required'
+                                ? context.l10n.requiredField
                                 : null,
                             onChanged: (_) => setState(() {}),
                           ),
@@ -226,13 +227,13 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _lastNameCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Last Name',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: context.l10n.lastNameLabel,
+                              border: const OutlineInputBorder(),
                             ),
                             textCapitalization: TextCapitalization.words,
                             validator: (v) => (v == null || v.trim().isEmpty)
-                                ? 'Required'
+                                ? context.l10n.requiredField
                                 : null,
                             onChanged: (_) => setState(() {}),
                           ),
@@ -242,31 +243,31 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _phoneCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Phone Number',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.phone_outlined),
+                      decoration: InputDecoration(
+                        labelText: context.l10n.phoneLabel,
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.phone_outlined),
                       ),
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 16),
-                    _ReadOnlyField(label: 'Specialty', value: _specialty),
+                    _ReadOnlyField(label: context.l10n.specialtyLabel, value: _specialty),
                   ]),
 
                   const SizedBox(height: 12),
 
                   // ─── Professional info ───
                   _FormCard(cs: cs, children: [
-                    Text('Professional Information',
+                    Text(context.l10n.professionalInfoTitle,
                         style: AppTextStyles.bodyMd
                             .copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _bioCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Bio',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.bioLabel,
                         alignLabelWithHint: true,
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                       ),
                       maxLines: 4,
                       maxLength: 1000,
@@ -278,17 +279,17 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _experienceCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Years of Experience',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: context.l10n.yearsExperienceLabel,
+                              border: const OutlineInputBorder(),
                             ),
                             keyboardType: TextInputType.number,
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) {
-                                return 'Required';
+                                return context.l10n.requiredField;
                               }
                               if (int.tryParse(v) == null) {
-                                return 'Enter a valid number';
+                                return context.l10n.invalidNumberError;
                               }
                               return null;
                             },
@@ -298,19 +299,19 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                         Expanded(
                           child: TextFormField(
                             controller: _feeCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Fee (EGP)',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: context.l10n.feeEgpLabel,
+                              border: const OutlineInputBorder(),
                             ),
                             keyboardType:
                                 const TextInputType.numberWithOptions(
                                     decimal: true),
                             validator: (v) {
                               if (v == null || v.trim().isEmpty) {
-                                return 'Required';
+                                return context.l10n.requiredField;
                               }
                               if (double.tryParse(v) == null) {
-                                return 'Enter a valid number';
+                                return context.l10n.invalidNumberError;
                               }
                               return null;
                             },
@@ -324,24 +325,24 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
 
                   // ─── Clinic info ───
                   _FormCard(cs: cs, children: [
-                    Text('Clinic Information',
+                    Text(context.l10n.clinicInfoTitle,
                         style: AppTextStyles.bodyMd
                             .copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _clinicNameCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Clinic Name',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: context.l10n.clinicNameInputLabel,
+                        border: const OutlineInputBorder(),
                       ),
                       textCapitalization: TextCapitalization.words,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _clinicAddressCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Clinic Address',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: context.l10n.clinicAddressInputLabel,
+                        border: const OutlineInputBorder(),
                       ),
                       textCapitalization: TextCapitalization.sentences,
                     ),
@@ -353,7 +354,7 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                   _FormCard(cs: cs, children: [
                     Row(
                       children: [
-                        Text('Clinic Location',
+                        Text(context.l10n.clinicLocationTitle,
                             style: AppTextStyles.bodyMd
                                 .copyWith(fontWeight: FontWeight.w600)),
                         const Spacer(),
@@ -370,7 +371,7 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Tap on the map to pin your clinic location',
+                      context.l10n.clinicLocationDesc,
                       style: AppTextStyles.bodySm
                           .copyWith(color: cs.onSurface.withAlpha(140)),
                     ),
@@ -421,7 +422,7 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                         alignment: Alignment.centerRight,
                         child: TextButton.icon(
                           icon: const Icon(Icons.clear, size: 16),
-                          label: const Text('Clear pin'),
+                          label: Text(context.l10n.clearPinButton),
                           onPressed: () =>
                               setState(() => _lat = _lng = null),
                         ),
@@ -447,8 +448,7 @@ class _DoctorEditProfileScreenState extends State<DoctorEditProfileScreen> {
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: Colors.white),
                             )
-                          : const Text('Save Changes',
-                              style: TextStyle(fontSize: 16)),
+                          : Text(context.l10n.saveChangesButton),
                     ),
                   ),
                   const SizedBox(height: 32),

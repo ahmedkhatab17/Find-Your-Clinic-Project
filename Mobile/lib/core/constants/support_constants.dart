@@ -1,6 +1,5 @@
 /// Static contact and legal-link configuration for the Help & Support screen.
 ///
-/// TODO: replace the placeholder values below with the real production
 /// support channels and hosted legal pages before release.
 class SupportConstants {
   SupportConstants._();

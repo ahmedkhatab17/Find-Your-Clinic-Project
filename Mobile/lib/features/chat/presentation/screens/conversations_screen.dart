@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/token_storage.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../cubit/conversations_cubit.dart';
 import '../cubit/conversations_state.dart';
 import '../../../../core/widgets/user_avatar.dart';
@@ -43,19 +45,22 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Messages'),
         centerTitle: true,
-        backgroundColor: theme.colorScheme.surface,
-        elevation: 2.0,
-        shadowColor: isDark
-            ? Colors.black.withValues(alpha: 0.3)
-            : Colors.black.withValues(alpha: 0.08),
-        shape: Border(
-          bottom: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.12)
-                : Colors.black.withValues(alpha: 0.12),
-            width: 1.0,
+        title: Text(
+          context.l10n.messages,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        toolbarHeight: 70,
+        foregroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: isDark
+                ? AppTheme.headerGradientDark
+                : AppTheme.headerGradient,
           ),
         ),
       ),
@@ -77,7 +82,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                   ),
                   TextButton(
                     onPressed: () => _cubit.loadConversations(),
-                    child: const Text('Retry'),
+                    child: Text(context.l10n.retry),
                   ),
                 ],
               ),
@@ -88,7 +93,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
             final conversations = state.conversations;
 
             if (conversations.isEmpty) {
-              return const Center(child: Text('No conversations yet.'));
+              return Center(child: Text(context.l10n.noConversations));
             }
 
             return RefreshIndicator(
@@ -141,7 +146,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                           ),
                         ),
                         title: Text(
-                          conv.counterpartyName ?? 'Unknown',
+                          conv.counterpartyName ?? context.l10n.unknown,
                           style: TextStyle(
                             fontWeight: isUnread
                                 ? FontWeight.bold
@@ -149,7 +154,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          conv.lastMessage ?? 'Started a conversation',
+                          conv.lastMessage ?? context.l10n.startedConversation,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

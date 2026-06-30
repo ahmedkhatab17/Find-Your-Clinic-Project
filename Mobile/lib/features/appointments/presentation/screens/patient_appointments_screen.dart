@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../accessibility/domain/entities/screen_context.dart';
 import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
 import '../../domain/entities/appointment_entity.dart';
@@ -39,6 +41,7 @@ class _PatientAppointmentsScreenState extends State<PatientAppointmentsScreen>
       context.read<VoiceAssistantCubit>().setScreenContext(
             _screenContext,
             summary: _buildScreenSummary,
+            itemSelector: _itemSelector,
           );
     });
   }
@@ -46,12 +49,31 @@ class _PatientAppointmentsScreenState extends State<PatientAppointmentsScreen>
   String _buildScreenSummary() {
     final state = context.read<AppointmentCubit>().state;
     if (state is AppointmentListLoaded) {
-      return 'My appointments. ${state.upcoming.length} upcoming, '
-          '${state.completed.length} completed, '
-          '${state.cancelled.length} cancelled. '
-          "Say 'when is my next appointment' to hear the next one.";
+      return context.l10n.myAppointmentsSummary(
+        state.upcoming.length,
+        state.completed.length,
+        state.cancelled.length,
+      );
     }
-    return 'My appointments. Loading.';
+    return context.l10n.myAppointmentsLoading;
+  }
+
+  bool _itemSelector(int index) {
+    final state = context.read<AppointmentCubit>().state;
+    if (state is! AppointmentListLoaded) return false;
+
+    // Which list are we looking at? The selected tab.
+    final list = switch (_tabController.index) {
+      0 => state.upcoming,
+      1 => state.completed,
+      _ => state.cancelled,
+    };
+
+    if (index < 0 || index >= list.length) return false;
+
+    final apt = list[index];
+    context.push('/appointment/${apt.id}');
+    return true;
   }
 
   @override
@@ -66,26 +88,44 @@ class _PatientAppointmentsScreenState extends State<PatientAppointmentsScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'My Appointments',
-          style: AppTextStyles.heading2.copyWith(
-            color: theme.colorScheme.onSurface,
+        title: Semantics(
+          header: true,
+          child: Text(
+            context.l10n.appointments,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: theme.colorScheme.primary,
-          unselectedLabelColor: theme.brightness == Brightness.dark
-              ? theme.colorScheme.onSurfaceVariant
-              : AppColors.textSecondary,
-          indicatorColor: theme.colorScheme.primary,
-          labelStyle: AppTextStyles.label,
-          unselectedLabelStyle: AppTextStyles.bodyMd,
-          tabs: const [
-            Tab(text: 'Upcoming'),
-            Tab(text: 'Completed'),
-            Tab(text: 'Cancelled'),
-          ],
+        toolbarHeight: 80,
+        foregroundColor: Colors.white,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: theme.brightness == Brightness.dark
+                ? AppTheme.headerGradientDark
+                : AppTheme.headerGradient,
+          ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Semantics(
+            label: context.l10n.appointments, // A general label for the tab bar
+            child: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              indicatorColor: Colors.white,
+              labelStyle: AppTextStyles.label,
+              unselectedLabelStyle: AppTextStyles.bodyMd,
+              tabs: [
+                Tab(text: context.l10n.tabUpcoming),
+                Tab(text: context.l10n.tabCompleted),
+                Tab(text: context.l10n.tabCancelled),
+              ],
+            ),
+          ),
         ),
       ),
       body: BlocConsumer<AppointmentCubit, AppointmentState>(
@@ -135,7 +175,7 @@ class _PatientAppointmentsScreenState extends State<PatientAppointmentsScreen>
                   ElevatedButton(
                     onPressed: () =>
                         context.read<AppointmentCubit>().loadPatientAppointments(),
-                    child: const Text('Retry'),
+                    child: Text(context.l10n.retryButton),
                   ),
                 ],
               ),
@@ -191,18 +231,18 @@ class _PatientAppointmentsScreenState extends State<PatientAppointmentsScreen>
     final (icon, title, subtitle) = switch (type) {
       'upcoming' => (
           Icons.calendar_today_outlined,
-          'No Upcoming Appointments',
-          'Book your first appointment with a doctor\nto get started on your health journey.',
+          context.l10n.noUpcomingAppointmentsTitle,
+          context.l10n.noUpcomingAppointmentsDesc,
         ),
       'completed' => (
           Icons.check_circle_outline,
-          'No Completed Appointments',
-          'Your completed appointments will appear here.',
+          context.l10n.noCompletedAppointmentsTitle,
+          context.l10n.noCompletedAppointmentsDesc,
         ),
       _ => (
           Icons.cancel_outlined,
-          'No Cancelled Appointments',
-          'No cancelled appointments to show.',
+          context.l10n.noCancelledAppointmentsTitle,
+          context.l10n.noCancelledAppointmentsDesc,
         ),
     };
 
@@ -240,7 +280,7 @@ class _PatientAppointmentsScreenState extends State<PatientAppointmentsScreen>
               ElevatedButton.icon(
                 onPressed: () => context.push('/search'),
                 icon: const Icon(Icons.search),
-                label: const Text('Find a Doctor'),
+                label: Text(context.l10n.findADoctor),
               ),
             ],
           ],

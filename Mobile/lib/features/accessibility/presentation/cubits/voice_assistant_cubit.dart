@@ -3,8 +3,13 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import 'package:flutter/widgets.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+
 import '../../../../core/network/api_result.dart';
 import '../../../../core/services/tts_service.dart';
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/locale/locale_cubit.dart';
 import '../../../ai_health/presentation/cubits/voice_input_cubit.dart';
 import '../../../ai_health/presentation/cubits/voice_input_state.dart';
 import '../../../appointments/domain/entities/appointment_entity.dart';
@@ -51,6 +56,11 @@ class VoiceAssistantCubit extends Cubit<VoiceAssistantState> {
   ScreenContext _currentContext = ScreenContext.unknown;
   ScreenSummaryProvider? _screenSummary;
   ItemSelector? _itemSelector;
+
+  AppLocalizations get _l10n {
+    final code = sl<LocaleCubit>().effectiveLanguageCode;
+    return lookupAppLocalizations(Locale(code));
+  }
 
   VoiceAssistantCubit({
     required VoiceInputCubit voiceInputCubit,
@@ -153,9 +163,7 @@ class VoiceAssistantCubit extends Cubit<VoiceAssistantState> {
       case Success<VoiceCommandResult>(:final data):
         await _executeIntent(data);
       case Error<VoiceCommandResult>():
-        await _speak(
-          "Sorry, I couldn't reach the assistant right now. Please try again.",
-        );
+        await _speak(_l10n.voiceAssistantCouldNotReach);
     }
   }
 
@@ -167,24 +175,18 @@ class VoiceAssistantCubit extends Cubit<VoiceAssistantState> {
       case ReadScreenIntent():
         final summary = _screenSummary?.call().trim() ?? '';
         await _speak(
-          summary.isNotEmpty ? summary : 'There is nothing to read on this screen.',
+          summary.isNotEmpty ? summary : _l10n.voiceAssistantNothingToRead,
         );
 
       case SelectItemIntent(:final index):
         final selector = _itemSelector;
         if (selector == null) {
-          await _speak(
-            'There is nothing to select on this screen. '
-            'Try saying "read this screen" first.',
-          );
+          await _speak(_l10n.voiceAssistantNothingToSelect);
           break;
         }
         final ok = selector(index);
         if (!ok) {
-          await _speak(
-            "I couldn't find item number $index here. "
-            "Say 'read this screen' to hear what's available.",
-          );
+          await _speak(_l10n.voiceAssistantItemNotFound(index));
         } else if (spoken.isNotEmpty) {
           await _speak(spoken);
         }
@@ -216,20 +218,30 @@ class VoiceAssistantCubit extends Cubit<VoiceAssistantState> {
       case NavigateAiChatIntent():
       case NavigateNotificationsIntent():
       case NavigateHealthRecordsIntent():
+      case NavigateConversationsIntent():
+      case NavigateEditProfileIntent():
         if (spoken.isNotEmpty) await _speak(spoken);
         await _navigationHandler?.call(intent);
+        // Auto-speak the new screen's summary so the blind user knows
+        // where they landed. We wait briefly to let the destination
+        // screen register its ScreenSummaryProvider in initState.
+        unawaited(_autoSpeakAfterNavigation());
 
       case HelpIntent():
         await _speak(spoken.isNotEmpty ? spoken : _helpMessage());
 
       case CancelIntent():
-        await _speak(spoken.isNotEmpty ? spoken : 'Okay, cancelled.');
+        await _speak(spoken.isNotEmpty ? spoken : _l10n.voiceAssistantCancelled);
+
+      case ConfirmIntent():
+      case DenyIntent():
+        if (spoken.isNotEmpty) await _speak(spoken);
 
       case UnknownIntent():
         await _speak(
           spoken.isNotEmpty
               ? spoken
-              : "Sorry, I didn't understand. Say 'help' to hear what I can do.",
+              : _l10n.voiceAssistantDidNotUnderstand,
         );
     }
   }
@@ -251,20 +263,18 @@ class VoiceAssistantCubit extends Cubit<VoiceAssistantState> {
     final clinic = (d[ScreenContextKeys.clinicName] as String?)?.trim();
 
     if (doctorProfileId == null || slotIso == null) {
-      await _speak(
-        'I need a doctor profile to book. Open a doctor first.',
-      );
+      await _speak(_l10n.voiceAssistantNeedDoctorProfile);
       return;
     }
 
     final scheduledAt = DateTime.tryParse(slotIso);
     if (scheduledAt == null) {
-      await _speak("Sorry, I couldn't read this doctor's next available time.");
+      await _speak(_l10n.voiceAssistantCouldNotReadSlot);
       return;
     }
 
-    final friendlyName = doctorName.isNotEmpty ? 'Doctor $doctorName' : 'this doctor';
-    await _speak('Booking the next available slot with $friendlyName.');
+    final friendlyName = doctorName.isNotEmpty ? doctorName : 'doctor';
+    await _speak(_l10n.voiceAssistantBookingSlot(friendlyName));
 
     final result = await _bookAppointment(
       doctorProfileId: doctorProfileId,
@@ -274,14 +284,12 @@ class VoiceAssistantCubit extends Cubit<VoiceAssistantState> {
 
     switch (result) {
       case Success<AppointmentEntity>(:final data):
-        final dateStr = DateFormat('EEEE, MMMM d').format(data.scheduledAt);
-        final timeStr = DateFormat('h:mm a').format(data.scheduledAt);
-        await _speak(
-          'Done. Your appointment with $friendlyName is on $dateStr at $timeStr. '
-          'Please pay in cash at the clinic.',
-        );
+        final code = sl<LocaleCubit>().effectiveLanguageCode;
+        final dateStr = DateFormat('EEEE, MMMM d', code).format(data.scheduledAt);
+        final timeStr = DateFormat('h:mm a', code).format(data.scheduledAt);
+        await _speak(_l10n.voiceAssistantBookingDone(friendlyName, dateStr, timeStr));
       case Error<AppointmentEntity>(:final failure):
-        await _speak("Sorry, I couldn't book it: ${failure.message}");
+        await _speak(_l10n.voiceAssistantBookingFailed(failure.message));
     }
   }
 
@@ -291,19 +299,19 @@ class VoiceAssistantCubit extends Cubit<VoiceAssistantState> {
       case Success<List<AppointmentEntity>>(:final data):
         final next = _findNextUpcoming(data);
         if (next == null) {
-          await _speak('You have no upcoming appointments.');
+          await _speak(_l10n.voiceAssistantNoUpcoming);
           return;
         }
-        await _speak(_formatAppointmentSentence(next, prefix: 'Your next appointment is'));
+        await _speak(_formatAppointmentSentence(next, prefix: _l10n.voiceAssistantNextAppointment));
       case Error<List<AppointmentEntity>>():
-        await _speak("Sorry, I couldn't load your appointments right now.");
+        await _speak(_l10n.voiceAssistantCouldNotLoad);
     }
   }
 
   Future<void> _speakAllUpcomingAppointments() async {
     final result = await _getAppointments();
     if (result is Error<List<AppointmentEntity>>) {
-      await _speak("Sorry, I couldn't load your appointments right now.");
+      await _speak(_l10n.voiceAssistantCouldNotLoad);
       return;
     }
     final upcoming = (result as Success<List<AppointmentEntity>>)
@@ -313,11 +321,10 @@ class VoiceAssistantCubit extends Cubit<VoiceAssistantState> {
       ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
 
     if (upcoming.isEmpty) {
-      await _speak('You have no upcoming appointments.');
+      await _speak(_l10n.voiceAssistantNoUpcoming);
       return;
     }
-    final buffer = StringBuffer('You have ${upcoming.length} upcoming '
-        '${upcoming.length == 1 ? 'appointment' : 'appointments'}. ');
+    final buffer = StringBuffer(_l10n.voiceAssistantUpcomingCount(upcoming.length));
     for (var i = 0; i < upcoming.length; i++) {
       buffer.write(
         _formatAppointmentSentence(upcoming[i], prefix: '${i + 1}.'),
@@ -337,23 +344,37 @@ class VoiceAssistantCubit extends Cubit<VoiceAssistantState> {
     AppointmentEntity appt, {
     required String prefix,
   }) {
-    final dateStr = DateFormat('EEEE, MMMM d').format(appt.scheduledAt);
-    final timeStr = DateFormat('h:mm a').format(appt.scheduledAt);
+    final code = sl<LocaleCubit>().effectiveLanguageCode;
+    final dateStr = DateFormat('EEEE, MMMM d', code).format(appt.scheduledAt);
+    final timeStr = DateFormat('h:mm a', code).format(appt.scheduledAt);
+    final onStr = _l10n.voiceAssistantAppointmentOn(dateStr, timeStr);
     final doctor = appt.relatedPersonName.trim().isNotEmpty
-        ? ' with Doctor ${appt.relatedPersonName}'
+        ? _l10n.voiceAssistantWithDoctor(appt.relatedPersonName)
         : '';
-    return '$prefix on $dateStr at $timeStr$doctor';
+    return '$prefix $onStr$doctor';
   }
 
   Future<void> _speak(String message) async {
+    final localeCode = sl<LocaleCubit>().effectiveLanguageCode;
+    await _tts.setLanguage(localeCode);
     emit(VoiceAssistantSpoken(message));
     await _tts.speak(message);
   }
 
-  String _helpMessage() => "You can say things like 'my appointments', "
-      "'when is my next appointment', 'find a cardiologist', "
-      "'nearby clinics', 'read this screen', 'select the second one', "
-      "'go back', 'help', or 'cancel'.";
+  /// Waits briefly for the destination screen to register its
+  /// [ScreenSummaryProvider] via [setScreenContext], then speaks the summary.
+  Future<void> _autoSpeakAfterNavigation() async {
+    // Wait for the new screen's initState + addPostFrameCallback to fire.
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+    if (isClosed) return;
+
+    final summary = _screenSummary?.call().trim() ?? '';
+    if (summary.isNotEmpty) {
+      await _speak(summary);
+    }
+  }
+
+  String _helpMessage() => _l10n.voiceAssistantHelpMessage;
 
   @override
   Future<void> close() async {

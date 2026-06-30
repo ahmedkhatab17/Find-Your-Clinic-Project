@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:find_your_clinic/core/locale/l10n_extension.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -428,11 +429,13 @@ class AppRouter {
         path: '/booking-success',
         name: RouteNames.bookingSuccess,
         builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
+          final extra = state.extra as Map? ?? {};
           return BookingSuccessScreen(
-            isConfirmed: extra['isConfirmed'] as bool,
-            doctorName: extra['doctorName'] as String,
-            scheduledAt: extra['scheduledAt'] as DateTime,
+            isConfirmed: extra['isConfirmed'] as bool? ?? false,
+            doctorName: extra['doctorName'] as String? ?? 'Doctor',
+            scheduledAt: extra['scheduledAt'] != null 
+                ? DateTime.parse(extra['scheduledAt'] as String) 
+                : DateTime.now(),
             appointmentId: extra['appointmentId'] as String?,
           );
         },
@@ -467,10 +470,13 @@ class AppRouter {
       GoRoute(
         path: '/patient/ai-chat',
         name: RouteNames.aiChat,
-        builder: (context, state) => BlocProvider(
-          create: (_) => sl<AiChatCubit>()..loadHistory(),
-          child: const AiChatScreen(),
-        ),
+        builder: (context, state) {
+          final initialMessage = state.extra as String?;
+          return BlocProvider(
+            create: (_) => sl<AiChatCubit>()..loadHistory(),
+            child: AiChatScreen(initialMessage: initialMessage),
+          );
+        },
       ),
       GoRoute(
         path: '/patient/symptom-checker',
@@ -714,6 +720,11 @@ class _PatientShellState extends State<_PatientShell> with WidgetsBindingObserve
         widget.navigationShell.goBranch(3);
       case NavigateProfileIntent():
         widget.navigationShell.goBranch(4);
+      case NavigateConversationsIntent():
+        widget.navigationShell.goBranch(2);
+      case NavigateEditProfileIntent():
+        widget.navigationShell.goBranch(4);
+        context.pushNamed(RouteNames.patientProfileEdit);
       case NavigateSearchIntent(:final query):
         if (query != null && query.trim().isNotEmpty) {
           context.pushNamed(
@@ -853,12 +864,12 @@ class _PatientShellState extends State<_PatientShell> with WidgetsBindingObserve
                           ),
                           child: const Icon(Icons.home),
                         ),
-                        label: 'Home',
+                        label: context.l10n.navHome,
                       ),
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.calendar_today_outlined),
-                        activeIcon: Icon(Icons.calendar_today),
-                        label: 'Appointments',
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.calendar_today_outlined),
+                        activeIcon: const Icon(Icons.calendar_today),
+                        label: context.l10n.navAppointments,
                       ),
                       BottomNavigationBarItem(
                         icon: Badge(
@@ -871,17 +882,17 @@ class _PatientShellState extends State<_PatientShell> with WidgetsBindingObserve
                           label: Text(unreadCount.toString()),
                           child: const Icon(Icons.chat_bubble),
                         ),
-                        label: 'Messages',
+                        label: context.l10n.navMessages,
                       ),
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.description_outlined),
-                        activeIcon: Icon(Icons.description),
-                        label: 'Records',
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.description_outlined),
+                        activeIcon: const Icon(Icons.description),
+                        label: context.l10n.navRecords,
                       ),
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.person_outline),
-                        activeIcon: Icon(Icons.person),
-                        label: 'Profile',
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.person_outline),
+                        activeIcon: const Icon(Icons.person),
+                        label: context.l10n.navProfile,
                       ),
                     ],
                   );
@@ -1035,12 +1046,12 @@ class _DoctorShellState extends State<_DoctorShell> with WidgetsBindingObserver 
                           ),
                           child: const Icon(Icons.home),
                         ),
-                        label: 'Home',
+                        label: context.l10n.navHome,
                       ),
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.calendar_today_outlined),
-                        activeIcon: Icon(Icons.calendar_today),
-                        label: 'Appointments',
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.calendar_today_outlined),
+                        activeIcon: const Icon(Icons.calendar_today),
+                        label: context.l10n.navAppointments,
                       ),
                       BottomNavigationBarItem(
                         icon: Badge(
@@ -1053,17 +1064,17 @@ class _DoctorShellState extends State<_DoctorShell> with WidgetsBindingObserver 
                           label: Text(unreadCount.toString()),
                           child: const Icon(Icons.chat_bubble),
                         ),
-                        label: 'Chat',
+                        label: context.l10n.navMessages,
                       ),
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.insights_outlined),
-                        activeIcon: Icon(Icons.insights),
-                        label: 'Insights',
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.insights_outlined),
+                        activeIcon: const Icon(Icons.insights),
+                        label: context.l10n.navInsights,
                       ),
-                      const BottomNavigationBarItem(
-                        icon: Icon(Icons.person_outline),
-                        activeIcon: Icon(Icons.person),
-                        label: 'Profile',
+                      BottomNavigationBarItem(
+                        icon: const Icon(Icons.person_outline),
+                        activeIcon: const Icon(Icons.person),
+                        label: context.l10n.navProfile,
                       ),
                     ],
                   );

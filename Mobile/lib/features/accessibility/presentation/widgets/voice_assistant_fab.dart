@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../cubits/voice_assistant_cubit.dart';
 import '../cubits/voice_assistant_state.dart';
@@ -80,11 +81,11 @@ class _FabState extends State<_Fab> with SingleTickerProviderStateMixin {
       _ => Icons.mic_rounded,
     };
     final tooltip = switch (state) {
-      VoiceAssistantListening() => 'Listening… tap to cancel',
-      VoiceAssistantThinking() => 'Thinking…',
-      VoiceAssistantSpoken() => 'Speaking — tap to talk',
-      VoiceAssistantError() => 'Voice assistant error — tap to retry',
-      _ => 'Voice assistant. Double tap to start listening',
+      VoiceAssistantListening() => context.l10n.voiceAssistantListeningCancel,
+      VoiceAssistantThinking() => context.l10n.voiceAssistantThinking,
+      VoiceAssistantSpoken() => context.l10n.voiceAssistantSpeaking,
+      VoiceAssistantError() => context.l10n.voiceAssistantErrorTapRetry,
+      _ => context.l10n.voiceAssistantLabel,
     };
 
     final base = FloatingActionButton(

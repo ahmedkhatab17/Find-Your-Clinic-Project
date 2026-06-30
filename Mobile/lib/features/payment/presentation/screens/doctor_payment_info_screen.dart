@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/doctor_payment_info_entity.dart';
 import '../cubits/doctor_payment_info_cubit.dart';
 import '../cubits/doctor_payment_info_state.dart';
@@ -83,7 +84,7 @@ class _BodyState extends State<_Body> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Payout Details'),
+        title: Text(context.l10n.payoutDetails),
         centerTitle: true,
       ),
       body: BlocConsumer<DoctorPaymentInfoCubit, DoctorPaymentInfoState>(
@@ -93,8 +94,8 @@ class _BodyState extends State<_Body> {
           }
           if (state is DoctorPaymentInfoSaved) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Payout details saved successfully.'),
+              SnackBar(
+                content: Text(context.l10n.payoutDetailsSaved),
                 backgroundColor: AppColors.success,
               ),
             );
@@ -127,7 +128,7 @@ class _BodyState extends State<_Body> {
 
                 // ─── Method selector ───
                 Text(
-                  'Payout Method',
+                  context.l10n.payoutMethod,
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w600),
                 ),
@@ -136,7 +137,7 @@ class _BodyState extends State<_Body> {
                   children: [
                     Expanded(
                       child: _MethodChip(
-                        label: 'Mobile Wallet',
+                        label: context.l10n.mobileWallet,
                         icon: Icons.phone_android_rounded,
                         selected: _method == PayoutMethodType.wallet,
                         onTap: () => setState(() => _method = PayoutMethodType.wallet),
@@ -145,7 +146,7 @@ class _BodyState extends State<_Body> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: _MethodChip(
-                        label: 'Bank Account',
+                        label: context.l10n.bankAccountLabel,
                         icon: Icons.account_balance_rounded,
                         selected: _method == PayoutMethodType.bank,
                         onTap: () => setState(() => _method = PayoutMethodType.bank),
@@ -201,9 +202,9 @@ class _BodyState extends State<_Body> {
                               strokeWidth: 2.5,
                             ),
                           )
-                        : const Text(
-                            'Save Payout Details',
-                            style: TextStyle(
+                        : Text(
+                            context.l10n.savePayoutDetails,
+                            style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w600),
                           ),
                   ),
@@ -237,11 +238,10 @@ class _InfoBanner extends StatelessWidget {
         children: [
           Icon(Icons.info_outline_rounded, size: 18, color: AppColors.primary),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Add your payout details so earnings can be transferred to you. '
-              'Your information is stored securely.',
-              style: TextStyle(fontSize: 12, height: 1.5),
+              context.l10n.payoutInfoBanner,
+              style: const TextStyle(fontSize: 12, height: 1.5),
             ),
           ),
         ],
@@ -327,7 +327,7 @@ class _WalletFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Wallet Provider',
+          context.l10n.walletProviderLabel,
           style: Theme.of(context)
               .textTheme
               .labelLarge
@@ -344,7 +344,7 @@ class _WalletFields extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           ),
           items: WalletProviderType.values
-              .map((p) => DropdownMenuItem(value: p, child: Text(p.label)))
+              .map((p) => DropdownMenuItem(value: p, child: Text(p.localizedLabel(context))))
               .toList(),
           onChanged: (v) {
             if (v != null) onProviderChanged(v);
@@ -352,7 +352,7 @@ class _WalletFields extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Wallet Phone Number',
+          context.l10n.walletPhoneNumberLabel,
           style: Theme.of(context)
               .textTheme
               .labelLarge
@@ -363,7 +363,7 @@ class _WalletFields extends StatelessWidget {
           controller: phoneCtrl,
           keyboardType: TextInputType.phone,
           decoration: InputDecoration(
-            hintText: 'e.g. 01xxxxxxxxx',
+            hintText: context.l10n.walletPhoneHint,
             filled: true,
             fillColor: isDark ? AppColors.darkSurface : Colors.white,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -402,24 +402,24 @@ class _BankFields extends StatelessWidget {
       children: [
         _Field(
           isDark: isDark,
-          label: 'Bank Name',
-          hint: 'e.g. CIB, NBE, Banque Misr',
+          label: context.l10n.bankNameLabel,
+          hint: context.l10n.bankNameHint,
           controller: bankNameCtrl,
           icon: Icons.account_balance_rounded,
         ),
         const SizedBox(height: 16),
         _Field(
           isDark: isDark,
-          label: 'Account Holder Name',
-          hint: 'Full name as on bank account',
+          label: context.l10n.accountHolderNameLabel,
+          hint: context.l10n.accountHolderHint,
           controller: accountHolderCtrl,
           icon: Icons.person_rounded,
         ),
         const SizedBox(height: 16),
         _Field(
           isDark: isDark,
-          label: 'Account Number',
-          hint: 'Your bank account number',
+          label: context.l10n.accountNumberLabel,
+          hint: context.l10n.accountNumberHint,
           controller: accountNumberCtrl,
           icon: Icons.credit_card_rounded,
           inputType: TextInputType.number,
@@ -427,8 +427,8 @@ class _BankFields extends StatelessWidget {
         const SizedBox(height: 16),
         _Field(
           isDark: isDark,
-          label: 'IBAN (Optional)',
-          hint: 'EG00 0000 0000 0000 ...',
+          label: context.l10n.ibanOptionalLabel,
+          hint: context.l10n.ibanHint,
           controller: ibanCtrl,
           icon: Icons.tag_rounded,
         ),

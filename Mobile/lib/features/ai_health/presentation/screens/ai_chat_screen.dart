@@ -11,9 +11,16 @@ import '../cubits/voice_input_cubit.dart';
 import '../cubits/voice_input_state.dart';
 import '../widgets/ai_message_bubble.dart';
 import '../widgets/voice_recording_indicator.dart';
+import '../../../../core/services/tts_service.dart';
+import '../../../accessibility/domain/entities/screen_context.dart';
+import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
+import '../../../accessibility/presentation/cubits/voice_assistant_visibility_cubit.dart';
+import '../../../../core/locale/locale_cubit.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 class AiChatScreen extends StatefulWidget {
-  const AiChatScreen({super.key});
+  final String? initialMessage;
+  const AiChatScreen({super.key, this.initialMessage});
 
   @override
   State<AiChatScreen> createState() => _AiChatScreenState();
@@ -23,11 +30,37 @@ class _AiChatScreenState extends State<AiChatScreen> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final VoiceInputCubit _voiceCubit;
+  dynamic _lastSpokenMessage;
+
+  static const _screenContext = ScreenContext(screen: PatientScreen.aiChat);
 
   @override
   void initState() {
     super.initState();
     _voiceCubit = sl<VoiceInputCubit>();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<VoiceAssistantCubit>().setScreenContext(
+            _screenContext,
+            summary: _buildScreenSummary,
+            itemSelector: _itemSelector,
+          );
+    });
+
+    // Only start listening automatically if accessibility is enabled
+    final isAccessibilityEnabled = sl<VoiceAssistantVisibilityCubit>().state;
+    if (isAccessibilityEnabled) {
+      _voiceCubit.startListening();
+    }
+
+    if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<AiChatCubit>().sendMessage(widget.initialMessage!, sl<LocaleCubit>().effectiveLanguageCode);
+        }
+      });
+    }
   }
 
   @override
@@ -38,11 +71,38 @@ class _AiChatScreenState extends State<AiChatScreen> {
     super.dispose();
   }
 
+  String _buildScreenSummary() {
+    final state = context.read<AiChatCubit>().state;
+    final msgs = switch (state) {
+      AiChatLoaded(:final messages) => messages,
+      AiChatSending(:final messages) => messages,
+      _ => null,
+    };
+    if (msgs == null || msgs.isEmpty) return 'Welcome to AI Health Chat. How can I help you today?';
+    return 'AI Health Chat with ${msgs.length} messages. The last message is from ${msgs.last.role}: ${msgs.last.content}';
+  }
+
+  bool _itemSelector(int index) {
+    // Read specific message
+    final state = context.read<AiChatCubit>().state;
+    final msgs = switch (state) {
+      AiChatLoaded(:final messages) => messages,
+      AiChatSending(:final messages) => messages,
+      _ => null,
+    };
+    if (msgs == null || index < 0 || index >= msgs.length) return false;
+    final msg = msgs[index];
+    // We could speak it directly here or just return true to acknowledge
+    sl<TtsService>().setLanguage(sl<LocaleCubit>().effectiveLanguageCode);
+    sl<TtsService>().speak('${msg.role} says: ${msg.content}');
+    return true;
+  }
+
   void _sendMessage() {
     final text = _inputController.text.trim();
     if (text.isEmpty) return;
     _inputController.clear();
-    context.read<AiChatCubit>().sendMessage(text);
+    context.read<AiChatCubit>().sendMessage(text, sl<LocaleCubit>().effectiveLanguageCode);
     _scrollToBottom();
   }
 
@@ -77,8 +137,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [AppColors.gradientStart, AppColors.gradientMiddle],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
+                begin: AlignmentDirectional.centerStart,
+                end: AlignmentDirectional.centerEnd,
               ),
             ),
           ),
@@ -107,16 +167,16 @@ class _AiChatScreenState extends State<AiChatScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'AI Health Assistant',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.aiHealthAssistantTitle,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
-                    'Voice enabled • Gemini AI',
+                    context.l10n.voiceEnabledGemini,
                     style: AppTextStyles.caption.copyWith(
                       color: Colors.white.withValues(alpha: 0.75),
                     ),
@@ -134,6 +194,20 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 listener: (context, state) {
                   if (state is AiChatLoaded || state is AiChatSending) {
                     _scrollToBottom();
+                  }
+                  if (state is AiChatLoaded && state.messages.isNotEmpty) {
+                    final lastMsg = state.messages.last;
+                    if (lastMsg.role == 'assistant' && lastMsg != _lastSpokenMessage) {
+                      _lastSpokenMessage = lastMsg;
+                      final isVoiceActive = sl<VoiceAssistantVisibilityCubit>().state;
+                      if (isVoiceActive) {
+                        sl<TtsService>().speak(lastMsg.content);
+                      }
+                    }
+                  } else if (state is AiChatError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(state.message)),
+                    );
                   }
                 },
                 builder: (context, state) {
@@ -213,7 +287,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 if (state is VoiceResult) {
                   // Auto-send the recognized text
                   if (state.text.isNotEmpty) {
-                    context.read<AiChatCubit>().sendMessage(state.text);
+                    context.read<AiChatCubit>().sendMessage(state.text, sl<LocaleCubit>().effectiveLanguageCode);
                     _scrollToBottom();
                   }
                 }
@@ -253,12 +327,12 @@ class _AiChatScreenState extends State<AiChatScreen> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF2D2500) : const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(8),
-        border: const Border(
-          left: BorderSide(color: AppColors.warning, width: 3),
+        border: const BorderDirectional(
+          start: BorderSide(color: AppColors.warning, width: 3),
         ),
       ),
       child: Text(
-        '⚠ AI suggestions are not a substitute for professional medical advice.',
+        context.l10n.aiDisclaimer,
         style: TextStyle(
           fontSize: 11,
           color: isDark ? const Color(0xFFD4A017) : const Color(0xFF92400E),
@@ -278,7 +352,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               Icon(Icons.mic, size: 16, color: AppColors.primary),
               const SizedBox(width: 6),
               Text(
-                'Tap the mic to speak, or type your message',
+                context.l10n.tapMicOrType,
                 style: AppTextStyles.bodySm.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -290,10 +364,10 @@ class _AiChatScreenState extends State<AiChatScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              'I have a headache',
-              'Find a cardiologist',
-              'Check my symptoms',
-              'Health tips',
+              context.l10n.quickReplyHeadache,
+              context.l10n.quickReplyCardiologist,
+              context.l10n.quickReplySymptoms,
+              context.l10n.quickReplyHealthTips,
             ].map((text) => _buildQuickReplyChip(text)).toList(),
           ),
           const SizedBox(height: 16),
@@ -305,7 +379,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
   Widget _buildQuickReplyChip(String text) {
     return OutlinedButton(
       onPressed: () {
-        context.read<AiChatCubit>().sendMessage(text);
+        context.read<AiChatCubit>().sendMessage(text, Localizations.localeOf(context).languageCode);
         _scrollToBottom();
       },
       style: OutlinedButton.styleFrom(
@@ -330,8 +404,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [AppColors.gradientStart, AppColors.gradientMiddle],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: AlignmentDirectional.topStart,
+                end: AlignmentDirectional.bottomEnd,
               ),
             ),
             child: const Icon(
@@ -346,11 +420,11 @@ class _AiChatScreenState extends State<AiChatScreen> {
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkSurface : Colors.white,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-                bottomRight: Radius.circular(12),
-                bottomLeft: Radius.circular(4),
+              borderRadius: const BorderRadiusDirectional.only(
+                topStart: Radius.circular(12),
+                topEnd: Radius.circular(12),
+                bottomEnd: Radius.circular(12),
+                bottomStart: Radius.circular(4),
               ),
               boxShadow: [
                 BoxShadow(
@@ -396,7 +470,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                       : AppColors.textPrimary,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Type your message...',
+                  hintText: context.l10n.typeYourMessage,
                   hintStyle: AppTextStyles.bodyMd.copyWith(
                     color: AppColors.textHint,
                   ),
@@ -450,8 +524,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
                         AppColors.gradientMiddle,
                         AppColors.gradientEnd,
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                      begin: AlignmentDirectional.topStart,
+                      end: AlignmentDirectional.bottomEnd,
                     ),
                   ),
                   child: const Icon(

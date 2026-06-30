@@ -311,6 +311,21 @@ class ChatCubit extends Cubit<ChatState> {
     emit(current.copyWith(messages: [...current.messages, message]));
   }
 
+  Future<void> clearMessages() async {
+    if (state is! ChatLoaded) return;
+    final current = state as ChatLoaded;
+    
+    // Optimistic UI update
+    emit(current.copyWith(messages: []));
+    
+    // Backend call
+    final result = await _chatRepository.clearMessages(conversationId);
+    if (result is Error) {
+      // Revert on failure
+      emit(current);
+    }
+  }
+
   @override
   Future<void> close() {
     _messageReceivedSubscription?.cancel();

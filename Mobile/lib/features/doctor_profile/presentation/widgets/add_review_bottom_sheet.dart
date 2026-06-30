@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubits/doctor_profile_cubit.dart';
 import '../cubits/doctor_profile_state.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 class AddReviewBottomSheet extends StatefulWidget {
   final String doctorId;
@@ -31,7 +32,7 @@ class _AddReviewBottomSheetState extends State<AddReviewBottomSheet> {
         if (state is DoctorProfileReviewSuccess) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Review submitted')),
+            SnackBar(content: Text(context.l10n.reviewSubmittedMessage)),
           );
         }
         if (state is DoctorProfileReviewError) {
@@ -51,9 +52,9 @@ class _AddReviewBottomSheetState extends State<AddReviewBottomSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Write a Review', style: theme.textTheme.titleLarge),
+            Text(context.l10n.writeReviewButton, style: theme.textTheme.titleLarge),
             const SizedBox(height: 16),
-            Text('Your Rating', style: theme.textTheme.labelMedium),
+            Text(context.l10n.yourRatingLabel, style: theme.textTheme.labelMedium),
             const SizedBox(height: 8),
             Row(
               children: List.generate(5, (i) {
@@ -74,8 +75,8 @@ class _AddReviewBottomSheetState extends State<AddReviewBottomSheet> {
             const SizedBox(height: 16),
             TextField(
               controller: _commentCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Your experience (optional)',
+              decoration: InputDecoration(
+                labelText: context.l10n.yourExperienceOptionalLabel,
                 alignLabelWithHint: true,
               ),
               maxLines: 3,
@@ -104,7 +105,7 @@ class _AddReviewBottomSheetState extends State<AddReviewBottomSheet> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Submit Review'),
+                      : Text(context.l10n.submitReviewButton),
                 );
               },
             ),

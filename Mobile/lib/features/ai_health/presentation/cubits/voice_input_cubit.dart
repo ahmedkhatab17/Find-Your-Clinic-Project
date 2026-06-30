@@ -2,6 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 // ignore: depend_on_referenced_packages
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/locale/locale_cubit.dart';
 import 'voice_input_state.dart';
 
 /// Cubit managing speech-to-text voice input flow.
@@ -50,7 +52,11 @@ class VoiceInputCubit extends Cubit<VoiceInputState> {
 
     emit(const VoiceListening());
 
+    final localeCode = sl<LocaleCubit>().effectiveLanguageCode;
+    final localeId = localeCode == 'ar' ? 'ar-SA' : 'en-US';
+
     await _speech.listen(
+      localeId: localeId,
       onResult: (result) {
         if (result.finalResult) {
           emit(VoiceResult(result.recognizedWords));
@@ -74,7 +80,6 @@ class VoiceInputCubit extends Cubit<VoiceInputState> {
       },
       listenFor: const Duration(seconds: 30),
       pauseFor: const Duration(seconds: 3),
-      localeId: 'en_US',
       // ignore: deprecated_member_use
       cancelOnError: true,
       // ignore: deprecated_member_use

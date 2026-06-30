@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/doctor_search_entities.dart';
 
 class FilterBottomSheet extends StatefulWidget {
@@ -30,7 +31,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     _minRating = widget.currentFilters.minRating ?? 0;
     _feeRange = RangeValues(
       widget.currentFilters.minFee ?? 0,
-      widget.currentFilters.maxFee ?? 500,
+      widget.currentFilters.maxFee ?? 5000,
     );
     _sortBy = widget.currentFilters.sortBy ?? 'rating';
   }
@@ -55,32 +56,32 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
             ),
           ),
           const SizedBox(height: 16),
-          Text('Filters', style: AppTextStyles.heading2),
+          Text(context.l10n.filtersTitle, style: AppTextStyles.heading2),
           const SizedBox(height: 20),
 
           // ─── Sort By ───
-          Text('Sort By', style: AppTextStyles.label),
+          Text(context.l10n.sortBy, style: AppTextStyles.label),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: [
               _SortChip(
-                label: 'Rating',
+                label: context.l10n.sortByRating,
                 selected: _sortBy == 'rating',
                 onTap: () => setState(() => _sortBy = 'rating'),
               ),
               _SortChip(
-                label: 'Fee (Low)',
+                label: context.l10n.sortByFeeLow,
                 selected: _sortBy == 'fee_asc',
                 onTap: () => setState(() => _sortBy = 'fee_asc'),
               ),
               _SortChip(
-                label: 'Fee (High)',
+                label: context.l10n.sortByFeeHigh,
                 selected: _sortBy == 'fee_desc',
                 onTap: () => setState(() => _sortBy = 'fee_desc'),
               ),
               _SortChip(
-                label: 'Experience',
+                label: context.l10n.sortByExperience,
                 selected: _sortBy == 'experience',
                 onTap: () => setState(() => _sortBy = 'experience'),
               ),
@@ -92,9 +93,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Minimum Rating', style: AppTextStyles.label),
+              Text(context.l10n.minimumRating, style: AppTextStyles.label),
               Text(
-                _minRating == 0 ? 'Any' : '${_minRating.toStringAsFixed(1)}+',
+                _minRating == 0 ? context.l10n.any : '${_minRating.toStringAsFixed(1)}+',
                 style: AppTextStyles.label.copyWith(color: AppColors.primary),
               ),
             ],
@@ -113,9 +114,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Fee Range', style: AppTextStyles.label),
+              Text(context.l10n.feeRange, style: AppTextStyles.label),
               Text(
-                '\$${_feeRange.start.toInt()} — \$${_feeRange.end.toInt()}',
+                '${context.l10n.egp} ${_feeRange.start.toInt()} — ${context.l10n.egp} ${_feeRange.end.toInt()}',
                 style: AppTextStyles.label.copyWith(color: AppColors.primary),
               ),
             ],
@@ -123,7 +124,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           RangeSlider(
             values: _feeRange,
             min: 0,
-            max: 500,
+            max: 5000,
             divisions: 50,
             activeColor: AppColors.primary,
             onChanged: (v) => setState(() => _feeRange = v),
@@ -134,13 +135,18 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
           SizedBox(
             width: double.infinity,
             child: AppButton(
-              text: 'Apply Filters',
+              text: context.l10n.applyFilters,
               onPressed: () {
                 widget.onApply(SearchFilters(
+                  name: widget.currentFilters.name,
                   specialtyId: widget.currentFilters.specialtyId,
+                  specialtyName: widget.currentFilters.specialtyName,
+                  lat: widget.currentFilters.lat,
+                  lng: widget.currentFilters.lng,
+                  radiusKm: widget.currentFilters.radiusKm,
                   minRating: _minRating > 0 ? _minRating : null,
                   minFee: _feeRange.start > 0 ? _feeRange.start : null,
-                  maxFee: _feeRange.end < 500 ? _feeRange.end : null,
+                  maxFee: _feeRange.end < 5000 ? _feeRange.end : null,
                   sortBy: _sortBy,
                 ));
               },
@@ -165,20 +171,21 @@ class _SortChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Chip(
-        label: Text(
-          label,
-          style: AppTextStyles.labelSm.copyWith(
-            color: selected ? Colors.white : AppColors.textPrimary,
-          ),
-        ),
-        backgroundColor: selected ? AppColors.primary : AppColors.surfaceAlt,
-        side: BorderSide(
-          color: selected ? AppColors.primary : AppColors.divider,
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: AppTextStyles.labelSm.copyWith(
+          color: selected ? Colors.white : AppColors.textPrimary,
         ),
       ),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.surfaceAlt,
+      side: BorderSide(
+        color: selected ? AppColors.primary : AppColors.divider,
+      ),
+      showCheckmark: false,
     );
   }
 }

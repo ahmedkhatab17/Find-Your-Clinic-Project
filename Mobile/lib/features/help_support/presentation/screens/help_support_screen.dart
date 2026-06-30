@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/support_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -10,18 +11,18 @@ class HelpSupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Help & Support')),
+      appBar: AppBar(title: Text(context.l10n.helpAndSupport)),
       body: ListView(
         padding: const EdgeInsets.only(bottom: 32),
-        children: const [
+        children: [
           _Hero(),
-          _SectionHeader('CONTACT SUPPORT'),
+          _SectionHeader(context.l10n.contactSupportSection),
           _ContactTiles(),
           Divider(height: 1),
-          _SectionHeader('FREQUENTLY ASKED QUESTIONS'),
+          _SectionHeader(context.l10n.faqSection),
           _FaqList(),
           Divider(height: 1),
-          _SectionHeader('LEGAL'),
+          _SectionHeader(context.l10n.legalSection),
           _LegalTiles(),
         ],
       ),
@@ -38,7 +39,7 @@ class _Hero extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 28, 20, 28),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -67,9 +68,9 @@ class _Hero extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'How can we help?',
-            style: TextStyle(
+          Text(
+            context.l10n.howCanWeHelp,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -77,7 +78,7 @@ class _Hero extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            "We're here for you — reach out any time, or browse common questions below.",
+            context.l10n.howCanWeHelpDesc,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 14,
@@ -102,22 +103,22 @@ class _ContactTiles extends StatelessWidget {
         _ContactTile(
           icon: Icons.email_outlined,
           iconColor: AppColors.secondary,
-          title: 'Email us',
+          title: context.l10n.emailUs,
           subtitle: SupportConstants.supportEmail,
           onTap: () => _launchEmail(context),
         ),
         _ContactTile(
           icon: Icons.phone_outlined,
           iconColor: AppColors.primary,
-          title: 'Call us',
+          title: context.l10n.callUs,
           subtitle: SupportConstants.supportPhoneDisplay,
           onTap: () => _launchPhone(context),
         ),
         _ContactTile(
           icon: Icons.chat_outlined,
           iconColor: AppColors.success,
-          title: 'WhatsApp',
-          subtitle: 'Chat with us on WhatsApp',
+          title: context.l10n.chatWhatsApp,
+          subtitle: context.l10n.whatsappDesc,
           onTap: () => _launchWhatsApp(context),
         ),
       ],
@@ -130,12 +131,12 @@ class _ContactTiles extends StatelessWidget {
       path: SupportConstants.supportEmail,
       queryParameters: {'subject': SupportConstants.supportEmailSubject},
     );
-    await _safeLaunch(context, uri, errorMessage: 'No email app found');
+    await _safeLaunch(context, uri, errorMessage: context.l10n.noEmailApp);
   }
 
   Future<void> _launchPhone(BuildContext context) async {
     final uri = Uri(scheme: 'tel', path: SupportConstants.supportPhoneE164);
-    await _safeLaunch(context, uri, errorMessage: 'Cannot place a call from this device');
+    await _safeLaunch(context, uri, errorMessage: context.l10n.cannotPlaceCall);
   }
 
   Future<void> _launchWhatsApp(BuildContext context) async {
@@ -147,7 +148,7 @@ class _ContactTiles extends StatelessWidget {
     await _safeLaunch(
       context,
       uri,
-      errorMessage: 'WhatsApp is not installed on this device',
+      errorMessage: context.l10n.noWhatsApp,
       mode: LaunchMode.externalApplication,
     );
   }
@@ -161,7 +162,7 @@ class _FaqList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: const [
+      children: [
         _FaqGroup(
           title: 'Account',
           items: [
@@ -183,72 +184,62 @@ class _FaqList extends StatelessWidget {
           ],
         ),
         _FaqGroup(
-          title: 'Appointments',
+          title: context.l10n.faqAppointments,
           items: [
             _FaqItem(
-              question: 'How do I book an appointment?',
-              answer:
-                  'Search for a doctor or open one from the home screen, pick a time slot from their availability, then confirm and pay to complete the booking.',
+              question: context.l10n.faqAppointmentsQ1,
+              answer: context.l10n.faqAppointmentsA1,
             ),
             _FaqItem(
-              question: 'Can I cancel or reschedule?',
-              answer:
-                  'Yes. Open the appointment from the Appointments tab and use the cancel or reschedule action. Cancellation policies vary by doctor.',
+              question: context.l10n.faqAppointmentsQ2,
+              answer: context.l10n.faqAppointmentsA2,
             ),
             _FaqItem(
-              question: 'When will my appointment be confirmed?',
-              answer:
-                  'Most doctors auto-confirm immediately after payment. Some review requests manually — you\'ll get a notification as soon as the status changes.',
+              question: context.l10n.faqAppointmentsQ3,
+              answer: context.l10n.faqAppointmentsA3,
             ),
           ],
         ),
         _FaqGroup(
-          title: 'Payments',
+          title: context.l10n.faqPayments,
           items: [
             _FaqItem(
-              question: 'Which payment methods are supported?',
-              answer:
-                  'We support credit/debit cards and mobile wallets through Paymob. Available methods may differ based on your region.',
+              question: context.l10n.faqPaymentsQ1,
+              answer: context.l10n.faqPaymentsA1,
             ),
             _FaqItem(
-              question: 'How do I get a receipt?',
-              answer:
-                  'Every successful payment generates a receipt. Find them under Profile → Payment History, or tap any past appointment.',
+              question: context.l10n.faqPaymentsQ2,
+              answer: context.l10n.faqPaymentsA2,
             ),
             _FaqItem(
-              question: 'My payment failed — was I charged?',
-              answer:
-                  'Failed payments are not captured. If you see a pending charge from your bank it will be released automatically within a few business days.',
+              question: context.l10n.faqPaymentsQ3,
+              answer: context.l10n.faqPaymentsA3,
             ),
           ],
         ),
         _FaqGroup(
-          title: 'AI Health',
+          title: context.l10n.faqAi,
           items: [
             _FaqItem(
-              question: 'Is the AI a replacement for a doctor?',
-              answer:
-                  'No. The AI assistant and symptom checker provide general guidance only. Always consult a licensed doctor for diagnosis and treatment.',
+              question: context.l10n.faqAiQ1,
+              answer: context.l10n.faqAiA1,
             ),
             _FaqItem(
-              question: 'Are my AI conversations private?',
-              answer:
-                  'Your conversations are stored securely and used only to power the assistant for your account. We do not share them with third parties.',
+              question: context.l10n.faqAiQ2,
+              answer: context.l10n.faqAiA2,
             ),
           ],
         ),
         _FaqGroup(
-          title: 'Notifications',
+          title: context.l10n.faqNotifications,
           items: [
             _FaqItem(
-              question: "I'm not receiving notifications.",
-              answer:
-                  'Make sure notifications are enabled for Find Your Clinic in your device settings, and that you have a stable internet connection.',
+              question: context.l10n.faqNotificationsQ1,
+              answer: context.l10n.faqNotificationsA1,
             ),
             _FaqItem(
-              question: 'How do I manage notification preferences?',
-              answer:
-                  'You can mute or unmute different notification types from Settings. System-wide notification permission is controlled in your phone settings.',
+              question: context.l10n.faqNotificationsQ2,
+              answer: context.l10n.faqNotificationsA2,
             ),
           ],
         ),
@@ -266,12 +257,12 @@ class _FaqGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 4, 0, 8),
+            padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 0, 8),
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -305,7 +296,7 @@ class _FaqItem extends StatelessWidget {
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        childrenPadding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
         title: Text(
           question,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
@@ -341,7 +332,7 @@ class _LegalTiles extends StatelessWidget {
       children: [
         ListTile(
           leading: const Icon(Icons.description_outlined),
-          title: const Text('Terms of Service'),
+          title: Text(context.l10n.termsOfService),
           trailing: const Icon(Icons.open_in_new, size: 18),
           onTap: () => _safeLaunch(
             context,
@@ -352,7 +343,7 @@ class _LegalTiles extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.privacy_tip_outlined),
-          title: const Text('Privacy Policy'),
+          title: Text(context.l10n.privacyPolicy),
           trailing: const Icon(Icons.open_in_new, size: 18),
           onTap: () => _safeLaunch(
             context,
@@ -375,7 +366,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 20, 16, 4),
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(

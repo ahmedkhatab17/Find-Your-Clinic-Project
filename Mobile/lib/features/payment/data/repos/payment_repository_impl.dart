@@ -32,9 +32,9 @@ class PaymentRepositoryImpl implements PaymentRepository {
         data: {
           'doctorProfileId': doctorProfileId,
           'scheduledAt': scheduledAt.toUtc().toIso8601String(),
-          if (locationName != null) 'locationName': locationName,
+          'locationName': ?locationName,
           'paymentMethod': paymentMethod.index,
-          if (walletPhone != null) 'walletPhone': walletPhone,
+          'walletPhone': ?walletPhone,
         },
         // Paymob's auth + order + payment_key chain can take 25+ seconds on a
         // cold start — override the global 30s receive timeout for this call.
@@ -68,7 +68,7 @@ class PaymentRepositoryImpl implements PaymentRepository {
         data: {
           'doctorProfileId': doctorProfileId,
           'scheduledAt': scheduledAt.toUtc().toIso8601String(),
-          if (locationName != null) 'locationName': locationName,
+          'locationName': ?locationName,
           'paymobOrderId': paymobOrderId,
           'paymobTransactionId': paymobTransactionId,
           'paymentMethod': paymentMethod.index,

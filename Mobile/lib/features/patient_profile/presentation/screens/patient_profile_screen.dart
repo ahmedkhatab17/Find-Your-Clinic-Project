@@ -6,14 +6,48 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../accessibility/domain/entities/screen_context.dart';
+import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
 import '../cubits/patient_profile_cubit.dart';
 import '../cubits/patient_profile_state.dart';
 
-class PatientProfileScreen extends StatelessWidget {
+class PatientProfileScreen extends StatefulWidget {
   const PatientProfileScreen({super.key});
+
+  @override
+  State<PatientProfileScreen> createState() => _PatientProfileScreenState();
+}
+
+class _PatientProfileScreenState extends State<PatientProfileScreen> {
+  static const _screenContext = ScreenContext(screen: PatientScreen.profile);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<VoiceAssistantCubit>().setScreenContext(
+            _screenContext,
+            summary: _buildScreenSummary,
+          );
+    });
+  }
+
+  String _buildScreenSummary() {
+    final state = context.read<PatientProfileCubit>().state;
+    final profile = switch (state) {
+      PatientProfileLoaded(:final profile) => profile,
+      PatientProfileUpdating(:final profile) => profile,
+      PatientProfileUpdateSuccess(:final profile) => profile,
+      _ => null,
+    };
+    if (profile == null) return context.l10n.loading;
+    return '${context.l10n.myProfile} ${profile.fullName}. ${profile.email}.';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -165,7 +199,7 @@ class _ProfileBody extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              'Patient',
+                              context.l10n.patient,
                               style: AppTextStyles.bodySm.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
@@ -182,19 +216,19 @@ class _ProfileBody extends StatelessWidget {
                   children: [
                     _StatItem(
                       value: stats.appointmentsCount.toString(),
-                      label: 'Appointments',
+                      label: context.l10n.appointments,
                       color: AppColors.primary,
                     ),
                     _StatDivider(),
                     _StatItem(
                       value: stats.doctorsCount.toString(),
-                      label: 'Doctors',
+                      label: context.l10n.doctors,
                       color: AppColors.secondary,
                     ),
                     _StatDivider(),
                     _StatItem(
                       value: stats.recordsCount.toString(),
-                      label: 'Records',
+                      label: context.l10n.records,
                       color: AppColors.success,
                     ),
                   ],
@@ -204,74 +238,74 @@ class _ProfileBody extends StatelessWidget {
           ),
 
           // ─── My Health ───
-          _SectionHeader('MY HEALTH'),
+          _SectionHeader(context.l10n.myHealth),
           _SettingsTile(
             icon: Icons.person_outline,
             iconBg: AppColors.primary.withAlpha(25),
             iconColor: AppColors.primary,
-            title: 'Edit Profile',
-            subtitle: 'Update your personal information',
+            title: context.l10n.editProfile,
+            subtitle: context.l10n.updatePersonalInfo,
             onTap: () => context.push('/patient/profile/edit'),
           ),
           _SettingsTile(
             icon: Icons.favorite_border,
             iconBg: const Color(0xFF4CAF50).withAlpha(25),
             iconColor: const Color(0xFF4CAF50),
-            title: 'AI Health Assistant',
-            subtitle: 'Get personalised health insights',
+            title: context.l10n.aiHealthAssistant,
+            subtitle: context.l10n.getPersonalisedHealthInsights,
             onTap: () => context.pushNamed(RouteNames.aiChat),
           ),
           _SettingsTile(
             icon: Icons.search,
             iconBg: const Color(0xFF2196F3).withAlpha(25),
             iconColor: const Color(0xFF2196F3),
-            title: 'Symptom Checker',
-            subtitle: 'Check your symptoms with AI',
+            title: context.l10n.symptomChecker,
+            subtitle: context.l10n.checkSymptomsWithAI,
             onTap: () => context.pushNamed(RouteNames.symptomChecker),
           ),
           _SettingsTile(
             icon: Icons.location_on_outlined,
             iconBg: const Color(0xFFFF9800).withAlpha(25),
             iconColor: const Color(0xFFFF9800),
-            title: 'Nearby Clinics',
-            subtitle: 'Find clinics near you',
+            title: context.l10n.nearbyClinics,
+            subtitle: context.l10n.findClinicsNearYou,
             onTap: () => context.push('/nearby-clinics'),
           ),
 
           const SizedBox(height: 8),
 
           // ─── Account ───
-          _SectionHeader('ACCOUNT'),
+          _SectionHeader(context.l10n.account),
           _SettingsTile(
             icon: Icons.notifications_outlined,
             iconBg: AppColors.warning.withAlpha(25),
             iconColor: AppColors.warning,
-            title: 'Notifications',
-            subtitle: 'Manage your alerts',
+            title: context.l10n.notifications,
+            subtitle: context.l10n.manageAlerts,
             onTap: () => context.push('/notifications'),
           ),
           _SettingsTile(
             icon: Icons.credit_card_outlined,
             iconBg: AppColors.secondary.withAlpha(25),
             iconColor: AppColors.secondary,
-            title: 'Payment Methods',
-            subtitle: 'Choose your default method',
+            title: context.l10n.paymentMethods,
+            subtitle: context.l10n.chooseDefaultMethod,
             onTap: () => context.push('/patient/payments/methods'),
           ),
           _SettingsTile(
             icon: Icons.receipt_long_outlined,
             iconBg: const Color(0xFF9C27B0).withAlpha(25),
             iconColor: const Color(0xFF9C27B0),
-            title: 'Transaction History',
-            subtitle: 'View past payments',
+            title: context.l10n.transactionHistory,
+            subtitle: context.l10n.viewPastPayments,
             onTap: () => context.push('/patient/payments/history'),
           ),
           _SettingsTile(
             icon: Icons.settings_outlined,
             iconBg: AppColors.primary.withAlpha(25),
             iconColor: AppColors.primary,
-            title: 'App Settings',
-            subtitle: 'Theme, language & more',
+            title: context.l10n.appSettings,
+            subtitle: context.l10n.themeLanguageMore,
             onTap: () => context.push('/settings'),
           ),
 
@@ -281,9 +315,9 @@ class _ProfileBody extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: OutlinedButton.icon(
               icon: const Icon(Icons.logout, color: AppColors.error),
-              label: const Text(
-                'Logout',
-                style: TextStyle(color: AppColors.error),
+              label: Text(
+                context.l10n.logout,
+                style: AppTextStyles.label.copyWith(color: AppColors.error),
               ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.error),
@@ -305,12 +339,12 @@ class _ProfileBody extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: Text(context.l10n.logout),
+        content: Text(context.l10n.logoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -318,8 +352,8 @@ class _ProfileBody extends StatelessWidget {
               await sl<AuthCubit>().logout();
               if (context.mounted) context.go('/login');
             },
-            child: const Text(
-              'Logout',
+            child: Text(
+              context.l10n.logout,
               style: TextStyle(color: AppColors.error),
             ),
           ),

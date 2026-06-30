@@ -1,3 +1,6 @@
+import 'package:flutter/widgets.dart';
+import '../../../../core/locale/l10n_extension.dart';
+
 enum PayoutMethodType { wallet, bank }
 
 enum WalletProviderType { vodafoneCash, orangeMoney, etisalatCash, wePay }
@@ -8,6 +11,13 @@ extension WalletProviderTypeLabel on WalletProviderType {
         WalletProviderType.orangeMoney => 'Orange Money',
         WalletProviderType.etisalatCash => 'Etisalat Cash',
         WalletProviderType.wePay => 'WE Pay',
+      };
+
+  String localizedLabel(BuildContext context) => switch (this) {
+        WalletProviderType.vodafoneCash => context.l10n.walletProviderVodafone,
+        WalletProviderType.orangeMoney => context.l10n.walletProviderOrange,
+        WalletProviderType.etisalatCash => context.l10n.walletProviderEtisalat,
+        WalletProviderType.wePay => context.l10n.walletProviderWe,
       };
 
   String get serverValue => switch (this) {

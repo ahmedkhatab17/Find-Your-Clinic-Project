@@ -15,9 +15,9 @@ class AiHealthRepositoryImpl implements AiHealthRepository {
       : _dataSource = dataSource;
 
   @override
-  Future<ApiResult<AiChatMessage>> sendMessage(String content) async {
+  Future<ApiResult<AiChatMessage>> sendMessage(String content, String language) async {
     try {
-      final model = await _dataSource.sendMessage(content);
+      final model = await _dataSource.sendMessage(content, language);
       return Success(model.toEntity());
     } on DioException catch (e) {
       return Error(mapDioException(e));
@@ -40,9 +40,9 @@ class AiHealthRepositoryImpl implements AiHealthRepository {
 
   @override
   Future<ApiResult<SymptomAnalysis>> analyzeSymptoms(
-      List<String> symptoms) async {
+      List<String> symptoms, String language) async {
     try {
-      final model = await _dataSource.analyzeSymptoms(symptoms);
+      final model = await _dataSource.analyzeSymptoms(symptoms, language);
       return Success(model.toEntity());
     } on DioException catch (e) {
       return Error(mapDioException(e));

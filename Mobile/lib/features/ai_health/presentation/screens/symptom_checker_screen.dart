@@ -9,28 +9,9 @@ import '../cubits/symptom_checker_cubit.dart';
 import '../cubits/symptom_checker_state.dart';
 import '../widgets/symptom_chip.dart';
 
-const _symptoms = [
-  ('Head', 'Headache'),
-  ('General', 'Fever'),
-  ('Respiratory', 'Cough'),
-  ('Respiratory', 'Sore Throat'),
-  ('General', 'Fatigue'),
-  ('Digestive', 'Nausea'),
-  ('Head', 'Dizziness'),
-  ('Cardiovascular', 'Chest Pain'),
-  ('Respiratory', 'Shortness of Breath'),
-  ('Digestive', 'Abdominal Pain'),
-  ('Musculoskeletal', 'Back Pain'),
-  ('Musculoskeletal', 'Joint Pain'),
-  ('Skin', 'Rash'),
-  ('Respiratory', 'Runny Nose'),
-  ('Digestive', 'Diarrhea'),
-  ('General', 'Chills'),
-  ('Cardiovascular', 'Palpitations'),
-  ('Digestive', 'Vomiting'),
-  ('Skin', 'Swelling'),
-  ('Other', 'Insomnia'),
-];
+import '../../../../core/di/service_locator.dart';
+import '../../../../core/locale/locale_cubit.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 class SymptomCheckerScreen extends StatefulWidget {
   const SymptomCheckerScreen({super.key});
@@ -49,18 +30,43 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
     super.dispose();
   }
 
-  List<(String, String)> get _filteredSymptoms {
-    if (_searchQuery.isEmpty) return _symptoms;
-    final q = _searchQuery.toLowerCase();
-    return _symptoms
-        .where((s) => s.$2.toLowerCase().contains(q))
-        .toList();
+  List<(String, String)> _getLocalizedSymptoms(BuildContext context) {
+    final l10n = context.l10n;
+    return [
+      (l10n.symptomCategoryHead, l10n.symptomHeadache),
+      (l10n.symptomCategoryGeneral, l10n.symptomFever),
+      (l10n.symptomCategoryRespiratory, l10n.symptomCough),
+      (l10n.symptomCategoryRespiratory, l10n.symptomSoreThroat),
+      (l10n.symptomCategoryGeneral, l10n.symptomFatigue),
+      (l10n.symptomCategoryDigestive, l10n.symptomNausea),
+      (l10n.symptomCategoryHead, l10n.symptomDizziness),
+      (l10n.symptomCategoryCardiovascular, l10n.symptomChestPain),
+      (l10n.symptomCategoryRespiratory, l10n.symptomShortnessOfBreath),
+      (l10n.symptomCategoryDigestive, l10n.symptomAbdominalPain),
+      (l10n.symptomCategoryMusculoskeletal, l10n.symptomBackPain),
+      (l10n.symptomCategoryMusculoskeletal, l10n.symptomJointPain),
+      (l10n.symptomCategorySkin, l10n.symptomRash),
+      (l10n.symptomCategoryRespiratory, l10n.symptomRunnyNose),
+      (l10n.symptomCategoryDigestive, l10n.symptomDiarrhea),
+      (l10n.symptomCategoryGeneral, l10n.symptomChills),
+      (l10n.symptomCategoryCardiovascular, l10n.symptomPalpitations),
+      (l10n.symptomCategoryDigestive, l10n.symptomVomiting),
+      (l10n.symptomCategorySkin, l10n.symptomSwelling),
+      (l10n.symptomCategoryOther, l10n.symptomInsomnia),
+    ];
   }
 
-  bool get _hasCustomSymptom {
+  List<(String, String)> _getFilteredSymptoms(BuildContext context) {
+    final all = _getLocalizedSymptoms(context);
+    if (_searchQuery.isEmpty) return all;
+    final q = _searchQuery.toLowerCase();
+    return all.where((s) => s.$2.toLowerCase().contains(q)).toList();
+  }
+
+  bool _hasCustomSymptom(BuildContext context) {
     if (_searchQuery.isEmpty) return false;
     final q = _searchQuery.toLowerCase();
-    return !_symptoms.any((s) => s.$2.toLowerCase() == q);
+    return !_getLocalizedSymptoms(context).any((s) => s.$2.toLowerCase() == q);
   }
 
   @override
@@ -73,6 +79,13 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
           context.pushNamed(
             RouteNames.symptomResult,
             extra: state.analysis,
+          );
+        } else if (state is SymptomCheckerError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
           );
         }
       },
@@ -95,9 +108,9 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
             icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
             onPressed: () => context.pop(),
           ),
-          title: const Text(
-            'Symptom Checker',
-            style: TextStyle(
+          title: Text(
+            context.l10n.symptomCheckerTitle,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -118,7 +131,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
                       : AppColors.textPrimary,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Search symptoms...',
+                  hintText: context.l10n.searchSymptomsHint,
                   hintStyle:
                       AppTextStyles.bodyMd.copyWith(color: AppColors.textHint),
                   prefixIcon: const Icon(Icons.search,
@@ -149,18 +162,20 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
 
                   final selected = switch (state) {
                     SymptomCheckerSelecting(:final selected) => selected,
+                    SymptomCheckerAnalyzing(:final selected) => selected,
+                    SymptomCheckerError(:final selected) => selected,
                     _ => <String>[],
                   };
 
-                  final filtered = _filteredSymptoms;
-                  final showCustom = _hasCustomSymptom;
+                  final filtered = _getFilteredSymptoms(context);
+                  final showCustom = _hasCustomSymptom(context);
                   final totalCount =
                       filtered.length + (showCustom ? 1 : 0);
 
                   if (totalCount == 0) {
                     return Center(
                       child: Text(
-                        'No symptoms found',
+                        context.l10n.noSymptomsFound,
                         style: AppTextStyles.bodyMd.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -182,7 +197,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
                       if (showCustom && index == 0) {
                         final customName = _searchQuery;
                         return SymptomChip(
-                          category: 'Custom',
+                          category: context.l10n.symptomCategoryCustom,
                           name: customName,
                           isSelected: selected.contains(customName),
                           onTap: () => context
@@ -224,7 +239,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
         ),
       ),
       child: Text(
-        '⚠ AI suggestions are not a substitute for professional medical advice.',
+        context.l10n.aiDisclaimer,
         style: TextStyle(
           fontSize: 11,
           color: isDark ? const Color(0xFFD4A017) : const Color(0xFF92400E),
@@ -238,6 +253,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
       builder: (context, state) {
         final selected = switch (state) {
           SymptomCheckerSelecting(:final selected) => selected,
+          SymptomCheckerAnalyzing(:final selected) => selected,
           _ => <String>[],
         };
         final isEnabled = selected.isNotEmpty;
@@ -250,7 +266,7 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
             child: GestureDetector(
               onTap: isEnabled && !isAnalyzing
                   ? () =>
-                      context.read<SymptomCheckerCubit>().analyzeSymptoms()
+                      context.read<SymptomCheckerCubit>().analyzeSymptoms(sl<LocaleCubit>().effectiveLanguageCode)
                   : null,
               child: Container(
                 width: double.infinity,
@@ -272,8 +288,8 @@ class _SymptomCheckerScreenState extends State<SymptomCheckerScreen> {
                 child: Center(
                   child: Text(
                     isAnalyzing
-                        ? 'Analyzing...'
-                        : 'Analyze Symptoms (${selected.length})',
+                        ? context.l10n.analyzingLabel
+                        : context.l10n.analyzeSymptomsCount(selected.length),
                     style: AppTextStyles.button.copyWith(
                       color: isEnabled
                           ? Colors.white

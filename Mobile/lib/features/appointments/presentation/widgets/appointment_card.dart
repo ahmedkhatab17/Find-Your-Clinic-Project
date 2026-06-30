@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/user_avatar.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/appointment_entity.dart';
 
 /// Reusable appointment card used in both patient and doctor list screens.
@@ -34,8 +35,9 @@ class AppointmentCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTap: onTap,
+    return MergeSemantics(
+      child: GestureDetector(
+        onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
@@ -58,7 +60,7 @@ class AppointmentCard extends StatelessWidget {
           children: [
             // ─── Header: Avatar + Name + Status Badge ───
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 8),
               child: Row(
                 children: [
                   _buildAvatar(),
@@ -83,7 +85,7 @@ class AppointmentCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  _buildStatusBadge(),
+                  _buildStatusBadge(context),
                 ],
               ),
             ),
@@ -113,7 +115,7 @@ class AppointmentCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Your appointment is today at ${DateFormat.jm().format(appointment.scheduledAt)}',
+                        'Your appointment is today at ${DateFormat.jm(Localizations.localeOf(context).languageCode).format(appointment.scheduledAt)}',
                         style: AppTextStyles.bodySm.copyWith(
                           color: AppColors.warning,
                           fontWeight: FontWeight.w500,
@@ -126,18 +128,18 @@ class AppointmentCard extends StatelessWidget {
 
             // ─── Info rows: Date, Time, Location ───
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 0),
               child: Column(
                 children: [
                   _infoRow(
                     Icons.calendar_today_outlined,
-                    DateFormat.yMMMEd().format(appointment.scheduledAt),
+                    DateFormat.yMMMEd(Localizations.localeOf(context).languageCode).format(appointment.scheduledAt),
                     theme,
                   ),
                   const SizedBox(height: 4),
                   _infoRow(
                     Icons.access_time_outlined,
-                    DateFormat.jm().format(appointment.scheduledAt),
+                    DateFormat.jm(Localizations.localeOf(context).languageCode).format(appointment.scheduledAt),
                     theme,
                   ),
                   if (appointment.locationName != null) ...[
@@ -156,13 +158,14 @@ class AppointmentCard extends StatelessWidget {
             if (_hasActions) ...[
               const SizedBox(height: 12),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: _buildActions(theme),
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 16),
+                child: _buildActions(context, theme),
               ),
             ] else
               const SizedBox(height: 16),
           ],
         ),
+      ),
       ),
     );
   }
@@ -182,10 +185,30 @@ class AppointmentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge() {
-    final label = isDoctorView
-        ? appointment.effectiveStatus.doctorLabel
-        : appointment.effectiveStatus.patientLabel;
+  Widget _buildStatusBadge(BuildContext context) {
+    final l10n = context.l10n;
+    
+    String getLocalizedLabel(AppointmentStatus status, bool isDoctor) {
+      if (isDoctor) {
+        return switch (status) {
+          AppointmentStatus.scheduled => l10n.appointmentStatusNewRequest,
+          AppointmentStatus.confirmed => l10n.appointmentStatusConfirmed,
+          AppointmentStatus.cancelled => l10n.appointmentStatusCancelled,
+          AppointmentStatus.completed => l10n.appointmentStatusCompleted,
+          AppointmentStatus.pendingPayment => l10n.appointmentStatusCashPending,
+        };
+      } else {
+        return switch (status) {
+          AppointmentStatus.scheduled => l10n.appointmentStatusPending,
+          AppointmentStatus.confirmed => l10n.appointmentStatusConfirmed,
+          AppointmentStatus.cancelled => l10n.appointmentStatusCancelled,
+          AppointmentStatus.completed => l10n.appointmentStatusCompleted,
+          AppointmentStatus.pendingPayment => l10n.appointmentStatusAwaitingApproval,
+        };
+      }
+    }
+
+    final label = getLocalizedLabel(appointment.effectiveStatus, isDoctorView);
     final color = switch (appointment.effectiveStatus) {
       AppointmentStatus.scheduled => AppColors.warning,
       AppointmentStatus.confirmed => AppColors.success,
@@ -244,7 +267,8 @@ class AppointmentCard extends StatelessWidget {
         appointment.effectiveStatus == AppointmentStatus.confirmed;
   }
 
-  Widget _buildActions(ThemeData theme) {
+  Widget _buildActions(BuildContext context, ThemeData theme) {
+    final l10n = context.l10n;
     if (isDoctorView) {
       if (appointment.effectiveStatus == AppointmentStatus.scheduled) {
         return Row(
@@ -336,17 +360,25 @@ class AppointmentCard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        TextButton.icon(
-          onPressed: onTap,
-          icon: const Icon(Icons.info_outline, size: 18),
-          label: const Text('View Details'),
+        Semantics(
+          button: true,
+          label: l10n.appointmentDetails, 
+          child: TextButton.icon(
+            onPressed: onTap,
+            icon: const Icon(Icons.info_outline, size: 18),
+            label: Text(l10n.appointmentDetails),
+          ),
         ),
-        TextButton.icon(
-          onPressed: onCancel,
-          icon: Icon(Icons.close, size: 18, color: AppColors.error),
-          label: Text(
-            'Cancel',
-            style: TextStyle(color: AppColors.error),
+        Semantics(
+          button: true,
+          label: l10n.cancel, 
+          child: TextButton.icon(
+            onPressed: onCancel,
+            icon: Icon(Icons.close, size: 18, color: AppColors.error),
+            label: Text(
+              l10n.cancel,
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ),
       ],

@@ -7,6 +7,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../domain/entities/chat_message.dart';
 import 'fullscreen_image_viewer.dart';
 
@@ -677,7 +678,7 @@ class _StatusRow extends StatelessWidget {
         if (isMe) ...[
           const SizedBox(width: 4),
           if (message.isPending)
-            Icon(Icons.check, size: 15, color: timeColor.withOpacity(0.5))
+            Icon(Icons.check, size: 15, color: timeColor.withValues(alpha: 0.5))
           else if (message.hasFailed)
             Icon(Icons.error_outline, size: 14, color: Colors.red[200])
           else
@@ -711,11 +712,11 @@ class _ReplyPreviewStrip extends StatelessWidget {
         onLightBubble ? AppColors.primary : Colors.white;
 
     final summary = switch (preview.type) {
-      ChatMessageType.image => '📷 Photo',
-      ChatMessageType.video => '🎥 Video',
-      ChatMessageType.voice => '🎙 Voice message',
+      ChatMessageType.image => context.l10n.photoReply,
+      ChatMessageType.video => context.l10n.videoReply,
+      ChatMessageType.voice => context.l10n.voiceReply,
       ChatMessageType.text =>
-        preview.content.isEmpty ? 'Message' : preview.content,
+        preview.content.isEmpty ? context.l10n.message : preview.content,
     };
 
     return Container(

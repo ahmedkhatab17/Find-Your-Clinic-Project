@@ -8,13 +8,17 @@ import '../../../../core/network/api_result.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/user_avatar.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../chat/domain/usecases/start_conversation_usecase.dart';
 import '../../domain/entities/appointment_entity.dart';
 import '../cubits/appointment_cubit.dart';
 import '../cubits/appointment_state.dart';
 import '../cubits/patient_card_cubit.dart';
+import '../../../accessibility/domain/entities/screen_context.dart';
+import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
 import '../widgets/cancel_appointment_sheet.dart';
 import '../widgets/patient_info_card.dart';
+import '../../../../core/extensions/appointment_status_l10n_extension.dart';
 
 class AppointmentDetailScreen extends StatefulWidget {
   final String appointmentId;
@@ -32,6 +36,9 @@ class AppointmentDetailScreen extends StatefulWidget {
 }
 
 class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
+  static const _screenContext =
+      ScreenContext(screen: PatientScreen.appointmentDetail);
+
   @override
   void initState() {
     super.initState();
@@ -39,14 +46,35 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
           widget.appointmentId,
           isDoctorView: widget.isDoctorView,
         );
+
+    if (!widget.isDoctorView) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.read<VoiceAssistantCubit>().setScreenContext(
+              _screenContext,
+              summary: _buildScreenSummary,
+            );
+      });
+    }
+  }
+
+  String _buildScreenSummary() {
+    final state = context.read<AppointmentCubit>().state;
+    if (state is AppointmentDetailLoaded) {
+      final apt = state.appointment;
+      final date = DateFormat.yMMMMd(Localizations.localeOf(context).languageCode).format(apt.scheduledAt);
+      final time = DateFormat.jm(Localizations.localeOf(context).languageCode).format(apt.scheduledAt);
+      final label = apt.effectiveStatus.getLocalizedLabel(context, widget.isDoctorView);
+      return 'Appointment with ${apt.relatedPersonName} on $date at $time. Status: $label.';
+    }
+    return 'Loading appointment details...';
   }
 
   @override
   Widget build(BuildContext context) {
     final body = Scaffold(
       appBar: AppBar(
-        title: Text(
-            widget.isDoctorView ? 'Appointment Details' : 'My Appointment'),
+        title: Text(widget.isDoctorView ? context.l10n.appointmentDetailsTitle : context.l10n.myAppointmentTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -102,7 +130,7 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
                     onPressed: () => context
                         .read<AppointmentCubit>()
                         .loadAppointmentDetail(widget.appointmentId),
-                    child: const Text('Retry'),
+                    child: Text(context.l10n.retryButton),
                   ),
                 ],
               ),
@@ -136,7 +164,7 @@ class _AppointmentDetailBody extends StatelessWidget {
     final endTime = apt.scheduledAt.add(const Duration(minutes: 30));
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -169,7 +197,7 @@ class _AppointmentDetailBody extends StatelessWidget {
                         ),
                       if (isDoctorView)
                         Text(
-                          'Booking #${apt.id.substring(0, 8).toUpperCase()}',
+                          '${context.l10n.bookingRefPrefix}${apt.id.substring(0, 8).toUpperCase()}',
                           style: AppTextStyles.bodySm
                               .copyWith(color: AppColors.textSecondary),
                         ),
@@ -201,12 +229,12 @@ class _AppointmentDetailBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      DateFormat('EEEE, MMM d').format(apt.scheduledAt),
+                      DateFormat('EEEE, MMM d', Localizations.localeOf(context).languageCode).format(apt.scheduledAt),
                       style: AppTextStyles.heading3,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${DateFormat.jm().format(apt.scheduledAt)} — ${DateFormat.jm().format(endTime)}',
+                      '${DateFormat.jm(Localizations.localeOf(context).languageCode).format(apt.scheduledAt)} — ${DateFormat.jm(Localizations.localeOf(context).languageCode).format(endTime)}',
                       style: AppTextStyles.bodyMd
                           .copyWith(color: AppColors.textSecondary),
                     ),
@@ -223,17 +251,17 @@ class _AppointmentDetailBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Details', style: AppTextStyles.label),
+                Text(context.l10n.detailsTitle, style: AppTextStyles.label),
                 const SizedBox(height: 12),
                 if (apt.locationName != null)
-                  _InfoRow(Icons.location_on_outlined, 'Location',
+                  _InfoRow(Icons.location_on_outlined, context.l10n.locationTitle,
                       apt.locationName!),
                 _InfoRow(
                     Icons.confirmation_number_outlined,
-                    'Booking Ref',
+                    context.l10n.bookingRefTitle,
                     '#${apt.id.substring(0, 8).toUpperCase()}'),
-                _InfoRow(Icons.event_note_outlined, 'Booked on',
-                    DateFormat.yMMMd().format(apt.createdAt)),
+                _InfoRow(Icons.event_note_outlined, context.l10n.bookedOnTitle,
+                    DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(apt.createdAt)),
               ],
             ),
           ),
@@ -251,7 +279,7 @@ class _AppointmentDetailBody extends StatelessWidget {
           if (!isDoctorView)
             OutlinedButton.icon(
               icon: const Icon(Icons.person_outline),
-              label: const Text('View Doctor Profile'),
+              label: Text(context.l10n.viewDoctorProfileButton),
               onPressed: () => context.push(
                 '/doctor-details/${apt.doctorUserId}',
                 extra: {
@@ -270,7 +298,7 @@ class _AppointmentDetailBody extends StatelessWidget {
                 isDoctorView ? apt.patientId : apt.doctorUserId,
               ),
               icon: const Icon(Icons.chat_bubble_outline),
-              label: Text(isDoctorView ? 'Message Patient' : 'Message Doctor'),
+              label: Text(isDoctorView ? context.l10n.messagePatientButton : context.l10n.messageDoctorButton),
             ),
             const SizedBox(height: 10),
             TextButton(
@@ -282,7 +310,7 @@ class _AppointmentDetailBody extends StatelessWidget {
                     .cancelAppointment(apt.id),
               ),
               style: TextButton.styleFrom(foregroundColor: AppColors.error),
-              child: const Text('Cancel Appointment'),
+              child: Text(context.l10n.cancelAppointmentButton),
             ),
           ],
         ],
@@ -346,8 +374,8 @@ class _ActionBanner extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   isCashPending
-                      ? 'New Cash Booking — Action Required'
-                      : 'Action Required',
+                      ? context.l10n.newCashBookingActionReq
+                      : context.l10n.actionRequired,
                   style: AppTextStyles.label
                       .copyWith(color: AppColors.warning),
                 ),
@@ -356,7 +384,7 @@ class _ActionBanner extends StatelessWidget {
             if (isCashPending) ...[
               const SizedBox(height: 6),
               Text(
-                'Patient will pay at the clinic. Approve to confirm the slot.',
+                context.l10n.cashBookingDoctorDesc,
                 style: AppTextStyles.bodySm
                     .copyWith(color: AppColors.textSecondary),
               ),
@@ -371,7 +399,7 @@ class _ActionBanner extends StatelessWidget {
                     onPressed: () => context
                         .read<AppointmentCubit>()
                         .confirmAppointment(apt.id),
-                    child: Text(isCashPending ? 'Approve' : 'Accept'),
+                    child: Text(isCashPending ? context.l10n.approveButton : context.l10n.acceptButton),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -384,7 +412,7 @@ class _ActionBanner extends StatelessWidget {
                     onPressed: () => context
                         .read<AppointmentCubit>()
                         .cancelAppointment(apt.id),
-                    child: Text(isCashPending ? 'Reject' : 'Decline'),
+                    child: Text(isCashPending ? context.l10n.rejectButton : context.l10n.declineButton),
                   ),
                 ),
               ],
@@ -431,7 +459,7 @@ class _ConfirmedBanner extends StatelessWidget {
               const Icon(Icons.check_circle_outline,
                   color: AppColors.success, size: 20),
               const SizedBox(width: 8),
-              Text('Appointment Confirmed',
+              Text(context.l10n.appointmentConfirmedTitle,
                   style: AppTextStyles.label
                       .copyWith(color: AppColors.success)),
             ],
@@ -445,7 +473,7 @@ class _ConfirmedBanner extends StatelessWidget {
               onPressed: () => context
                   .read<AppointmentCubit>()
                   .completeAppointment(apt.id),
-              child: const Text('Mark as Completed'),
+              child: Text(context.l10n.markAsCompletedButton),
             ),
           ),
         ],
@@ -475,14 +503,14 @@ class _MarkAsPaidBanner extends StatelessWidget {
               const Icon(Icons.payments_outlined,
                   color: AppColors.info, size: 20),
               const SizedBox(width: 8),
-              Text('Cash Payment Pending',
+              Text(context.l10n.cashPaymentPendingTitle,
                   style: AppTextStyles.label
                       .copyWith(color: AppColors.info)),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            'Confirm once the patient has paid in person.',
+            context.l10n.cashPaymentPendingDesc,
             style: AppTextStyles.bodySm
                 .copyWith(color: AppColors.textSecondary),
           ),
@@ -491,7 +519,7 @@ class _MarkAsPaidBanner extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.icon(
               icon: const Icon(Icons.check_rounded),
-              label: const Text('Mark as Paid'),
+              label: Text(context.l10n.markAsPaidButton),
               style: FilledButton.styleFrom(backgroundColor: AppColors.info),
               onPressed: () => _confirmMarkAsPaid(context),
             ),
@@ -505,18 +533,18 @@ class _MarkAsPaidBanner extends StatelessWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Mark as Paid?'),
-        content: const Text(
-          'Confirm that the patient has paid in person. This will record the transaction in your earnings.',
+        title: Text(context.l10n.markAsPaidDialogTitle),
+        content: Text(
+          context.l10n.markAsPaidDialogDesc,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancelButton),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirm'),
+            child: Text(context.l10n.confirmButton),
           ),
         ],
       ),
@@ -612,7 +640,7 @@ class _StatusBadge extends StatelessWidget {
         AppointmentStatus.pendingPayment => AppColors.info,
       };
 
-  String get _label => isDoctor ? status.doctorLabel : status.patientLabel;
+  String _getLabel(BuildContext context) => status.getLocalizedLabel(context, isDoctor);
 
   @override
   Widget build(BuildContext context) {
@@ -624,7 +652,7 @@ class _StatusBadge extends StatelessWidget {
         border: Border.all(color: _color.withAlpha(100)),
       ),
       child: Text(
-        _label,
+        _getLabel(context),
         style: AppTextStyles.labelSm.copyWith(
           color: _color,
           fontWeight: FontWeight.w600,

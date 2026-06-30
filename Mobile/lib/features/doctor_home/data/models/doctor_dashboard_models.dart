@@ -4,6 +4,7 @@ import '../../domain/entities/doctor_dashboard_entities.dart';
 /// JSON deserialization models for the doctor dashboard API.
 
 class DoctorDashboardModel {
+  final String doctorName;
   final QuickStatsModel quickStats;
   final OverallStatsModel overallStats;
   final NextAppointmentModel? nextAppointment;
@@ -11,6 +12,7 @@ class DoctorDashboardModel {
   final List<ScheduleItemModel> todaySchedule;
 
   const DoctorDashboardModel({
+    required this.doctorName,
     required this.quickStats,
     required this.overallStats,
     this.nextAppointment,
@@ -20,6 +22,7 @@ class DoctorDashboardModel {
 
   factory DoctorDashboardModel.fromJson(Map<String, dynamic> json) {
     return DoctorDashboardModel(
+      doctorName: json['doctorName'] ?? 'Doctor',
       quickStats: QuickStatsModel.fromJson(json['quickStats']),
       overallStats: OverallStatsModel.fromJson(json['overallStats'] ?? const {}),
       nextAppointment: json['nextAppointment'] != null
@@ -33,6 +36,7 @@ class DoctorDashboardModel {
   }
 
   DoctorDashboard toEntity() => DoctorDashboard(
+        doctorName: doctorName,
         quickStats: quickStats.toEntity(),
         overallStats: overallStats.toEntity(),
         nextAppointment: nextAppointment?.toEntity(),

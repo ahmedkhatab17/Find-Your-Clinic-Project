@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
-/// Shimmer skeleton card matching the DoctorListTile layout.
-/// Shown during SearchLoading to prevent layout jump.
 class DoctorShimmerCard extends StatelessWidget {
   const DoctorShimmerCard({super.key});
 

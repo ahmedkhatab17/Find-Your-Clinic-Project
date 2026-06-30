@@ -11,6 +11,9 @@ import '../../../../core/utils/date_utils.dart';
 import '../../../../core/widgets/user_avatar.dart';
 import '../../../health_records/domain/entities/health_record_entity.dart';
 import '../../../health_records/domain/usecases/health_record_usecases.dart';
+import '../../../accessibility/domain/entities/screen_context.dart';
+import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../cubits/booking_cubit.dart';
 import '../cubits/booking_state.dart';
 import '../widgets/step_indicator.dart';
@@ -49,7 +52,18 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   // ─── Wizard state ───
   int _currentStep = 0;
   static const int _totalSteps = 4;
-  static const _stepLabels = ['Date & Time', 'Reason', 'Allergies', 'Summary'];
+  late final List<String> _stepLabels;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _stepLabels = [
+      context.l10n.wizardStepDateTime,
+      context.l10n.wizardStepReason,
+      context.l10n.wizardStepAllergies,
+      context.l10n.wizardStepSummary,
+    ];
+  }
 
   // ─── Step 0 data ───
   DateTime? _selectedDate;
@@ -64,7 +78,30 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   // ─── Step 2 data ───
   List<HealthRecordEntity> _allergies = [];
   bool _loadingAllergies = false;
-  Set<String> _dismissedAllergyIds = {};
+  final Set<String> _dismissedAllergyIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      sl<VoiceAssistantCubit>().setScreenContext(
+        ScreenContext(
+          screen: PatientScreen.bookAppointment,
+          data: {
+            ScreenContextKeys.doctorProfileId: widget.doctorProfileId,
+            ScreenContextKeys.doctorUserId: widget.doctorUserId,
+            ScreenContextKeys.doctorName: widget.doctorName,
+            ScreenContextKeys.doctorSpecialty: widget.specialty,
+            if (widget.consultationFee != null)
+              ScreenContextKeys.consultationFee:
+                  double.tryParse(widget.consultationFee!.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0,
+            if (widget.clinicName != null) ScreenContextKeys.clinicName: widget.clinicName!,
+          },
+        ),
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -77,7 +114,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   void _goNext() {
     if (_currentStep == 0 && _selectedSlot == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a date and time slot.')),
+        SnackBar(content: Text(context.l10n.pleaseSelectDateSlot)),
       );
       return;
     }
@@ -146,7 +183,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
               size: 20),
           onPressed: _goBack,
         ),
-        title: const Text('Book Appointment'),
+        title: Semantics(
+          header: true,
+          child: Text(context.l10n.bookAppointmentTitle),
+        ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(72),
           child: StepIndicator(
@@ -227,10 +267,13 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
         children: [
           _DoctorCard(widget: widget),
           const SizedBox(height: 20),
-          Text(
-            'When would you like to come in?',
-            style: AppTextStyles.heading3.copyWith(
-              color: theme.colorScheme.onSurface,
+          Semantics(
+            header: true,
+            child: Text(
+              context.l10n.wizardWhen,
+              style: AppTextStyles.heading3.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -263,7 +306,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           if (_selectedDate != null) ...[
             const SizedBox(height: 20),
             Text(
-              'Available Times',
+              context.l10n.wizardAvailableTimes,
               style: AppTextStyles.label.copyWith(
                 color: theme.colorScheme.onSurface,
               ),
@@ -295,11 +338,11 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
           children: [
             Icon(Icons.event_busy_outlined, size: 40, color: AppColors.warning),
             const SizedBox(height: 8),
-            Text('No available slots for this date',
+            Text(context.l10n.wizardNoSlots,
                 style: AppTextStyles.bodyMd
                     .copyWith(color: AppColors.textSecondary)),
             const SizedBox(height: 4),
-            Text('Try selecting a different date',
+            Text(context.l10n.wizardTryDifferentDate,
                 style: AppTextStyles.bodySm.copyWith(color: AppColors.textHint)),
           ],
         ),
@@ -313,7 +356,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       );
     }
     return Center(
-      child: Text('Select a date to see available times',
+      child: Text(context.l10n.wizardSelectDate,
           style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary)),
     );
   }
@@ -327,15 +370,18 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'What brings you in today?',
-            style: AppTextStyles.heading2.copyWith(
-              color: theme.colorScheme.onSurface,
+          Semantics(
+            header: true,
+            child: Text(
+              context.l10n.wizardWhatBringsYou,
+              style: AppTextStyles.heading2.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'This helps the doctor prepare for your visit.',
+            context.l10n.wizardHelpsDoctorPrepare,
             style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
@@ -345,9 +391,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             maxLines: 5,
             autofocus: true,
             decoration: InputDecoration(
-              hintText:
-                  'e.g. I\'ve had a persistent headache for 3 days and some dizziness...',
-              errorText: _reasonError ? 'Please describe your reason for visit' : null,
+              hintText: context.l10n.wizardReasonHint,
+              errorText: _reasonError ? context.l10n.wizardReasonError : null,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -364,11 +409,11 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              'Routine checkup',
-              'Follow-up visit',
-              'New symptoms',
-              'Chronic condition',
-              'Prescription renewal',
+              context.l10n.reasonRoutineCheckup,
+              context.l10n.reasonFollowUpVisit,
+              context.l10n.reasonNewSymptoms,
+              context.l10n.reasonChronicCondition,
+              context.l10n.reasonPrescriptionRenewal,
             ]
                 .map((s) => ActionChip(
                       label: Text(s),
@@ -393,15 +438,18 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Any health warnings we should know?',
-            style: AppTextStyles.heading2.copyWith(
-              color: theme.colorScheme.onSurface,
+          Semantics(
+            header: true,
+            child: Text(
+              context.l10n.wizardHealthWarnings,
+              style: AppTextStyles.heading2.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'We\'ve pulled your allergy records so the doctor knows in advance.',
+            context.l10n.wizardAllergyRecords,
             style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
@@ -430,8 +478,8 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                         : Colors.green.shade600,
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text('No allergy records found. You\'re all clear!'),
+                  Expanded(
+                    child: Text(context.l10n.wizardNoAllergyRecords),
                   ),
                 ],
               ),
@@ -476,7 +524,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                           icon: const Icon(Icons.close, size: 18),
                           onPressed: () => setState(
                               () => _dismissedAllergyIds.add(a.id)),
-                          tooltip: 'Dismiss this allergy',
+                          tooltip: context.l10n.wizardDismissAllergy,
                         ),
                       ),
                     ),
@@ -502,15 +550,18 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Does everything look right?',
-            style: AppTextStyles.heading2.copyWith(
-              color: theme.colorScheme.onSurface,
+          Semantics(
+            header: true,
+            child: Text(
+              context.l10n.wizardDoesEverythingLookRight,
+              style: AppTextStyles.heading2.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Review your booking details before confirming.',
+            context.l10n.wizardReviewBooking,
             style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 24),
@@ -520,25 +571,25 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             children: [
               _SummaryRow(
                 icon: Icons.calendar_today_outlined,
-                label: 'Date',
+                label: context.l10n.wizardDate,
                 value: DateFormat.yMMMMEEEEd().format(slot),
               ),
               _SummaryRow(
                 icon: Icons.access_time_outlined,
-                label: 'Time',
+                label: context.l10n.wizardTime,
                 value:
                     '${DateFormat.jm().format(slot)} — ${DateFormat.jm().format(end)}',
               ),
               if (widget.clinicName != null)
                 _SummaryRow(
                   icon: Icons.location_on_outlined,
-                  label: 'Clinic',
+                  label: context.l10n.wizardClinic,
                   value: widget.clinicName!,
                 ),
               if (widget.consultationFee != null)
                 _SummaryRow(
                   icon: Icons.payments_outlined,
-                  label: 'Fee',
+                  label: context.l10n.wizardFee,
                   value: widget.consultationFee!,
                 ),
             ],
@@ -548,7 +599,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
             children: [
               _SummaryRow(
                 icon: Icons.notes_outlined,
-                label: 'Reason for visit',
+                label: context.l10n.wizardReasonForVisit,
                 value: _reasonController.text.trim(),
               ),
             ],
@@ -584,7 +635,7 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Allergy Alert',
+                          context.l10n.wizardAllergyAlert,
                           style: TextStyle(
                             color: theme.brightness == Brightness.dark
                                 ? Colors.red.shade300
@@ -616,10 +667,10 @@ class _BookAppointmentScreenState extends State<BookAppointmentScreen> {
   // ─── Bottom action button ───
   Widget _buildBottomButton(BuildContext context, bool isSubmitting) {
     final label = switch (_currentStep) {
-      0 => 'Next — What\'s the reason?',
-      1 => 'Next — Health warnings',
-      2 => 'Next — Review booking',
-      _ => 'Confirm & Pay',
+      0 => context.l10n.wizardActionNextReason,
+      1 => context.l10n.wizardActionNextWarnings,
+      2 => context.l10n.wizardActionNextReview,
+      _ => context.l10n.wizardActionConfirmPay,
     };
 
     return SafeArea(

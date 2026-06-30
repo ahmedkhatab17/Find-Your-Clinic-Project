@@ -192,6 +192,18 @@ class ChatRepositoryImpl implements IChatRepository {
   }
 
   @override
+  Future<ApiResult<void>> clearMessages(String conversationId) async {
+    try {
+      await _remoteDataSource.clearMessages(conversationId);
+      return const Success(null);
+    } on DioException catch (e) {
+      return Error(mapDioException(e));
+    } catch (_) {
+      return const Error(UnknownFailure());
+    }
+  }
+
+  @override
   Future<void> joinConversation(String conversationId) async {
     await _signalRDataSource.connect();
     await _signalRDataSource.joinConversation(conversationId);

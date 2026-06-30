@@ -35,6 +35,7 @@ abstract class ChatRemoteDataSource {
     String emoji,
   );
   Future<void> markConversationAsRead(String conversationId);
+  Future<void> clearMessages(String conversationId);
 }
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
@@ -74,7 +75,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       '/api/messages/conversations/$conversationId/send',
       data: {
         'content': content,
-        if (replyToMessageId != null) 'replyToMessageId': replyToMessageId,
+        'replyToMessageId': ?replyToMessageId,
       },
     );
     return ChatMessageModel.fromJson(response.data['data']);
@@ -90,7 +91,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     final form = FormData.fromMap({
       'image': await MultipartFile.fromFile(filePath),
       if (caption != null && caption.isNotEmpty) 'caption': caption,
-      if (replyToMessageId != null) 'replyToMessageId': replyToMessageId,
+      'replyToMessageId': ?replyToMessageId,
     });
     final response = await _apiClient.dio.post(
       '/api/messages/conversations/$conversationId/send-image',
@@ -109,7 +110,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     final form = FormData.fromMap({
       'video': await MultipartFile.fromFile(filePath),
       if (caption != null && caption.isNotEmpty) 'caption': caption,
-      if (replyToMessageId != null) 'replyToMessageId': replyToMessageId,
+      'replyToMessageId': ?replyToMessageId,
     });
     final response = await _apiClient.dio.post(
       '/api/messages/conversations/$conversationId/send-video',
@@ -127,8 +128,8 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   }) async {
     final form = FormData.fromMap({
       'audio': await MultipartFile.fromFile(filePath),
-      if (durationSeconds != null) 'durationSeconds': durationSeconds,
-      if (replyToMessageId != null) 'replyToMessageId': replyToMessageId,
+      'durationSeconds': ?durationSeconds,
+      'replyToMessageId': ?replyToMessageId,
     });
     final response = await _apiClient.dio.post(
       '/api/messages/conversations/$conversationId/send-voice',
@@ -159,5 +160,11 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   Future<void> markConversationAsRead(String conversationId) async {
     await _apiClient.dio
         .put('/api/messages/conversations/$conversationId/read');
+  }
+
+  @override
+  Future<void> clearMessages(String conversationId) async {
+    await _apiClient.dio
+        .delete('/api/messages/conversations/$conversationId/messages');
   }
 }

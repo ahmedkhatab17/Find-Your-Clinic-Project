@@ -23,7 +23,7 @@ class AiChatCubit extends Cubit<AiChatState> {
     }
   }
 
-  Future<void> sendMessage(String content) async {
+  Future<void> sendMessage(String content, String language) async {
     final currentMessages = switch (state) {
       AiChatLoaded(:final messages) => messages,
       AiChatSending(:final messages) => messages,
@@ -38,14 +38,17 @@ class AiChatCubit extends Cubit<AiChatState> {
     );
     emit(AiChatSending([...currentMessages, userMsg]));
 
-    final result = await _sendMessage(content);
+    final result = await _sendMessage(content, language);
     switch (result) {
       case Success(:final data):
         emit(AiChatLoaded([...currentMessages, userMsg, data]));
       case Error(:final failure):
-        // Revert optimistic update and surface error.
-        emit(AiChatLoaded(currentMessages));
-        emit(AiChatError(failure.message));
+        final errorMsg = AiChatMessage(
+          role: 'assistant',
+          content: failure.message,
+          createdAt: DateTime.now(),
+        );
+        emit(AiChatLoaded([...currentMessages, userMsg, errorMsg]));
     }
   }
 }

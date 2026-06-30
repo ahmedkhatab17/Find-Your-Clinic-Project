@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/locale/l10n_extension.dart';
+
 import '../../domain/entities/health_record_entity.dart';
 
 class RecordListTile extends StatelessWidget {
@@ -58,8 +60,8 @@ class RecordListTile extends StatelessWidget {
       key: ValueKey(record.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
+        alignment: AlignmentDirectional.centerEnd,
+        padding: const EdgeInsetsDirectional.only(end: 20),
         color: Colors.red.shade700,
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
@@ -72,12 +74,12 @@ class RecordListTile extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
+                child: Text(context.l10n.cancelTooltip),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(
-                  'Delete',
+                  context.l10n.deleteTooltip,
                   style: TextStyle(color: Colors.red.shade400),
                 ),
               ),
@@ -86,8 +88,9 @@ class RecordListTile extends StatelessWidget {
         );
       },
       onDismissed: (_) => onDelete(),
-      child: ListTile(
-        onTap: onTap,
+      child: MergeSemantics(
+        child: ListTile(
+          onTap: onTap,
         leading: Container(
           width: 42,
           height: 42,
@@ -114,7 +117,7 @@ class RecordListTile extends StatelessWidget {
           children: [
             if (record.fileUrl != null)
               Padding(
-                padding: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsetsDirectional.only(end: 6),
                 child: Icon(
                   Icons.attach_file,
                   size: 16,
@@ -130,6 +133,7 @@ class RecordListTile extends StatelessWidget {
           ],
         ),
       ),
+    ),
     );
   }
 }

@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/routing/app_router.dart';
 
+
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/theme/app_text_styles.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -22,32 +24,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late final Animation<double> _bgAnimation;
   int _currentPage = 0;
 
-  static const _slides = [
-    _Slide(
-      icon: Icons.search_rounded,
-      color1: Color(0xFF1A8FE3),
-      color2: Color(0xFF0D6EAF),
-      title: 'Find the Right Doctor',
-      subtitle:
-          'Search verified doctors by specialty, location, and rating — all in one place.',
-    ),
-    _Slide(
-      icon: Icons.calendar_today_rounded,
-      color1: Color(0xFF11A8CD),
-      color2: Color(0xFF0D7FA0),
-      title: 'Book in Seconds',
-      subtitle:
-          'Choose a time slot that works for you and confirm your appointment instantly.',
-    ),
-    _Slide(
-      icon: Icons.favorite_rounded,
-      color1: Color(0xFF0E9E8A),
-      color2: Color(0xFF0A7A6A),
-      title: 'Your Health, Our Priority',
-      subtitle:
-          'Track your records, manage prescriptions, and chat with your doctor anytime.',
-    ),
-  ];
+    // Strings are resolved dynamically in build method.
 
   @override
   void initState() {
@@ -74,7 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   void _next() {
-    if (_currentPage < _slides.length - 1) {
+    if (_currentPage < 2) { // length - 1
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
@@ -86,7 +63,30 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final slide = _slides[_currentPage];
+    final slides = [
+      _Slide(
+        icon: Icons.search_rounded,
+        color1: const Color(0xFF1A8FE3),
+        color2: const Color(0xFF0D6EAF),
+        title: context.l10n.onboardingTitle1,
+        subtitle: context.l10n.onboardingSubtitle1,
+      ),
+      _Slide(
+        icon: Icons.calendar_today_rounded,
+        color1: const Color(0xFF11A8CD),
+        color2: const Color(0xFF0D7FA0),
+        title: context.l10n.onboardingTitle2,
+        subtitle: context.l10n.onboardingSubtitle2,
+      ),
+      _Slide(
+        icon: Icons.favorite_rounded,
+        color1: const Color(0xFF0E9E8A),
+        color2: const Color(0xFF0A7A6A),
+        title: context.l10n.onboardingTitle3,
+        subtitle: context.l10n.onboardingSubtitle3,
+      ),
+    ];
+    final slide = slides[_currentPage];
     return Scaffold(
       body: AnimatedBuilder(
         animation: _bgAnimation,
@@ -111,14 +111,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             children: [
               // Skip button
               Align(
-                alignment: Alignment.topRight,
+                alignment: AlignmentDirectional.topEnd,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 16, 24, 0),
-                  child: _currentPage < _slides.length - 1
+                  padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 24, 0),
+                  child: _currentPage < slides.length - 1
                       ? TextButton(
                           onPressed: _complete,
                           child: Text(
-                            'Skip',
+                            context.l10n.skip,
                             style: AppTextStyles.bodyMd
                                 .copyWith(color: Colors.white70),
                           ),
@@ -132,10 +132,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 flex: 5,
                 child: PageView.builder(
                   controller: _pageController,
-                  itemCount: _slides.length,
+                  itemCount: slides.length,
                   onPageChanged: (i) => setState(() => _currentPage = i),
                   itemBuilder: (context, i) {
-                    return _SlidePage(slide: _slides[i]);
+                    return _SlidePage(slide: slides[i]);
                   },
                 ),
               ),
@@ -151,7 +151,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       // Dot indicator
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_slides.length, (i) {
+                        children: List.generate(slides.length, (i) {
                           final isActive = i == _currentPage;
                           return AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
@@ -184,9 +184,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                             ),
                           ),
                           child: Text(
-                            _currentPage < _slides.length - 1
-                                ? 'Next'
-                                : 'Get Started',
+                            _currentPage < slides.length - 1
+                                ? context.l10n.next
+                                : context.l10n.getStarted,
                             style: AppTextStyles.bodyMd.copyWith(
                               fontWeight: FontWeight.w700,
                               color: slide.color2,

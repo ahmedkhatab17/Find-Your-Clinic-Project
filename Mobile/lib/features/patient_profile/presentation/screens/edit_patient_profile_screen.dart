@@ -9,6 +9,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../cubits/patient_profile_cubit.dart';
 import '../cubits/patient_profile_state.dart';
 import '../../domain/entities/user_profile_entity.dart';
+import '../../../../core/locale/l10n_extension.dart';
 
 class EditPatientProfileScreen extends StatefulWidget {
   const EditPatientProfileScreen({super.key});
@@ -138,7 +139,7 @@ class _EditPatientProfileScreenState extends State<EditPatientProfileScreen> {
         if (state is PatientProfileLoaded) _populate(state);
         if (state is PatientProfileUpdateSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully')),
+            SnackBar(content: Text(context.l10n.profileUpdated)),
           );
           context.pop();
         }
@@ -154,7 +155,7 @@ class _EditPatientProfileScreenState extends State<EditPatientProfileScreen> {
       builder: (context, state) {
         final isUpdating = state is PatientProfileUpdating;
         return Scaffold(
-          appBar: AppBar(title: const Text('Edit Profile')),
+          appBar: AppBar(title: Text(context.l10n.editProfile)),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Form(
@@ -180,58 +181,59 @@ class _EditPatientProfileScreenState extends State<EditPatientProfileScreen> {
                   ),
                   const SizedBox(height: 24),
                   _Section(
-                    title: 'Personal Information',
+                    title: context.l10n.personalInformation,
                     children: [
                       _row(
                         AppTextField(
-                          label: 'First Name',
+                          label: context.l10n.firstName,
                           controller: _firstNameCtrl,
                           validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Required'
+                              ? context.l10n.required
                               : null,
                         ),
                         AppTextField(
-                          label: 'Last Name',
+                          label: context.l10n.lastName,
                           controller: _lastNameCtrl,
                           validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'Required'
+                              ? context.l10n.required
                               : null,
                         ),
                       ),
                       AppTextField(
-                        label: 'Email',
+                        label: context.l10n.email,
                         controller: _emailCtrl,
                         readOnly: true,
                         keyboardType: TextInputType.emailAddress,
                       ),
                       AppTextField(
-                        label: 'Phone Number',
+                        label: context.l10n.phoneNumber,
                         controller: _phoneCtrl,
                         keyboardType: TextInputType.phone,
                       ),
                       _DateField(
-                        label: 'Date of Birth',
+                        label: context.l10n.dateOfBirth,
                         value: _dateOfBirth,
                         onTap: _pickDate,
                       ),
                       _row(
                         _DropdownField(
                           key: ValueKey('gender_$_gender'),
-                          label: 'Gender',
+                          label: context.l10n.gender,
                           initialValue: _gender,
                           items: _genders,
+                          itemLabelBuilder: (e) => e == 'Male' ? context.l10n.genderMale : (e == 'Female' ? context.l10n.genderFemale : e),
                           onChanged: (v) => setState(() => _gender = v),
                         ),
                         _DropdownField(
                           key: ValueKey('blood_$_bloodType'),
-                          label: 'Blood Type',
+                          label: context.l10n.bloodType,
                           initialValue: _bloodType,
                           items: _bloodTypes,
                           onChanged: (v) => setState(() => _bloodType = v),
                         ),
                       ),
                       AppTextField(
-                        label: 'Address',
+                        label: context.l10n.address,
                         controller: _addressCtrl,
                         maxLines: 3,
                       ),
@@ -239,14 +241,14 @@ class _EditPatientProfileScreenState extends State<EditPatientProfileScreen> {
                   ),
                   const SizedBox(height: 24),
                   _Section(
-                    title: 'Emergency Contact',
+                    title: context.l10n.emergencyContact,
                     children: [
                       AppTextField(
-                        label: 'Contact Name',
+                        label: context.l10n.contactName,
                         controller: _emergencyNameCtrl,
                       ),
                       AppTextField(
-                        label: 'Contact Phone',
+                        label: context.l10n.contactPhone,
                         controller: _emergencyPhoneCtrl,
                         keyboardType: TextInputType.phone,
                       ),
@@ -257,17 +259,34 @@ class _EditPatientProfileScreenState extends State<EditPatientProfileScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: isUpdating ? null : () => context.pop(),
-                          child: const Text('Cancel'),
+                          onPressed: () => context.pop(),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: const BorderSide(color: AppColors.divider),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(context.l10n.cancel),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
-                        flex: 2,
-                        child: AppButton(
-                          text: 'Save Changes',
-                          isLoading: isUpdating,
+                        child: FilledButton(
                           onPressed: isUpdating ? null : _save,
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: isUpdating
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(context.l10n.saveChanges),
                         ),
                       ),
                     ],
@@ -359,12 +378,14 @@ class _DropdownField extends StatelessWidget {
   final String label;
   final String? initialValue;
   final List<String> items;
+  final String Function(String)? itemLabelBuilder;
   final ValueChanged<String?> onChanged;
   const _DropdownField({
     super.key,
     required this.label,
     required this.initialValue,
     required this.items,
+    this.itemLabelBuilder,
     required this.onChanged,
   });
 
@@ -375,7 +396,7 @@ class _DropdownField extends StatelessWidget {
       isExpanded: true,
       decoration: InputDecoration(labelText: label),
       items: items
-          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+          .map((e) => DropdownMenuItem(value: e, child: Text(itemLabelBuilder?.call(e) ?? e)))
           .toList(),
       onChanged: onChanged,
     );

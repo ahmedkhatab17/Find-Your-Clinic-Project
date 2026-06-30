@@ -5,6 +5,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../../core/routing/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../cubits/auth_cubit.dart';
 
@@ -54,7 +55,7 @@ class DoctorRejectedScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               Text(
-                'Application Rejected',
+                context.l10n.doctorRejectedTitle,
                 style: AppTextStyles.heading2.copyWith(
                   color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
@@ -72,7 +73,7 @@ class DoctorRejectedScreen extends StatelessWidget {
                   border: Border.all(color: AppColors.error.withAlpha(80)),
                 ),
                 child: Text(
-                  'Action Required',
+                  context.l10n.actionRequired,
                   style: AppTextStyles.labelSm.copyWith(
                     color: AppColors.error,
                     fontWeight: FontWeight.w600,
@@ -103,7 +104,7 @@ class DoctorRejectedScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Rejection Reason:',
+                        '${context.l10n.rejectionReason}:',
                         style: AppTextStyles.label.copyWith(
                           color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
@@ -145,14 +146,14 @@ class DoctorRejectedScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'What to do next:',
+                      context.l10n.whatToDoNext,
                       style: AppTextStyles.label.copyWith(
                         color: isDark ? AppColors.darkTextPrimary : AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ..._steps.asMap().entries.map(
+                    ..._steps(context).asMap().entries.map(
                           (e) => Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: Row(
@@ -198,7 +199,7 @@ class DoctorRejectedScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: AppButton(
-                  text: 'Re-upload Documents',
+                  text: context.l10n.reuploadDocuments,
                   icon: Icons.upload_file_rounded,
                   onPressed: () => context.goNamed(
                     RouteNames.doctorDocuments,
@@ -212,7 +213,7 @@ class DoctorRejectedScreen extends StatelessWidget {
               TextButton(
                 onPressed: () => context.pushNamed(RouteNames.helpSupport),
                 child: Text(
-                  'Contact Support',
+                  context.l10n.contactSupport,
                   style: AppTextStyles.bodyMd.copyWith(
                     color: isDark ? AppColors.darkTextSecondary : AppColors.textSecondary,
                     decoration: TextDecoration.underline,
@@ -228,7 +229,7 @@ class DoctorRejectedScreen extends StatelessWidget {
                   if (context.mounted) context.goNamed(RouteNames.login);
                 },
                 child: Text(
-                  'Back to Login',
+                  context.l10n.backToLogin,
                   style: AppTextStyles.bodyMd.copyWith(color: AppColors.primary),
                 ),
               ),
@@ -239,9 +240,9 @@ class DoctorRejectedScreen extends StatelessWidget {
     );
   }
 
-  static const _steps = [
-    'Review the rejection reason above',
-    'Prepare updated, valid documents',
-    'Re-upload and resubmit for review',
+  List<String> _steps(BuildContext context) => [
+    context.l10n.doctorRejectedStep1,
+    context.l10n.doctorRejectedStep2,
+    context.l10n.doctorRejectedStep3,
   ];
 }

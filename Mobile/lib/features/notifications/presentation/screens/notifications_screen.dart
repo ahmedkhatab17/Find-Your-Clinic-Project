@@ -5,9 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/locale/l10n_extension.dart';
 import '../../../../core/utils/date_utils.dart';
 import '../../../../core/utils/token_storage.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../accessibility/domain/entities/screen_context.dart';
+import '../../../accessibility/presentation/cubits/voice_assistant_cubit.dart';
 import '../../domain/entities/notification_entity.dart';
 import '../cubits/notifications_cubit.dart';
 import '../cubits/notifications_state.dart';
@@ -20,10 +23,48 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  static const _screenContext = ScreenContext(screen: PatientScreen.notifications);
+
   @override
   void initState() {
     super.initState();
     context.read<NotificationsCubit>().loadNotifications();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<VoiceAssistantCubit>().setScreenContext(
+            _screenContext,
+            summary: _buildScreenSummary,
+            itemSelector: _itemSelector,
+          );
+    });
+  }
+
+  String _buildScreenSummary() {
+    final state = context.read<NotificationsCubit>().state;
+    if (state is NotificationsLoaded) {
+      if (state.notifications.isEmpty) return context.l10n.noNotificationsTitle;
+      final unread = state.notifications.where((n) => !n.isRead).length;
+      final buffer = StringBuffer('You have ${state.notifications.length} notifications, $unread unread. ');
+      final readN = state.notifications.length > 3 ? 3 : state.notifications.length;
+      for (var i = 0; i < readN; i++) {
+        final n = state.notifications[i];
+        buffer.write('${i + 1}: ${n.title}. ');
+      }
+      return buffer.toString();
+    }
+    return context.l10n.notificationsTitle;
+  }
+
+  bool _itemSelector(int index) {
+    final state = context.read<NotificationsCubit>().state;
+    if (state is! NotificationsLoaded) return false;
+    if (index < 0 || index >= state.notifications.length) return false;
+    final notif = state.notifications[index];
+    if (!notif.isRead) {
+      context.read<NotificationsCubit>().markAsRead(notif.id);
+    }
+    _navigate(context, notif);
+    return true;
   }
 
   @override
@@ -35,13 +76,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Notifications'),
+            title: Text(context.l10n.notificationsTitle),
             actions: [
               if (hasUnread)
                 TextButton(
                   onPressed: () =>
                       context.read<NotificationsCubit>().markAllAsRead(),
-                  child: const Text('Mark all read'),
+                  child: Text(context.l10n.markAllRead),
                 ),
             ],
           ),
@@ -55,10 +96,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     context.read<NotificationsCubit>().loadNotifications(),
               ),
             NotificationsLoaded(:final notifications) => notifications.isEmpty
-                ? const EmptyStateView(
+                ? EmptyStateView(
                     icon: Icons.notifications_none,
-                    title: 'No Notifications',
-                    subtitle: 'You\'re all caught up! Check back later.',
+                    title: context.l10n.noNotificationsTitle,
+                    subtitle: context.l10n.noNotificationsDesc,
                   )
                 : RefreshIndicator(
                     onRefresh: () =>
@@ -125,9 +166,10 @@ class _NotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
+    return MergeSemantics(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: notification.isRead
@@ -164,7 +206,7 @@ class _NotificationCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    notification.title,
+                    context.translateNotificationTitle(notification.type) ?? notification.title,
                     style: notification.isRead
                         ? AppTextStyles.label
                         : AppTextStyles.label
@@ -174,7 +216,7 @@ class _NotificationCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    notification.body,
+                    context.translateNotificationBody(notification.type) ?? notification.body,
                     style: AppTextStyles.bodySm
                         .copyWith(color: AppColors.textSecondary),
                     maxLines: 2,
@@ -182,7 +224,7 @@ class _NotificationCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    formatRelativeTime(notification.createdAt),
+                    formatRelativeTime(notification.createdAt, context),
                     style: AppTextStyles.caption
                         .copyWith(color: AppColors.textHint),
                   ),
@@ -201,6 +243,7 @@ class _NotificationCard extends StatelessWidget {
               ),
           ],
         ),
+      ),
       ),
     );
   }

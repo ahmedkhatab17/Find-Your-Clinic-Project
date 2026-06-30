@@ -44,6 +44,8 @@ abstract interface class IChatRepository {
   );
 
   Future<ApiResult<void>> markConversationAsRead(String conversationId);
+  
+  Future<ApiResult<void>> clearMessages(String conversationId);
 
   // Real-time Streams
   Stream<ChatMessage> get onMessageReceived;
