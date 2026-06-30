@@ -6,7 +6,7 @@ import { Users, FileCheck, Stethoscope, LogOut, LayoutDashboard, ClipboardList, 
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -46,6 +46,7 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onClose}
               className={`flex items-center px-4 py-3 rounded-xl transition-all ${
                 isActive
                   ? 'bg-primary/10 text-primary font-medium border border-primary/20 shadow-sm dark:shadow-none'
