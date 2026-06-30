@@ -52,7 +52,7 @@ public class GetUserDocumentsQueryHandler : IRequestHandler<GetUserDocumentsQuer
             .OrderByDescending(r => r.RecordedAt)
             .Select(r => new DocumentDto
             {
-                Url = string.Empty,
+                Url = r.FileUrl ?? string.Empty,
                 Name = r.Title,
                 Type = r.Type.ToString(),
                 UploadedAt = r.RecordedAt

@@ -18,7 +18,9 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddLocalization();
+builder.Services.AddControllers()
+    .AddDataAnnotationsLocalization();
 builder.Services.AddProblemDetails();
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<AccountCleanupBackgroundService>();
@@ -28,7 +30,7 @@ builder.Services.AddScoped<PaymobWebhookHandler>();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IUserIdProvider, NameIdentifierUserIdProvider>();
 
-// Allow multipart/form-data uploads up to 20 MB (covers images, PDFs, etc. for medical records)
+// Allow multipart/form-data uploads up to 20 MB
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 20 * 1024 * 1024; // 20 MB
@@ -148,6 +150,14 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+var supportedCultures = new[] { "en", "ar" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture("en")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
 
 using (var scope = app.Services.CreateScope())
 {

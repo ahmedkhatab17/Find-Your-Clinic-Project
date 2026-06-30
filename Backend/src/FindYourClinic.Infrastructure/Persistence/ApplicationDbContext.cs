@@ -199,6 +199,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
                 .HasForeignKey(x => x.ReplyToMessageId)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => new { x.ConversationId, x.SentAt });
+            entity.HasIndex(x => new { x.ConversationId, x.IsRead });
         });
 
         builder.Entity<MessageReaction>(entity =>

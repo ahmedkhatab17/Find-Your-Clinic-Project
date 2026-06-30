@@ -4,6 +4,7 @@ using FindYourClinic.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FindYourClinic.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260624020716_AddSpecialtyNameAr")]
+    partial class AddSpecialtyNameAr
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -318,8 +321,6 @@ namespace FindYourClinic.Infrastructure.Persistence.Migrations
                     b.HasIndex("ReplyToMessageId");
 
                     b.HasIndex("SenderId");
-
-                    b.HasIndex("ConversationId", "IsRead");
 
                     b.HasIndex("ConversationId", "SentAt");
 

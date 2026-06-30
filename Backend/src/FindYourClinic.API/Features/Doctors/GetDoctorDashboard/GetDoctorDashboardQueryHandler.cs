@@ -30,6 +30,9 @@ public class GetDoctorDashboardQueryHandler
             throw new NotFoundException("Doctor profile not found.");
         }
 
+        var user = await _dbContext.Users.FindAsync(new object[] { request.UserId }, cancellationToken);
+        var doctorName = user?.FirstName ?? "Doctor";
+
         var now = DateTime.UtcNow;
         var todayStart = now.Date;
         var todayEnd = todayStart.AddDays(1);
@@ -126,7 +129,7 @@ public class GetDoctorDashboardQueryHandler
                 x.Patient.ProfileImageUrl))
             .ToListAsync(cancellationToken);
 
-        var dashboard = new DoctorDashboardDto(quickStats, overallStats, nextAppointment, performance, schedule);
+        var dashboard = new DoctorDashboardDto(doctorName, quickStats, overallStats, nextAppointment, performance, schedule);
         return ApiResponse<DoctorDashboardDto>.Ok(dashboard);
     }
 }

@@ -56,6 +56,7 @@ public sealed record TopRatedDoctorDto(
 public sealed record CursorPaginatedResponse<T>(List<T> Items, string? NextCursor, bool HasNextPage);
 
 public sealed record DoctorDashboardDto(
+    string DoctorName,
     DoctorQuickStatsDto QuickStats,
     DoctorOverallStatsDto OverallStats,
     DoctorNextAppointmentDto? NextAppointment,

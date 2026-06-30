@@ -40,10 +40,26 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sen
             .ToListAsync(cancellationToken);
 
         var conversationHistory = history
-            .Select(m => (role: m.Role == "assistant" ? "model" : m.Role, content: m.Content))
+            .Select(h => (h.Role, h.Content))
             .ToList();
 
-        var assistantContent = await _geminiService.GenerateResponseAsync(conversationHistory);
+        var userIdGuid = Guid.Parse(request.UserId);
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userIdGuid, cancellationToken);
+        var patientContext = string.Empty;
+        if (user != null)
+        {
+            var ageStr = user.DateOfBirth.HasValue 
+                ? $"{(int)((DateTime.UtcNow - user.DateOfBirth.Value).TotalDays / 365.25)} years old" 
+                : "Unknown";
+            patientContext = $@"Patient Context:
+- Name: {user.FirstName} {user.LastName}
+- Gender: {user.Gender}
+- Age: {ageStr}
+- Blood Type: {user.BloodType ?? "Unknown"}
+Please keep this context in mind when giving personalized advice.";
+        }
+
+        var assistantContent = await _geminiService.GenerateResponseAsync(conversationHistory, language: request.Language, patientContext: patientContext);
 
         var assistantMessage = new AiChatMessage
         {

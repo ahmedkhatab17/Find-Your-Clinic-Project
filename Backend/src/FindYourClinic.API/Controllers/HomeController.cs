@@ -98,7 +98,11 @@ public class HomeController : ControllerBase
             .Select(x => new SpecialtySummaryDto(x.Id, x.Name, x.IconUrl))
             .ToListAsync(cancellationToken);
 
+        var user = await _dbContext.Users.FindAsync(new object[] { userId }, cancellationToken);
+        var patientName = user?.FirstName ?? "Patient";
+
         var summary = new HomeSummaryDto(
+            patientName,
             upcomingAppointment,
             new HealthSummaryDto(records.Count, latestHeartRate?.Value, latestBloodPressure?.Value),
             topDoctors,
@@ -108,6 +112,7 @@ public class HomeController : ControllerBase
     }
 
     public sealed record HomeSummaryDto(
+        string PatientName,
         UpcomingAppointmentDto? UpcomingAppointment,
         HealthSummaryDto HealthSummary,
         List<TopDoctorDto> TopDoctors,

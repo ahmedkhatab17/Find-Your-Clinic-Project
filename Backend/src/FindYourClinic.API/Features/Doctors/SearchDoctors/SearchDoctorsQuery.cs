@@ -8,6 +8,7 @@ public class SearchDoctorsQuery : IRequest<ApiResponse<PaginatedResponse<DoctorS
 {
     public Guid? SpecialtyId { get; set; }
     public string? SpecialtyName { get; set; }
+    public string? Name { get; set; }
     public double? Lat { get; set; }
     public double? Lng { get; set; }
     public double? RadiusKm { get; set; }
